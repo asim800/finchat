@@ -1,0 +1,159 @@
+// ============================================================================
+// FILE: lib/llm-service.ts
+// Multi-LLM service with provider switching
+// ============================================================================
+
+import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
+
+export type LLMProvider = 'anthropic' | 'openai';
+
+export interface LLMMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface LLMResponse {
+  content: string;
+  provider: LLMProvider;
+  usage?: {
+    tokens: number;
+    cost?: number;
+  };
+}
+
+class LLMService {
+  private anthropic: Anthropic | null = null;
+  private openai: OpenAI | null = null;
+  private defaultProvider: LLMProvider = 'anthropic';
+
+  constructor() {
+    // Initialize OpenAI if API key exists
+    if (process.env.OPENAI_API_KEY) {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+      this.defaultProvider = 'openai'; // Set this first
+    }
+
+    // Initialize Anthropic if API key exists
+    if (process.env.ANTHROPIC_API_KEY) {
+      this.anthropic = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+      });
+      this.defaultProvider = 'anthropic'; // This will override if available
+    }
+  }
+
+  async generateResponse(
+    messages: LLMMessage[],
+    options: {
+      provider?: LLMProvider;
+      temperature?: number;
+      maxTokens?: number;
+      systemPrompt?: string;
+    } = {}
+  ): Promise<LLMResponse> {
+    const provider = options.provider || this.defaultProvider;
+    
+    // Add system prompt if provided
+    const fullMessages = options.systemPrompt 
+      ? [{ role: 'system' as const, content: options.systemPrompt }, ...messages]
+      : messages;
+
+    switch (provider) {
+      case 'anthropic':
+        return this.generateAnthropicResponse(fullMessages, options);
+      case 'openai':
+        return this.generateOpenAIResponse(fullMessages, options);
+      default:
+        throw new Error(`Unsupported LLM provider: ${provider}`);
+    }
+  }
+
+  private async generateAnthropicResponse(
+    messages: LLMMessage[],
+    options: { temperature?: number; maxTokens?: number }
+  ): Promise<LLMResponse> {
+    if (!this.anthropic) {
+      throw new Error('Anthropic API key not configured');
+    }
+
+    try {
+      const response = await this.anthropic.messages.create({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: options.maxTokens || 1000,
+        temperature: options.temperature || 0.7,
+        messages: messages.map(msg => ({
+          role: msg.role === 'system' ? 'user' : msg.role,
+          content: msg.content,
+        })),
+      });
+
+      const content = response.content[0]?.type === 'text' 
+        ? response.content[0].text 
+        : '';
+
+      return {
+        content,
+        provider: 'anthropic',
+        usage: {
+          tokens: response.usage.input_tokens + response.usage.output_tokens,
+        },
+      };
+    } catch (error) {
+      console.error('Anthropic API error:', error);
+      throw new Error('Failed to generate response from Anthropic');
+    }
+  }
+
+  private async generateOpenAIResponse(
+    messages: LLMMessage[],
+    options: { temperature?: number; maxTokens?: number }
+  ): Promise<LLMResponse> {
+    if (!this.openai) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: messages.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+        })),
+        temperature: options.temperature || 0.7,
+        max_tokens: options.maxTokens || 1000,
+      });
+
+      const content = response.choices[0]?.message?.content || '';
+
+      return {
+        content,
+        provider: 'openai',
+        usage: {
+          tokens: response.usage?.total_tokens || 0,
+        },
+      };
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      throw new Error('Failed to generate response from OpenAI');
+    }
+  }
+
+  getAvailableProviders(): LLMProvider[] {
+    const providers: LLMProvider[] = [];
+    if (this.anthropic) providers.push('anthropic');
+    if (this.openai) providers.push('openai');
+    return providers;
+  }
+
+  isProviderAvailable(provider: LLMProvider): boolean {
+    return this.getAvailableProviders().includes(provider);
+  }
+}
+
+export const llmService = new LLMService();
+
+
+
