@@ -87,7 +87,11 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to determine if we should generate charts
-async function checkForChartGeneration(userMessage: string, aiResponse: string): Promise<any> {
+async function checkForChartGeneration(userMessage: string, aiResponse: string): Promise<{
+  type: string;
+  title: string;
+  data: Array<{ name: string; value: number }>;
+} | null> {
   const chartKeywords = ['allocation', 'portfolio', 'distribution', 'breakdown', 'chart', 'graph'];
   const messageContainsChart = chartKeywords.some(keyword => 
     userMessage.toLowerCase().includes(keyword) || aiResponse.toLowerCase().includes(keyword)

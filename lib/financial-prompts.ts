@@ -28,12 +28,25 @@ For market analysis:
 
 Always be encouraging while being realistic about risks and uncertainties in investing.`;
 
+interface PortfolioData {
+  holdings?: Array<{ symbol: string; [key: string]: unknown }>;
+  totalValue?: number;
+  [key: string]: unknown;
+}
+
+interface UserPreferences {
+  riskLevel?: string;
+  timeHorizon?: string;
+  goals?: string;
+  [key: string]: unknown;
+}
+
 export const generateFinancialPrompt = (
   userMessage: string,
   context?: {
     isGuestMode?: boolean;
-    portfolioData?: any;
-    userPreferences?: any;
+    portfolioData?: PortfolioData;
+    userPreferences?: UserPreferences;
   }
 ) => {
   let prompt = userMessage;
@@ -42,7 +55,7 @@ export const generateFinancialPrompt = (
     prompt += `\n\nUser's Portfolio Context:
 - Total Holdings: ${context.portfolioData.holdings?.length || 0} positions
 - Total Value: $${context.portfolioData.totalValue?.toLocaleString() || 'Unknown'}
-- Top Holdings: ${context.portfolioData.holdings?.slice(0, 3).map((h: any) => h.symbol).join(', ') || 'None'}`;
+- Top Holdings: ${context.portfolioData.holdings?.slice(0, 3).map((h) => h.symbol).join(', ') || 'None'}`;
   }
 
   if (context?.userPreferences) {

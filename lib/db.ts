@@ -33,6 +33,6 @@ export interface AuthResponse {
 
 export interface AuthError {
   error: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 

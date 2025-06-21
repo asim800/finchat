@@ -5,7 +5,29 @@
 
 // This function simulates AI responses
 // Later we'll replace this with actual API calls to Claude/OpenAI
-export async function simulateAIResponse(message: string, isGuestMode: boolean, uploadedData?: any): Promise<{ content: string; chartData?: any }> {
+interface PortfolioHolding {
+  symbol: string;
+  quantity: number;
+  price: number;
+  [key: string]: unknown;
+}
+
+interface UploadedData {
+  type: 'portfolio' | 'preferences' | 'text';
+  holdings?: PortfolioHolding[];
+  totalValue?: number;
+  settings?: Record<string, string>;
+  keywords?: string[];
+  [key: string]: unknown;
+}
+
+interface ChartData {
+  type: 'pie' | 'bar';
+  title: string;
+  data: Array<{ name: string; value: number }>;
+}
+
+export async function simulateAIResponse(message: string, isGuestMode: boolean, uploadedData?: UploadedData): Promise<{ content: string; chartData?: ChartData }> {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
 
@@ -14,9 +36,9 @@ export async function simulateAIResponse(message: string, isGuestMode: boolean, 
   // Handle uploaded data context
   if (uploadedData) {
     if (lowerMessage.includes('analyze') || lowerMessage.includes('portfolio') || lowerMessage.includes('allocation')) {
-      if (uploadedData.type === 'portfolio') {
+      if (uploadedData.type === 'portfolio' && uploadedData.holdings && uploadedData.totalValue) {
         const holdings = uploadedData.holdings;
-        const chartData = holdings.map((holding: any) => ({
+        const chartData = holdings.map((holding) => ({
           name: holding.symbol,
           value: holding.quantity * holding.price
         }));
@@ -32,24 +54,24 @@ export async function simulateAIResponse(message: string, isGuestMode: boolean, 
       }
     }
 
-    if (lowerMessage.includes('risk') && uploadedData.type === 'portfolio') {
+    if (lowerMessage.includes('risk') && uploadedData.type === 'portfolio' && uploadedData.holdings && uploadedData.totalValue) {
       const holdings = uploadedData.holdings;
-      const techStocks = holdings.filter((h: any) => ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'META'].includes(h.symbol));
-      const techWeight = techStocks.reduce((sum: number, stock: any) => sum + (stock.quantity * stock.price), 0) / uploadedData.totalValue;
+      const techStocks = holdings.filter((h) => ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'META'].includes(h.symbol));
+      const techWeight = techStocks.reduce((sum: number, stock) => sum + (stock.quantity * stock.price), 0) / uploadedData.totalValue;
 
       return {
         content: `**Risk Analysis of Your Portfolio:**\n\n• **Tech Concentration**: ${(techWeight * 100).toFixed(1)}% in technology stocks\n• **Number of Positions**: ${holdings.length} (${holdings.length > 20 ? 'well diversified' : holdings.length > 10 ? 'moderately diversified' : 'concentrated'})\n• **Risk Level**: ${techWeight > 0.4 ? 'High' : techWeight > 0.2 ? 'Moderate' : 'Conservative'}\n\n${techWeight > 0.4 ? '⚠️ Consider reducing tech exposure for better diversification.' : '✅ Your diversification looks reasonable.'}`
       };
     }
 
-    if (lowerMessage.includes('rebalance') && uploadedData.type === 'portfolio') {
+    if (lowerMessage.includes('rebalance') && uploadedData.type === 'portfolio' && uploadedData.holdings && uploadedData.totalValue) {
       const holdings = uploadedData.holdings;
       return {
         content: `**Rebalancing Recommendations:**\n\nBased on your ${holdings.length} holdings worth $${uploadedData.totalValue.toLocaleString()}:\n\n• **Target Allocation**: 60% stocks, 25% bonds, 10% REITs, 5% cash\n• **Current Status**: Analyzing your positions...\n• **Action Items**: Consider adding bond exposure for stability\n• **Timeline**: Rebalance quarterly or when allocations drift >5%\n\n${isGuestMode ? '*Sign up for automated rebalancing alerts and detailed tax-loss harvesting strategies!*' : 'Would you like me to calculate specific buy/sell recommendations?'}`
       };
     }
 
-    if (uploadedData.type === 'preferences') {
+    if (uploadedData.type === 'preferences' && uploadedData.settings) {
       const settings = uploadedData.settings;
       const riskLevel = settings['risk level'] || settings['risk_level'] || 'moderate';
       const timeHorizon = settings['time horizon'] || settings['time_horizon'] || '10 years';
@@ -59,7 +81,7 @@ export async function simulateAIResponse(message: string, isGuestMode: boolean, 
       };
     }
 
-    if (uploadedData.type === 'text') {
+    if (uploadedData.type === 'text' && uploadedData.keywords) {
       return {
         content: `I've analyzed your uploaded text file and found financial keywords: ${uploadedData.keywords.join(', ')}.\n\nBased on the content, I can help you with personalized advice related to your financial goals and preferences. ${isGuestMode ? 'Sign up to save this context for future conversations!' : 'What specific questions do you have about the information in your file?'}`
       };

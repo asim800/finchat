@@ -5,14 +5,25 @@
 
 import React from 'react';
 
+interface ChartData {
+  type: 'pie' | 'bar';
+  title: string;
+  data: Array<{ name: string; value: number }>;
+}
+
+interface FileData {
+  type: 'portfolio' | 'preferences' | 'text' | 'generic';
+  [key: string]: unknown;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
   provider?: string; // 'openai', 'anthropic', or 'simulation'
-  chartData?: any;
-  fileData?: any;
+  chartData?: ChartData;
+  fileData?: FileData;
 }
 
 interface MessageBubbleProps {

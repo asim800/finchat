@@ -43,7 +43,7 @@ export function generateToken(payload: { userId: string; email: string }): strin
 export function verifyToken(token: string): JWTPayload | null {
   try {
     return jwt.verify(token, JWT_SECRET) as JWTPayload;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -67,7 +67,7 @@ export async function getUserFromRequest(request: NextRequest): Promise<AuthUser
       firstName: '', // Would come from DB
       lastName: ''   // Would come from DB
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

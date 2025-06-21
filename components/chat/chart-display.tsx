@@ -6,8 +6,14 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
+interface ChartData {
+  type: 'pie' | 'bar';
+  title: string;
+  data: Array<{ name: string; value: number }>;
+}
+
 interface ChartDisplayProps {
-  data: any;
+  data: ChartData;
 }
 
 export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
@@ -31,7 +37,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
                 fill="#8884d8"
                 dataKey="value"
               >
-                {data.data.map((entry: any, index: number) => (
+                {data.data.map((entry, index: number) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>

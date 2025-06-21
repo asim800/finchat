@@ -6,12 +6,33 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { FileUpload } from '@/components/ui/file-upload';
 
+interface PortfolioEntry {
+  symbol: string;
+  quantity: number;
+  price: number;
+  name?: string;
+  [key: string]: string | number | undefined;
+}
+
+interface ExtractedData {
+  type: 'portfolio' | 'preferences' | 'text' | 'generic';
+  holdings?: PortfolioEntry[];
+  totalValue?: number;
+  settings?: Record<string, string>;
+  keywords?: string[];
+  headers?: string[];
+  rows?: Record<string, string>[];
+  totalRows?: number;
+  content?: string;
+  length?: number;
+  [key: string]: unknown;
+}
+
 interface FileProcessorProps {
-  onDataExtracted: (data: any, summary: string) => void;
+  onDataExtracted: (data: ExtractedData, summary: string) => void;
   isGuestMode?: boolean;
 }
 
@@ -90,7 +111,11 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
-      const entry: any = {};
+      const entry: PortfolioEntry = {
+        symbol: '',
+        quantity: 0,
+        price: 0
+      };
       
       headers.forEach((header, index) => {
         const value = values[index] || '';
@@ -117,17 +142,16 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     
     return {
       data: {
-        type: 'portfolio',
+        type: 'portfolio' as const,
         holdings: portfolio,
-        totalValue,
-        count: portfolio.length
+        totalValue
       },
       summary: `Processed portfolio with ${portfolio.length} holdings worth $${totalValue.toLocaleString()}`
     };
   };
 
   const processPreferenceData = (lines: string[], headers: string[]) => {
-    const preferences: any = {};
+    const preferences: Record<string, string> = {};
     
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
@@ -140,7 +164,7 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     
     return {
       data: {
-        type: 'preferences',
+        type: 'preferences' as const,
         settings: preferences
       },
       summary: `Processed ${Object.keys(preferences).length} preference settings`
@@ -152,7 +176,7 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     
     for (let i = 1; i < Math.min(lines.length, 50); i++) { // Limit to 50 rows for demo
       const values = lines[i].split(',').map(v => v.trim());
-      const entry: any = {};
+      const entry: Record<string, string> = {};
       
       headers.forEach((header, index) => {
         entry[header] = values[index] || '';
@@ -163,7 +187,7 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     
     return {
       data: {
-        type: 'generic',
+        type: 'generic' as const,
         headers,
         rows: data,
         totalRows: lines.length - 1
@@ -181,7 +205,7 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     
     return {
       data: {
-        type: 'text',
+        type: 'text' as const,
         content: content.substring(0, 2000), // Limit content length
         keywords: foundKeywords,
         length: content.length

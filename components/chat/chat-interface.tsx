@@ -34,7 +34,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
   
   const [inputValue, setInputValue] = useState('');
   const [showFileUpload, setShowFileUpload] = useState(false);
-  const [uploadedData, setUploadedData] = useState<any>(null);
+  const [uploadedData, setUploadedData] = useState<{
+    type: 'portfolio' | 'preferences' | 'text' | 'generic';
+    holdings?: Array<{ symbol: string; [key: string]: unknown }>;
+    totalValue?: number;
+    settings?: Record<string, string>;
+    keywords?: string[];
+    [key: string]: unknown;
+  } | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<'anthropic' | 'openai'>('openai');
   const [availableProviders, setAvailableProviders] = useState<('anthropic' | 'openai')[]>(['openai']);
   
@@ -64,7 +71,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
           setSelectedProvider(data.providers[0]);
         }
       }
-    } catch (error) {
+    } catch {
       console.log('Could not fetch providers, using simulation mode');
       setAvailableProviders(['openai']); // Fallback
     }
@@ -131,7 +138,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
     }
   };
 
-  const handleFileDataExtracted = (data: any, summary: string) => {
+  const handleFileDataExtracted = (data: {
+    type: 'portfolio' | 'preferences' | 'text' | 'generic';
+    holdings?: Array<{ symbol: string; [key: string]: unknown }>;
+    totalValue?: number;
+    settings?: Record<string, string>;
+    keywords?: string[];
+    [key: string]: unknown;
+  }, summary: string) => {
     setUploadedData(data);
     
     const fileMessage: Message = {
@@ -301,7 +315,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder={uploadedData ? "Ask about your uploaded data..." : isGuestMode ? "Ask about finance basics..." : "Ask about your portfolio..."}
             className="flex-1"
             disabled={isLoading}
@@ -316,7 +330,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         </div>
         {isGuestMode && (
           <p className="text-xs text-gray-500 mt-2">
-            Demo mode: File analysis available, but data isn't saved. <a href="/register" className="text-blue-600 hover:underline">Sign up for persistent storage</a>
+            Demo mode: File analysis available, but data isn&apos;t saved. <a href="/register" className="text-blue-600 hover:underline">Sign up for persistent storage</a>
           </p>
         )}
       </div>

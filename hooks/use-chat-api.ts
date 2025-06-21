@@ -7,19 +7,38 @@
 
 import { useState } from 'react';
 
+interface ChartData {
+  type: 'pie' | 'bar';
+  title: string;
+  data: Array<{ name: string; value: number }>;
+}
+
+interface PortfolioData {
+  holdings?: Array<{ symbol: string; [key: string]: unknown }>;
+  totalValue?: number;
+  [key: string]: unknown;
+}
+
+interface UserPreferences {
+  riskLevel?: string;
+  timeHorizon?: string;
+  goals?: string;
+  [key: string]: unknown;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   provider?: string;
   timestamp: Date;
-  chartData?: any;
+  chartData?: ChartData;
 }
 
 interface ChatOptions {
   provider?: 'anthropic' | 'openai';
-  portfolioData?: any;
-  userPreferences?: any;
+  portfolioData?: PortfolioData;
+  userPreferences?: UserPreferences;
 }
 
 export const useChatAPI = () => {

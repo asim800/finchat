@@ -65,7 +65,7 @@ export default async function ChatPage() {
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800">
-                  You're in demo mode
+                  You&apos;re in demo mode
                 </h3>
                 <div className="mt-2 text-sm text-blue-700">
                   <p>
