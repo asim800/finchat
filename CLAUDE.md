@@ -90,6 +90,19 @@ lib/
 - Authentication helpers available in `lib/auth.ts`
 - Financial AI prompts should extend the system in `lib/financial-prompts.ts`
 
+## Database & Prisma Notes
+
+- **Prisma Client Generation**: The `postinstall` script automatically runs `prisma generate` after dependency installation
+- **Migrations**: Use `npx prisma migrate dev` for development and `npx prisma migrate deploy` for production
+- **Database Push**: Use `npx prisma db push` to sync schema changes without migrations
+- **Studio**: Use `npx prisma studio` to open the database browser
+
+## Deployment Notes
+
+- **Vercel**: The `postinstall` script ensures Prisma Client is generated during deployment
+- **Environment Variables**: Ensure `DATABASE_URL` is properly configured in your deployment environment
+- **Build Process**: Prisma generation happens automatically via the postinstall hook
+
 ## Debugging Notes
 
 - Please provide and explaination of the error and approach to resolve when prompted with error messages
