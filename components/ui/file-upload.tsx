@@ -71,7 +71,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     if (files.length > 0) {
       handleFile(files[0]);
     }
-  }, [disabled]);
+  }, [disabled, handleFile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (disabled) return;

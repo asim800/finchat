@@ -13,11 +13,16 @@ interface PortfolioHolding {
 }
 
 interface UploadedData {
-  type: 'portfolio' | 'preferences' | 'text';
+  type: 'portfolio' | 'preferences' | 'text' | 'generic';
   holdings?: PortfolioHolding[];
   totalValue?: number;
   settings?: Record<string, string>;
   keywords?: string[];
+  headers?: string[];
+  rows?: Record<string, string>[];
+  totalRows?: number;
+  content?: string;
+  length?: number;
   [key: string]: unknown;
 }
 
@@ -84,6 +89,12 @@ export async function simulateAIResponse(message: string, isGuestMode: boolean, 
     if (uploadedData.type === 'text' && uploadedData.keywords) {
       return {
         content: `I've analyzed your uploaded text file and found financial keywords: ${uploadedData.keywords.join(', ')}.\n\nBased on the content, I can help you with personalized advice related to your financial goals and preferences. ${isGuestMode ? 'Sign up to save this context for future conversations!' : 'What specific questions do you have about the information in your file?'}`
+      };
+    }
+
+    if (uploadedData.type === 'generic' && uploadedData.headers) {
+      return {
+        content: `I've processed your CSV file with ${uploadedData.headers.length} columns and ${uploadedData.totalRows || 0} rows.\n\nThe data includes: ${uploadedData.headers.slice(0, 5).join(', ')}${uploadedData.headers.length > 5 ? '...' : ''}.\n\nI can help analyze this data for financial insights. ${isGuestMode ? 'Sign up to save this data for ongoing analysis!' : 'What specific analysis would you like me to perform?'}`
       };
     }
   }

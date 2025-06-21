@@ -95,7 +95,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
       // Try API first
       const response = await sendMessage(currentInput, {
         provider: selectedProvider,
-        portfolioData: uploadedData,
+        portfolioData: uploadedData || undefined,
       });
 
       if (response) {
@@ -110,7 +110,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
       
       // Fallback to simulation
       try {
-        const simulationResponse = await simulateAIResponse(currentInput, isGuestMode, uploadedData);
+        const simulationResponse = await simulateAIResponse(currentInput, isGuestMode, uploadedData ? {
+          ...uploadedData,
+          holdings: uploadedData.holdings?.map(h => ({
+            ...h,
+            symbol: h.symbol,
+            quantity: (h.quantity as number) || 0,
+            price: (h.price as number) || 0
+          }))
+        } : undefined);
         
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
