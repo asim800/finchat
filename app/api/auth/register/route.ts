@@ -4,11 +4,10 @@
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { hashPassword, generateToken } from '@/lib/auth';
-import { RegisterSchema } from '@/lib/validations';
-
-const prisma = new PrismaClient();
+import { RegisterSchema } from '@/lib/validation';
+import { prisma } from '@/lib/db';
+import { z } from 'zod';
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,8 +89,6 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

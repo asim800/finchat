@@ -54,7 +54,7 @@ export const LoginForm: React.FC = () => {
       }
 
       // Login successful, redirect to dashboard
-      router.push('/chat');
+      router.push('/dashboard/chat');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
