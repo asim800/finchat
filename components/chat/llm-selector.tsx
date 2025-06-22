@@ -6,11 +6,12 @@
 'use client';
 
 import React from 'react';
+import { llmService, LLMProvider } from '@/lib/llm-service';
 
 interface LLMSelectorProps {
-  selectedProvider: 'anthropic' | 'openai';
-  onProviderChange: (provider: 'anthropic' | 'openai') => void;
-  availableProviders: ('anthropic' | 'openai')[];
+  selectedProvider: LLMProvider;
+  onProviderChange: (provider: LLMProvider) => void;
+  availableProviders: LLMProvider[];
   className?: string;
 }
 
@@ -29,15 +30,14 @@ export const LLMSelector: React.FC<LLMSelectorProps> = ({
       <span className="text-sm text-gray-600">AI Model:</span>
       <select
         value={selectedProvider}
-        onChange={(e) => onProviderChange(e.target.value as 'anthropic' | 'openai')}
+        onChange={(e) => onProviderChange(e.target.value as LLMProvider)}
         className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
       >
-        {availableProviders.includes('anthropic') && (
-          <option value="anthropic">Claude (Anthropic)</option>
-        )}
-        {availableProviders.includes('openai') && (
-          <option value="openai">GPT-3.5 (OpenAI)</option>
-        )}
+        {availableProviders.map(provider => (
+          <option key={provider} value={provider}>
+            {llmService.getProviderConfig(provider).displayName}
+          </option>
+        ))}
       </select>
     </div>
   );

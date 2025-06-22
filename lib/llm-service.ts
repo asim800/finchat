@@ -8,6 +8,22 @@ import OpenAI from 'openai';
 
 export type LLMProvider = 'anthropic' | 'openai';
 
+export interface ProviderConfig {
+  model: string;
+  displayName: string;
+}
+
+const PROVIDER_CONFIG: Record<LLMProvider, ProviderConfig> = {
+  openai: {
+    model: 'gpt-4.1-nano',
+    displayName: 'GPT-4.1-nano (OpenAI)'
+  },
+  anthropic: {
+    model: 'claude-3-sonnet-20240229',
+    displayName: 'Claude 3 Sonnet (Anthropic)'
+  }
+};
+
 export interface LLMMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -43,6 +59,16 @@ class LLMService {
       });
       this.defaultProvider = 'anthropic'; // This will override if available
     }
+  }
+
+  // Get provider configuration
+  getProviderConfig(provider: LLMProvider): ProviderConfig {
+    return PROVIDER_CONFIG[provider];
+  }
+
+  // Get all provider configurations
+  getAllProviderConfigs(): Record<LLMProvider, ProviderConfig> {
+    return PROVIDER_CONFIG;
   }
 
   async generateResponse(
@@ -81,7 +107,7 @@ class LLMService {
 
     try {
       const response = await this.anthropic.messages.create({
-        model: 'claude-3-sonnet-20240229',
+        model: PROVIDER_CONFIG.anthropic.model,
         max_tokens: options.maxTokens || 1000,
         temperature: options.temperature || 0.7,
         messages: messages.map(msg => ({
@@ -117,7 +143,7 @@ class LLMService {
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+        model: PROVIDER_CONFIG.openai.model,
         messages: messages.map(msg => ({
           role: msg.role,
           content: msg.content,
