@@ -1,7 +1,10 @@
 // ============================================================================
 // FILE: lib/chat-simulation.ts (UPDATED)
-// Updated simulation with file upload support
+// Updated simulation with file upload and portfolio input support
 // ============================================================================
+
+import { detectPortfolioIntent, parsePortfolioInput, formatPortfolioResponse } from './portfolio-parser';
+import { GuestPortfolioService } from './guest-portfolio';
 
 // This function simulates AI responses
 // Later we'll replace this with actual API calls to Claude/OpenAI
@@ -32,11 +35,115 @@ interface ChartData {
   data: Array<{ name: string; value: number }>;
 }
 
-export async function simulateAIResponse(message: string, isGuestMode: boolean, uploadedData?: UploadedData): Promise<{ content: string; chartData?: ChartData }> {
+export async function simulateAIResponse(
+  message: string, 
+  isGuestMode: boolean, 
+  uploadedData?: UploadedData,
+  userId?: string,
+  guestSessionId?: string
+): Promise<{ content: string; chartData?: ChartData }> {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
 
   const lowerMessage = message.toLowerCase();
+
+  // Check for portfolio input intent
+  if (detectPortfolioIntent(message)) {
+    const parseResult = parsePortfolioInput(message);
+    
+    if (parseResult.success) {
+      try {
+        if (isGuestMode && guestSessionId) {
+          // Handle guest portfolio
+          const result = GuestPortfolioService.addAssetsToGuestPortfolio(guestSessionId, parseResult.assets);
+          
+          if (result.success) {
+            const response = formatPortfolioResponse(parseResult, true);
+            
+            // Generate chart data for guest portfolio
+            const chartData = result.portfolio.assets
+              .filter(asset => asset.avgPrice && asset.avgPrice > 0)
+              .map(asset => ({
+                name: asset.symbol,
+                value: asset.quantity * (asset.avgPrice || 0)
+              }));
+
+            return {
+              content: response,
+              chartData: chartData.length > 0 ? {
+                type: 'pie' as const,
+                title: 'Your Portfolio Allocation',
+                data: chartData
+              } : undefined
+            };
+          } else {
+            return {
+              content: `I had trouble adding some assets to your portfolio:\n${result.errors.join('\n')}\n\nPlease try rephrasing or check your input format.`
+            };
+          }
+        } else if (!isGuestMode && userId) {
+          // Handle authenticated user portfolio via API
+          try {
+            const response = await fetch('/api/portfolio', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ assets: parseResult.assets })
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              
+              if (result.success) {
+                const responseText = formatPortfolioResponse(parseResult, false);
+                
+                // Generate chart data for user portfolio
+                const chartData = result.portfolio.assets
+                  .filter((asset: { avgPrice?: number | null; quantity: number; symbol: string }) => asset.avgPrice && asset.avgPrice > 0)
+                  .map((asset: { avgPrice: number; quantity: number; symbol: string }) => ({
+                    name: asset.symbol,
+                    value: asset.quantity * asset.avgPrice
+                  }));
+
+                return {
+                  content: responseText,
+                  chartData: chartData.length > 0 ? {
+                    type: 'pie' as const,
+                    title: 'Your Portfolio Allocation',
+                    data: chartData
+                  } : undefined
+                };
+              } else {
+                return {
+                  content: `I had trouble adding some assets to your portfolio:\n${result.errors.join('\n')}\n\nPlease try again or contact support if the issue persists.`
+                };
+              }
+            } else {
+              const errorData = await response.json();
+              return {
+                content: `I had trouble adding assets to your portfolio: ${errorData.error || 'Unknown error'}\n\nPlease try again or contact support if the issue persists.`
+              };
+            }
+          } catch (error) {
+            console.error('Portfolio API error:', error);
+            return {
+              content: 'I encountered an error while updating your portfolio. Please try again or contact support if the issue persists.'
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Portfolio processing error:', error);
+        return {
+          content: 'I encountered an error while processing your portfolio. Please try again or rephrase your input.'
+        };
+      }
+    } else {
+      return {
+        content: parseResult.message
+      };
+    }
+  }
 
   // Handle uploaded data context
   if (uploadedData) {

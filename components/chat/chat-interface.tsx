@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageBubble, Message } from './message-bubble';
@@ -14,23 +14,17 @@ import { FileProcessor } from './file-processor';
 import { LLMSelector } from './llm-selector';
 import { useChatAPI } from '@/hooks/use-chat-api';
 import { simulateAIResponse } from '@/lib/chat-simulation';
+import { generateGuestSessionId } from '@/lib/guest-portfolio';
 
 interface ChatInterfaceProps {
   isGuestMode?: boolean;
+  userId?: string;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = false }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: isGuestMode 
-        ? 'Hi! I\'m your AI financial assistant. In demo mode, I can help you with general financial questions, market trends, and basic investment concepts. You can also upload portfolio files for analysis. Try asking me about stocks, bonds, or financial planning!'
-        : 'Hi! I\'m your AI financial assistant. I can help you with your portfolio, market analysis, and personalized financial advice. You can also upload your portfolio or preference files for detailed analysis. What would you like to know?',
-      timestamp: new Date(),
-      provider: 'simulation'
-    }
-  ]);
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = false, userId }) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const hasInitialized = useRef(false);
   
   const [inputValue, setInputValue] = useState('');
   const [showFileUpload, setShowFileUpload] = useState(false);
@@ -44,8 +38,61 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
   } | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<'anthropic' | 'openai'>('openai');
   const [availableProviders, setAvailableProviders] = useState<('anthropic' | 'openai')[]>(['openai']);
+  const [guestSessionId] = useState<string>(() => generateGuestSessionId());
   
-  const { sendMessage, isLoading, error } = useChatAPI();
+  const { sendMessage, loadLatestSession, isLoading, error } = useChatAPI();
+
+  // Memoized initialization function
+  const initializeSession = useCallback(async () => {
+    // Only run once per component lifecycle
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+    
+    try {
+      // Try to load the latest session
+      const latestSession = await loadLatestSession(isGuestMode, isGuestMode ? guestSessionId : undefined);
+      
+      if (latestSession && latestSession.messages.length > 0) {
+        // Load existing chat history
+        setMessages(latestSession.messages);
+        setCurrentSessionId(latestSession.sessionId);
+      } else {
+        // No existing session or empty session, show welcome message
+        const welcomeMessage: Message = {
+          id: '1',
+          role: 'assistant',
+          content: isGuestMode 
+            ? 'Hi! I\'m your AI financial assistant. In demo mode, I can help you with general financial questions, market trends, and basic investment concepts. You can also upload portfolio files for analysis. Try asking me about stocks, bonds, or financial planning!'
+            : 'Hi! I\'m your AI financial assistant. I can help you with your portfolio, market analysis, and personalized financial advice. You can also upload your portfolio or preference files for detailed analysis. What would you like to know?',
+          timestamp: new Date(),
+          provider: 'simulation'
+        };
+        
+        setMessages([welcomeMessage]);
+      }
+    } catch (error) {
+      console.error('Error initializing chat session:', error);
+      
+      // Fallback to welcome message
+      const welcomeMessage: Message = {
+        id: '1',
+        role: 'assistant',
+        content: isGuestMode 
+          ? 'Hi! I\'m your AI financial assistant. In demo mode, I can help you with general financial questions, market trends, and basic investment concepts. You can also upload portfolio files for analysis. Try asking me about stocks, bonds, or financial planning!'
+          : 'Hi! I\'m your AI financial assistant. I can help you with your portfolio, market analysis, and personalized financial advice. You can also upload your portfolio or preference files for detailed analysis. What would you like to know?',
+        timestamp: new Date(),
+        provider: 'simulation'
+      };
+      
+      setMessages([welcomeMessage]);
+    }
+  }, [isGuestMode, guestSessionId, loadLatestSession]);
+
+  // Initialize chat session - load existing history or show welcome message
+  useEffect(() => {
+    initializeSession();
+  }, [initializeSession]); // Include memoized initializeSession
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -96,11 +143,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
       const response = await sendMessage(currentInput, {
         provider: selectedProvider,
         portfolioData: uploadedData || undefined,
+        sessionId: currentSessionId || undefined,
+        guestSessionId: isGuestMode ? guestSessionId : undefined,
       });
 
       if (response) {
         console.log(`✅ Response from: ${response.provider}`); // Debug log
         setMessages(prev => [...prev, response]);
+        
+        // Update session ID if this is a new session
+        if (response.sessionId && !currentSessionId) {
+          setCurrentSessionId(response.sessionId);
+        }
       } else {
         throw new Error('API response failed');
       }
@@ -110,15 +164,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
       
       // Fallback to simulation
       try {
-        const simulationResponse = await simulateAIResponse(currentInput, isGuestMode, uploadedData ? {
-          ...uploadedData,
-          holdings: uploadedData.holdings?.map(h => ({
-            ...h,
-            symbol: h.symbol,
-            quantity: (h.quantity as number) || 0,
-            price: (h.price as number) || 0
-          }))
-        } : undefined);
+        const simulationResponse = await simulateAIResponse(
+          currentInput, 
+          isGuestMode, 
+          uploadedData ? {
+            ...uploadedData,
+            holdings: uploadedData.holdings?.map(h => ({
+              ...h,
+              symbol: h.symbol,
+              quantity: (h.quantity as number) || 0,
+              price: (h.price as number) || 0
+            }))
+          } : undefined,
+          userId,
+          guestSessionId
+        );
         
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -267,7 +327,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
                 </button>
                 <button
                   onClick={() => handleSampleQuestion("Show me market trends")}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-scripts"
+                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
                 >
                   Market Trends
                 </button>

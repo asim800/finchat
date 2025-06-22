@@ -45,9 +45,8 @@ model Asset {
   id          String   @id @default(cuid())
   portfolioId String
   symbol      String
-  name        String
   quantity    Float
-  avgPrice    Float
+  avgPrice    Float?
   assetType   String   // stock, bond, crypto, etc.
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -95,15 +94,18 @@ model Account {
 }
 
 model ChatSession {
-  id          String   @id @default(cuid())
-  userId      String
-  title       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String?  // Nullable for guest sessions
+  guestSessionId String? // For guest users
+  title         String?
+  isGuestSession Boolean @default(false)
+  expiresAt     DateTime? // For guest session cleanup
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
   // Relations
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages    Message[]
+  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      Message[]
   
   @@map("chat_sessions")
 }
@@ -113,6 +115,7 @@ model Message {
   sessionId   String
   role        String   // user, assistant
   content     String
+  provider    String?  // openai, anthropic, simulation
   metadata    Json?    // for storing chart data, etc.
   createdAt   DateTime @default(now())
   

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 interface ChartData {
   type: 'pie' | 'bar';
@@ -33,19 +33,98 @@ interface ChatMessage {
   provider?: string;
   timestamp: Date;
   chartData?: ChartData;
+  sessionId?: string;
 }
 
 interface ChatOptions {
   provider?: 'anthropic' | 'openai';
   portfolioData?: PortfolioData;
   userPreferences?: UserPreferences;
+  sessionId?: string;
+  guestSessionId?: string;
 }
 
 export const useChatAPI = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = async (
+  const loadSession = useCallback(async (
+    sessionId: string,
+    guestSessionId?: string
+  ): Promise<ChatMessage[] | null> => {
+    try {
+      const url = new URL(`/api/chat/sessions/${sessionId}`, window.location.origin);
+      if (guestSessionId) {
+        url.searchParams.set('guestSessionId', guestSessionId);
+      }
+
+      const response = await fetch(url.toString());
+      
+      if (!response.ok) {
+        throw new Error('Failed to load session');
+      }
+
+      const data = await response.json();
+      
+      // Convert messages to the format expected by the chat interface
+      return data.session.messages.map((msg: { id: string; role: string; content: string; provider?: string; createdAt: string; metadata?: any }) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        provider: msg.provider || 'unknown',
+        timestamp: new Date(msg.createdAt),
+        chartData: msg.metadata?.chartData || undefined,
+      }));
+    } catch (err) {
+      console.error('Error loading session:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load session');
+      return null;
+    }
+  }, []);
+
+  const loadLatestSession = useCallback(async (
+    isGuestMode: boolean,
+    guestSessionId?: string
+  ): Promise<{ sessionId: string; messages: ChatMessage[] } | null> => {
+    try {
+      const url = new URL('/api/chat/sessions', window.location.origin);
+      if (isGuestMode && guestSessionId) {
+        url.searchParams.set('guestSessionId', guestSessionId);
+      }
+
+      const response = await fetch(url.toString());
+      
+      if (!response.ok) {
+        return null; // No sessions exist yet
+      }
+
+      const data = await response.json();
+      
+      if (!data.sessions || data.sessions.length === 0) {
+        return null; // No sessions exist
+      }
+
+      // Get the most recent session
+      const latestSession = data.sessions[0];
+      
+      // Load the full session with messages
+      const messages = await loadSession(latestSession.id, guestSessionId);
+      
+      if (messages) {
+        return {
+          sessionId: latestSession.id,
+          messages
+        };
+      }
+      
+      return null;
+    } catch (err) {
+      console.error('Error loading latest session:', err);
+      return null;
+    }
+  }, [loadSession]);
+
+  const sendMessage = useCallback(async (
     message: string,
     options: ChatOptions = {}
   ): Promise<ChatMessage | null> => {
@@ -63,6 +142,8 @@ export const useChatAPI = () => {
           provider: options.provider,
           portfolioData: options.portfolioData,
           userPreferences: options.userPreferences,
+          sessionId: options.sessionId,
+          guestSessionId: options.guestSessionId,
         }),
       });
 
@@ -80,6 +161,7 @@ export const useChatAPI = () => {
         provider: data.provider,
         timestamp: new Date(),
         chartData: data.chartData,
+        sessionId: data.sessionId,
       };
 
     } catch (err) {
@@ -89,10 +171,12 @@ export const useChatAPI = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   return {
     sendMessage,
+    loadSession,
+    loadLatestSession,
     isLoading,
     error,
   };

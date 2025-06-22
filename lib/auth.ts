@@ -6,6 +6,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
+import { prisma } from './db';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '12');
@@ -59,13 +60,24 @@ export async function getUserFromRequest(request: NextRequest): Promise<AuthUser
     const payload = verifyToken(token);
     if (!payload) return null;
 
-    // Here you'd typically fetch full user data from database
-    // For now, returning basic info from token
+    // Fetch full user data from database
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true
+      }
+    });
+
+    if (!user) return null;
+
     return {
-      id: payload.userId,
-      email: payload.email,
-      firstName: '', // Would come from DB
-      lastName: ''   // Would come from DB
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName
     };
   } catch {
     return null;

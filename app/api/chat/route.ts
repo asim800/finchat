@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { llmService, LLMProvider } from '@/lib/llm-service';
 import { FINANCIAL_SYSTEM_PROMPT, generateFinancialPrompt } from '@/lib/financial-prompts';
 import { getUserFromRequest } from '@/lib/auth';
+import { ChatService } from '@/lib/chat-service';
 
 
 
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     
     const body = await request.json();
-    const { message, provider, portfolioData, userPreferences } = body;
+    const { message, provider, portfolioData, userPreferences, sessionId, guestSessionId } = body;
 
 
     if (!message || typeof message !== 'string') {
@@ -32,6 +33,28 @@ export async function POST(request: NextRequest) {
     // Check if user is authenticated
     const user = await getUserFromRequest(request);
     const isGuestMode = !user;
+
+    // Get or create chat session
+    let chatSession;
+    try {
+      if (sessionId) {
+        // Load existing session messages for context
+        const existingMessages = await ChatService.getSessionMessages(sessionId);
+        chatSession = { id: sessionId, existingMessages };
+      } else {
+        // Create new session
+        const sessionTitle = ChatService.generateSessionTitle(message);
+        chatSession = await ChatService.getOrCreateSession(
+          user?.id,
+          guestSessionId,
+          sessionTitle
+        );
+      }
+    } catch (sessionError) {
+      console.error('Session management error:', sessionError);
+      // Continue without session saving if there's an error
+      chatSession = null;
+    }
 
     // Validate provider if specified
     // const selectedProvider: LLMProvider = provider || 'anthropic';
@@ -51,6 +74,20 @@ export async function POST(request: NextRequest) {
       userPreferences,
     });
 
+    // Save user message to session
+    if (chatSession) {
+      try {
+        await ChatService.saveMessage(
+          chatSession.id,
+          'user',
+          message,
+          'user'
+        );
+      } catch (saveError) {
+        console.error('Failed to save user message:', saveError);
+      }
+    }
+
     // Generate response using selected LLM
     const response = await llmService.generateResponse(
       [{ role: 'user', content: financialPrompt }],
@@ -65,12 +102,28 @@ export async function POST(request: NextRequest) {
     // Check if response suggests creating charts/visualizations
     const shouldGenerateChart = await checkForChartGeneration(message, response.content);
 
+    // Save assistant message to session
+    if (chatSession) {
+      try {
+        await ChatService.saveMessage(
+          chatSession.id,
+          'assistant',
+          response.content,
+          response.provider,
+          shouldGenerateChart && shouldGenerateChart !== null ? { chartData: shouldGenerateChart } : undefined
+        );
+      } catch (saveError) {
+        console.error('Failed to save assistant message:', saveError);
+      }
+    }
+
     return NextResponse.json({
       content: response.content,
       provider: response.provider,
       usage: response.usage,
       chartData: shouldGenerateChart,
       isGuestMode,
+      sessionId: chatSession?.id,
     });
 
   } catch (error) {
