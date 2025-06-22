@@ -8,8 +8,13 @@ import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
 import { prisma } from './db';
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET;
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || '12');
+
+// Validate JWT_SECRET exists
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 export interface JWTPayload {
   userId: string;
@@ -37,12 +42,18 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 
 // Generate JWT token
 export function generateToken(payload: { userId: string; email: string }): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 }
 
 // Verify JWT token
 export function verifyToken(token: string): JWTPayload | null {
   try {
+    if (!JWT_SECRET) {
+      throw new Error('JWT_SECRET is not configured');
+    }
     return jwt.verify(token, JWT_SECRET) as JWTPayload;
   } catch {
     return null;
