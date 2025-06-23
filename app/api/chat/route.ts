@@ -8,6 +8,7 @@ import { llmService, LLMProvider } from '@/lib/llm-service';
 import { FINANCIAL_SYSTEM_PROMPT, generateFinancialPrompt } from '@/lib/financial-prompts';
 import { getUserFromRequest } from '@/lib/auth';
 import { ChatService } from '@/lib/chat-service';
+import { financeMCPClient, formatRiskAnalysis, formatSharpeAnalysis } from '@/lib/mcp-client';
 
 
 
@@ -67,12 +68,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if message requires MCP tools
+    const toolAnalysis = await analyzeMCPToolNeeds(message, user?.id, isGuestMode);
+    
     // Generate contextual prompt
-    const financialPrompt = generateFinancialPrompt(message, {
+    let financialPrompt = generateFinancialPrompt(message, {
       isGuestMode,
       portfolioData,
       userPreferences,
     });
+
+    // Add MCP tool results to prompt if available
+    if (toolAnalysis.toolResults) {
+      financialPrompt += `\n\nRelevant Analysis Results:\n${toolAnalysis.toolResults}`;
+    }
 
     // Save user message to session
     if (chatSession) {
@@ -167,6 +176,90 @@ async function checkForChartGeneration(userMessage: string, aiResponse: string):
   }
 
   return null;
+}
+
+// MCP Tool Analysis Function
+async function analyzeMCPToolNeeds(
+  message: string, 
+  userId?: string, 
+  isGuestMode: boolean = false
+): Promise<{ toolResults?: string; chartData?: unknown }> {
+  // Skip MCP tools for guest mode (no user data available)
+  if (isGuestMode || !userId) {
+    return {};
+  }
+
+  const lowerMessage = message.toLowerCase();
+  
+  // Keywords that trigger portfolio risk analysis
+  const riskKeywords = [
+    'risk', 'volatility', 'var', 'value at risk', 'drawdown', 
+    'portfolio risk', 'analyze my portfolio', 'portfolio analysis'
+  ];
+  
+  // Keywords that trigger Sharpe ratio calculation
+  const sharpeKeywords = [
+    'sharpe', 'sharpe ratio', 'risk adjusted', 'risk-adjusted', 
+    'performance ratio', 'return per risk'
+  ];
+  
+  // Keywords that trigger market data
+  const marketKeywords = [
+    'market data', 'current price', 'stock price', 'market performance',
+    'price change', 'market trend'
+  ];
+
+  let toolResults = '';
+
+  try {
+    // Check for risk analysis request
+    if (riskKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      console.log('🔧 Executing portfolio risk analysis tool...');
+      const riskAnalysis = await financeMCPClient.calculatePortfolioRisk(userId);
+      
+      if (!('error' in riskAnalysis)) {
+        toolResults += formatRiskAnalysis(riskAnalysis) + '\n\n';
+      } else {
+        console.error('Risk analysis error:', riskAnalysis.error);
+      }
+    }
+    
+    // Check for Sharpe ratio request
+    if (sharpeKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      console.log('🔧 Executing Sharpe ratio calculation tool...');
+      const sharpeAnalysis = await financeMCPClient.calculateSharpeRatio(userId);
+      
+      if (!('error' in sharpeAnalysis)) {
+        toolResults += formatSharpeAnalysis(sharpeAnalysis) + '\n\n';
+      } else {
+        console.error('Sharpe analysis error:', sharpeAnalysis.error);
+      }
+    }
+    
+    // Check for market data request
+    if (marketKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      console.log('🔧 Executing market data analysis tool...');
+      const marketData = await financeMCPClient.getPortfolioMarketData(userId, '1mo');
+      
+      if (!('error' in marketData)) {
+        toolResults += `📊 **Market Data Summary** (${marketData.period})\n\n`;
+        Object.entries(marketData.market_data).forEach(([symbol, data]) => {
+          toolResults += `• **${symbol}**: $${data.current_price} (${data.period_return > 0 ? '+' : ''}${data.period_return}%)\n`;
+        });
+        toolResults += '\n';
+      } else {
+        console.error('Market data error:', marketData.error);
+      }
+    }
+
+  } catch (error) {
+    console.error('MCP Tool execution error:', error);
+    // Continue without tool results rather than failing the entire request
+  }
+
+  return {
+    toolResults: toolResults || undefined
+  };
 }
 
 
