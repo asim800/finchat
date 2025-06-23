@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { symbol, quantity }: { symbol: string; quantity: number } = await request.json();
+    const { symbol, quantity, avgPrice }: { symbol: string; quantity: number; avgPrice?: number | null } = await request.json();
     
     if (!symbol || quantity == null || quantity <= 0) {
       return NextResponse.json(
@@ -97,7 +97,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const success = await PortfolioService.updateAssetQuantity(user.id, symbol, quantity);
+    const success = await PortfolioService.updateAsset(user.id, symbol, quantity, avgPrice);
     
     if (success) {
       // Return updated portfolio

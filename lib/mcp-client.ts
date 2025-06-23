@@ -68,9 +68,11 @@ class FinanceMCPClient {
   }
 
   /**
-   * Execute MCP tool via Python subprocess
+   * Execute MCP tool via Python subprocess with timeout and enhanced error handling
    */
   private async executeTool(toolName: string, args: Record<string, unknown>): Promise<unknown> {
+    const timeoutMs = 30000; // 30 second timeout
+    
     try {
       // Convert args to command line arguments
       const argString = Object.entries(args)
@@ -80,7 +82,7 @@ class FinanceMCPClient {
       // Execute MCP tool using uv run in the correct directory
       const mcpServerDir = path.join(process.cwd(), 'mcp-server');
       const databaseUrl = process.env.DATABASE_URL || '';
-      const command = `cd "${mcpServerDir}" && DATABASE_URL="${databaseUrl}" ${this.pythonCmd} -c "
+      const command = `cd "${mcpServerDir}" && DATABASE_URL="${databaseUrl}" timeout ${timeoutMs / 1000} ${this.pythonCmd} -c "
 import sys
 import json
 import os
@@ -108,9 +110,9 @@ else:
 print(json.dumps(result, default=str))
 " ${argString}`;
 
-      const { stdout, stderr } = await execAsync(command);
+      const { stdout, stderr } = await execAsync(command, { timeout: timeoutMs });
 
-      // Filter out INFO/DEBUG logging messages from stderr, only treat actual errors as failures
+      // Enhanced error handling
       if (stderr) {
         const isOnlyLogging = stderr.split('\n').every(line => 
           line.trim() === '' || 
@@ -121,6 +123,16 @@ print(json.dumps(result, default=str))
         
         if (!isOnlyLogging) {
           console.error('MCP Tool Error:', stderr);
+          
+          // Check for specific error types for better fallback messages
+          if (stderr.includes('ModuleNotFoundError') || stderr.includes('ImportError')) {
+            return { error: 'Python dependencies not available' };
+          } else if (stderr.includes('Connection refused') || stderr.includes('database')) {
+            return { error: 'Database connection failed' };
+          } else if (stderr.includes('timeout') || stderr.includes('killed')) {
+            return { error: 'Analysis timed out' };
+          }
+          
           return { error: `Tool execution error: ${stderr}` };
         } else {
           // Just log the info messages but don't treat as error
@@ -128,9 +140,39 @@ print(json.dumps(result, default=str))
         }
       }
 
-      return JSON.parse(stdout);
+      // Validate stdout
+      if (!stdout || stdout.trim() === '') {
+        return { error: 'No data returned from analysis tool' };
+      }
+
+      try {
+        const result = JSON.parse(stdout);
+        
+        // Validate the result structure
+        if (typeof result === 'object' && result !== null) {
+          return result;
+        } else {
+          return { error: 'Invalid response format from analysis tool' };
+        }
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Raw output:', stdout);
+        return { error: 'Failed to parse analysis results' };
+      }
+
     } catch (error) {
       console.error('MCP Client Error:', error);
+      
+      // Enhanced error handling based on error type
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          return { error: 'Analysis request timed out. Please try again.' };
+        } else if (error.message.includes('ENOENT')) {
+          return { error: 'Python environment not found. Please check installation.' };
+        } else if (error.message.includes('Command failed')) {
+          return { error: 'Analysis tool execution failed' };
+        }
+      }
+      
       return { error: `Failed to execute tool: ${error instanceof Error ? error.message : 'Unknown error'}` };
     }
   }

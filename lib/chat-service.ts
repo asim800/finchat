@@ -114,6 +114,13 @@ export class ChatService {
     });
   }
 
+  // Get session message count
+  static async getSessionMessageCount(sessionId: string): Promise<number> {
+    return await prisma.message.count({
+      where: { sessionId }
+    });
+  }
+
   // Generate session title from first message
   static generateSessionTitle(firstMessage: string): string {
     const words = firstMessage.trim().split(' ').slice(0, 6);

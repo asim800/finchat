@@ -8,7 +8,7 @@ import { ParsedAsset } from './portfolio-parser';
 export interface GuestAsset {
   symbol: string;
   quantity: number;
-  avgPrice?: number;
+  avgPrice?: number | null;
   assetType: string;
   addedAt: Date;
 }

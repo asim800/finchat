@@ -6,7 +6,7 @@
 export interface ParsedAsset {
   symbol: string;
   quantity: number;
-  avgPrice?: number;
+  avgPrice?: number | null;
   assetType?: string;
 }
 

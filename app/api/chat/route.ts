@@ -9,6 +9,8 @@ import { FINANCIAL_SYSTEM_PROMPT, generateFinancialPrompt } from '@/lib/financia
 import { getUserFromRequest } from '@/lib/auth';
 import { ChatService } from '@/lib/chat-service';
 import { financeMCPClient, formatRiskAnalysis, formatSharpeAnalysis } from '@/lib/mcp-client';
+import { PortfolioService } from '@/lib/portfolio-service';
+import { GuestPortfolioService } from '@/lib/guest-portfolio';
 
 
 
@@ -78,9 +80,18 @@ export async function POST(request: NextRequest) {
       userPreferences,
     });
 
-    // Add MCP tool results to prompt if available
+    // Add MCP tool results or fallback message to prompt
     if (toolAnalysis.toolResults) {
       financialPrompt += `\n\nRelevant Analysis Results:\n${toolAnalysis.toolResults}`;
+    } else if (toolAnalysis.fallbackMessage) {
+      financialPrompt += `\n\nNote: ${toolAnalysis.fallbackMessage}`;
+    }
+
+    // Inform LLM about MCP status for better response handling
+    if (toolAnalysis.mcpStatus === 'partial') {
+      financialPrompt += `\n\nNote: Some advanced analysis tools are temporarily unavailable. Please provide general financial guidance where specific calculations are missing.`;
+    } else if (toolAnalysis.mcpStatus === 'failed') {
+      financialPrompt += `\n\nNote: Advanced analysis tools are currently unavailable. Please provide helpful general financial guidance and mention that detailed analysis will be available later.`;
     }
 
     // Save user message to session
@@ -109,7 +120,14 @@ export async function POST(request: NextRequest) {
     );
 
     // Check if response suggests creating charts/visualizations
-    const shouldGenerateChart = await checkForChartGeneration(message, response.content);
+    const shouldGenerateChart = await checkForChartGeneration(
+      message, 
+      response.content, 
+      user?.id, 
+      guestSessionId, 
+      chatSession,
+      isGuestMode
+    );
 
     // Save assistant message to session
     if (chatSession) {
@@ -148,45 +166,156 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Helper function to determine if we should generate charts
-async function checkForChartGeneration(userMessage: string, aiResponse: string): Promise<{
+// Enhanced chart generation function with real portfolio data
+async function checkForChartGeneration(
+  userMessage: string, 
+  aiResponse: string, 
+  userId?: string,
+  guestSessionId?: string,
+  chatSession?: { id: string; existingMessages?: unknown[] } | null,
+  isGuestMode: boolean = false
+): Promise<{
   type: string;
   title: string;
   data: Array<{ name: string; value: number }>;
 } | null> {
-  const chartKeywords = ['allocation', 'portfolio', 'distribution', 'breakdown', 'chart', 'graph'];
-  const messageContainsChart = chartKeywords.some(keyword => 
-    userMessage.toLowerCase().includes(keyword) || aiResponse.toLowerCase().includes(keyword)
+  
+  // Explicit chart request keywords
+  const explicitChartKeywords = [
+    'show chart', 'create chart', 'generate chart', 'display chart',
+    'show pie chart', 'show graph', 'visualize', 'show allocation',
+    'portfolio chart', 'allocation chart', 'breakdown chart'
+  ];
+  
+  // Portfolio-related keywords that might suggest charts
+  const portfolioKeywords = ['allocation', 'portfolio', 'distribution', 'breakdown'];
+  
+  const lowerMessage = userMessage.toLowerCase();
+  const lowerResponse = aiResponse.toLowerCase();
+  
+  // Check for explicit chart requests
+  const explicitRequest = explicitChartKeywords.some(keyword => 
+    lowerMessage.includes(keyword) || lowerResponse.includes(keyword)
   );
+  
+  // Check if this is the first message in a session (show welcome portfolio chart)
+  const isFirstMessage = await isSessionFirstMessage(chatSession || null);
+  
+  // Generate chart if:
+  // 1. Explicit request for charts
+  // 2. First message in session (welcome portfolio overview)
+  // 3. User specifically asks about portfolio/allocation
+  const shouldShowChart = explicitRequest || 
+    (isFirstMessage && (lowerMessage.includes('portfolio') || lowerMessage.includes('hello') || lowerMessage.includes('hi'))) ||
+    (portfolioKeywords.some(keyword => lowerMessage.includes(keyword)) && 
+     (lowerMessage.includes('show') || lowerMessage.includes('what') || lowerMessage.includes('my')));
 
-  if (messageContainsChart) {
-    // Return sample chart data - in production, this would be more sophisticated
-    if (userMessage.toLowerCase().includes('allocation') || userMessage.toLowerCase().includes('portfolio')) {
-      return {
-        type: 'pie',
-        title: 'Portfolio Allocation',
-        data: [
-          { name: 'Stocks', value: 60 },
-          { name: 'Bonds', value: 25 },
-          { name: 'REITs', value: 10 },
-          { name: 'Cash', value: 5 }
-        ]
-      };
+  if (shouldShowChart) {
+    try {
+      // Get real portfolio data
+      const portfolioData = await getRealPortfolioData(userId, guestSessionId, isGuestMode);
+      
+      if (portfolioData && portfolioData.length > 0) {
+        return {
+          type: 'pie',
+          title: isFirstMessage ? 'Welcome! Your Portfolio Overview' : 'Portfolio Allocation',
+          data: portfolioData
+        };
+      } else {
+        // Return sample data if no real portfolio data exists
+        return {
+          type: 'pie',
+          title: 'Sample Portfolio Allocation',
+          data: [
+            { name: 'Add your assets', value: 100 }
+          ]
+        };
+      }
+    } catch (error) {
+      console.error('Error generating portfolio chart:', error);
+      return null;
     }
   }
 
   return null;
 }
 
-// MCP Tool Analysis Function
+// Helper function to check if this is the first message in a session
+async function isSessionFirstMessage(chatSession: { id: string; existingMessages?: unknown[] } | null): Promise<boolean> {
+  if (!chatSession || !chatSession.id) return true;
+  
+  try {
+    const messageCount = await ChatService.getSessionMessageCount(chatSession.id);
+    return messageCount <= 1; // 0 or 1 messages (the current user message)
+  } catch (error) {
+    console.error('Error checking session message count:', error);
+    return false;
+  }
+}
+
+// Helper function to get real portfolio data for charts
+async function getRealPortfolioData(
+  userId?: string, 
+  guestSessionId?: string, 
+  isGuestMode: boolean = false
+): Promise<Array<{ name: string; value: number }> | null> {
+  
+  try {
+    if (isGuestMode && guestSessionId) {
+      // Get guest portfolio data
+      const guestData = GuestPortfolioService.getGuestPortfolio(guestSessionId);
+      if (guestData && guestData.assets.length > 0) {
+        return guestData.assets
+          .filter(asset => asset.quantity > 0) // Only filter by quantity, not avgPrice
+          .map(asset => ({
+            name: asset.symbol,
+            value: asset.avgPrice && asset.avgPrice > 0 
+              ? asset.quantity * asset.avgPrice  // Use dollar value if avgPrice available
+              : asset.quantity // Use quantity as weight if no avgPrice
+          }))
+          .filter(item => item.value > 0);
+      }
+    } else if (userId) {
+      // Get authenticated user's portfolio data
+      const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(userId);
+      console.log('📊 Portfolio assets from DB:', portfolio.assets.map(a => ({
+        symbol: a.symbol,
+        quantity: a.quantity,
+        avgPrice: a.avgPrice
+      })));
+      
+      if (portfolio.assets.length > 0) {
+        const chartData = portfolio.assets
+          .filter(asset => asset.quantity > 0) // Only filter by quantity, not avgPrice
+          .map(asset => ({
+            name: asset.symbol,
+            value: asset.avgPrice && asset.avgPrice > 0 
+              ? asset.quantity * asset.avgPrice  // Use dollar value if avgPrice available
+              : asset.quantity // Use quantity as weight if no avgPrice
+          }))
+          .filter(item => item.value > 0);
+        
+        console.log('📊 Chart data generated:', chartData);
+        return chartData;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching portfolio data for chart:', error);
+    return null;
+  }
+}
+
+// MCP Tool Analysis Function with graceful fallback
 async function analyzeMCPToolNeeds(
   message: string, 
   userId?: string, 
   isGuestMode: boolean = false
-): Promise<{ toolResults?: string; chartData?: unknown }> {
+): Promise<{ toolResults?: string; fallbackMessage?: string; mcpStatus: 'success' | 'partial' | 'failed' }> {
   // Skip MCP tools for guest mode (no user data available)
   if (isGuestMode || !userId) {
-    return {};
+    return { mcpStatus: 'success' };
   }
 
   const lowerMessage = message.toLowerCase();
@@ -210,56 +339,155 @@ async function analyzeMCPToolNeeds(
   ];
 
   let toolResults = '';
+  const failedTools: string[] = [];
+  let successfulTools = 0;
+  let totalAttemptedTools = 0;
+
+  // Check if any MCP tools are needed
+  const needsRisk = riskKeywords.some(keyword => lowerMessage.includes(keyword));
+  const needsSharpe = sharpeKeywords.some(keyword => lowerMessage.includes(keyword));
+  const needsMarket = marketKeywords.some(keyword => lowerMessage.includes(keyword));
+
+  if (!needsRisk && !needsSharpe && !needsMarket) {
+    return { mcpStatus: 'success' };
+  }
 
   try {
-    // Check for risk analysis request
-    if (riskKeywords.some(keyword => lowerMessage.includes(keyword))) {
-      console.log('🔧 Executing portfolio risk analysis tool...');
-      const riskAnalysis = await financeMCPClient.calculatePortfolioRisk(userId);
-      
-      if (!('error' in riskAnalysis)) {
-        toolResults += formatRiskAnalysis(riskAnalysis) + '\n\n';
-      } else {
-        console.error('Risk analysis error:', riskAnalysis.error);
+    // First, check if MCP server is available
+    console.log('🔍 Checking MCP server availability...');
+    const dependencyCheck = await financeMCPClient.checkDependencies();
+    
+    if (!dependencyCheck.available) {
+      console.warn('⚠️ MCP server dependencies not available:', dependencyCheck.error);
+      return {
+        fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket),
+        mcpStatus: 'failed'
+      };
+    }
+
+    // Execute tools with individual error handling
+    if (needsRisk) {
+      totalAttemptedTools++;
+      try {
+        console.log('🔧 Executing portfolio risk analysis tool...');
+        const riskAnalysis = await financeMCPClient.calculatePortfolioRisk(userId);
+        
+        if (!('error' in riskAnalysis)) {
+          toolResults += formatRiskAnalysis(riskAnalysis) + '\n\n';
+          successfulTools++;
+        } else {
+          console.error('Risk analysis error:', riskAnalysis.error);
+          failedTools.push('Portfolio Risk Analysis');
+        }
+      } catch (error) {
+        console.error('Risk analysis execution error:', error);
+        failedTools.push('Portfolio Risk Analysis');
       }
     }
     
-    // Check for Sharpe ratio request
-    if (sharpeKeywords.some(keyword => lowerMessage.includes(keyword))) {
-      console.log('🔧 Executing Sharpe ratio calculation tool...');
-      const sharpeAnalysis = await financeMCPClient.calculateSharpeRatio(userId);
-      
-      if (!('error' in sharpeAnalysis)) {
-        toolResults += formatSharpeAnalysis(sharpeAnalysis) + '\n\n';
-      } else {
-        console.error('Sharpe analysis error:', sharpeAnalysis.error);
+    if (needsSharpe) {
+      totalAttemptedTools++;
+      try {
+        console.log('🔧 Executing Sharpe ratio calculation tool...');
+        const sharpeAnalysis = await financeMCPClient.calculateSharpeRatio(userId);
+        
+        if (!('error' in sharpeAnalysis)) {
+          toolResults += formatSharpeAnalysis(sharpeAnalysis) + '\n\n';
+          successfulTools++;
+        } else {
+          console.error('Sharpe analysis error:', sharpeAnalysis.error);
+          failedTools.push('Sharpe Ratio Analysis');
+        }
+      } catch (error) {
+        console.error('Sharpe analysis execution error:', error);
+        failedTools.push('Sharpe Ratio Analysis');
       }
     }
     
-    // Check for market data request
-    if (marketKeywords.some(keyword => lowerMessage.includes(keyword))) {
-      console.log('🔧 Executing market data analysis tool...');
-      const marketData = await financeMCPClient.getPortfolioMarketData(userId, '1mo');
-      
-      if (!('error' in marketData)) {
-        toolResults += `📊 **Market Data Summary** (${marketData.period})\n\n`;
-        Object.entries(marketData.market_data).forEach(([symbol, data]) => {
-          toolResults += `• **${symbol}**: $${data.current_price} (${data.period_return > 0 ? '+' : ''}${data.period_return}%)\n`;
-        });
-        toolResults += '\n';
-      } else {
-        console.error('Market data error:', marketData.error);
+    if (needsMarket) {
+      totalAttemptedTools++;
+      try {
+        console.log('🔧 Executing market data analysis tool...');
+        const marketData = await financeMCPClient.getPortfolioMarketData(userId, '1mo');
+        
+        if (!('error' in marketData)) {
+          toolResults += `📊 **Market Data Summary** (${marketData.period})\n\n`;
+          Object.entries(marketData.market_data).forEach(([symbol, data]) => {
+            toolResults += `• **${symbol}**: $${data.current_price} (${data.period_return > 0 ? '+' : ''}${data.period_return}%)\n`;
+          });
+          toolResults += '\n';
+          successfulTools++;
+        } else {
+          console.error('Market data error:', marketData.error);
+          failedTools.push('Market Data Analysis');
+        }
+      } catch (error) {
+        console.error('Market data execution error:', error);
+        failedTools.push('Market Data Analysis');
       }
     }
 
   } catch (error) {
     console.error('MCP Tool execution error:', error);
-    // Continue without tool results rather than failing the entire request
+    return {
+      fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket),
+      mcpStatus: 'failed'
+    };
+  }
+
+  // Determine status and prepare response
+  const mcpStatus = successfulTools === 0 ? 'failed' : 
+                   successfulTools < totalAttemptedTools ? 'partial' : 'success';
+
+  let fallbackMessage = '';
+  if (failedTools.length > 0) {
+    fallbackMessage = `⚠️ Some analysis tools are temporarily unavailable (${failedTools.join(', ')}). ` +
+                     `I'll provide general guidance based on portfolio fundamentals instead.\n\n`;
   }
 
   return {
-    toolResults: toolResults || undefined
+    toolResults: toolResults || undefined,
+    fallbackMessage: fallbackMessage || undefined,
+    mcpStatus
   };
+}
+
+// Helper function to create fallback messages when MCP tools fail
+function createMCPFallbackMessage(
+  _lowerMessage: string, 
+  needsRisk: boolean, 
+  needsSharpe: boolean, 
+  needsMarket: boolean
+): string {
+  let fallback = '🤖 **Analysis temporarily unavailable** - I\'ll provide general guidance instead:\n\n';
+
+  if (needsRisk) {
+    fallback += '📊 **Portfolio Risk Guidelines:**\n' +
+               '• Diversification across asset classes reduces risk\n' +
+               '• Higher volatility assets require smaller position sizes\n' +
+               '• Consider your risk tolerance and investment timeline\n' +
+               '• Regular rebalancing helps maintain target allocations\n\n';
+  }
+
+  if (needsSharpe) {
+    fallback += '📈 **Risk-Adjusted Performance Tips:**\n' +
+               '• Sharpe ratio measures return per unit of risk\n' +
+               '• Values > 1.0 are generally considered good\n' +
+               '• Focus on consistent returns rather than high volatility gains\n' +
+               '• Consider low-cost index funds for better risk-adjusted returns\n\n';
+  }
+
+  if (needsMarket) {
+    fallback += '💹 **Market Analysis Approach:**\n' +
+               '• Check financial news sites for current market data\n' +
+               '• Focus on long-term trends rather than daily fluctuations\n' +
+               '• Consider dollar-cost averaging for volatile markets\n' +
+               '• Review fundamentals of your holdings regularly\n\n';
+  }
+
+  fallback += '💡 For detailed analysis, please try again later when our advanced tools are available.';
+  
+  return fallback;
 }
 
 

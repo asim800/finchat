@@ -29,7 +29,7 @@ interface DisplayAsset {
 interface NewAsset {
   symbol: string;
   quantity: number;
-  avgPrice?: number;
+  avgPrice?: number | null;
   assetType: string;
 }
 
@@ -232,7 +232,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
             ...guestPortfolio.assets[assetIndex],
             symbol: editValues.symbol || asset.symbol,
             quantity: editValues.quantity || asset.quantity,
-            avgPrice: editValues.avgPrice ?? undefined,
+            avgPrice: editValues.avgPrice !== undefined ? editValues.avgPrice : guestPortfolio.assets[assetIndex].avgPrice,
             assetType: editValues.assetType || asset.assetType
           };
           
@@ -242,7 +242,8 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
         }
       } else if (userId) {
         // For authenticated users, use API
-        if (editValues.quantity !== asset.quantity) {
+        // Check if quantity or avgPrice changed
+        if (editValues.quantity !== asset.quantity || editValues.avgPrice !== asset.avgPrice) {
           const response = await fetch('/api/portfolio', {
             method: 'PUT',
             headers: {
@@ -250,7 +251,8 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
             },
             body: JSON.stringify({
               symbol: asset.symbol,
-              quantity: editValues.quantity
+              quantity: editValues.quantity,
+              avgPrice: editValues.avgPrice
             })
           });
 

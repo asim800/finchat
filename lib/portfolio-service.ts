@@ -241,4 +241,34 @@ export class PortfolioService {
       return false;
     }
   }
+
+  // Update asset quantity and/or average price
+  static async updateAsset(userId: string, symbol: string, newQuantity: number, newAvgPrice?: number | null): Promise<boolean> {
+    try {
+      const portfolio = await this.getOrCreateDefaultPortfolio(userId);
+      
+      const updateData: { quantity: number; avgPrice?: number | null; updatedAt: Date } = {
+        quantity: newQuantity,
+        updatedAt: new Date()
+      };
+
+      // Only update avgPrice if it's provided (allow null to clear the price)
+      if (newAvgPrice !== undefined) {
+        updateData.avgPrice = newAvgPrice;
+      }
+      
+      const updatedAsset = await prisma.asset.updateMany({
+        where: {
+          portfolioId: portfolio.id,
+          symbol: symbol.toUpperCase()
+        },
+        data: updateData
+      });
+
+      return updatedAsset.count > 0;
+    } catch (error) {
+      console.error('Error updating asset:', error);
+      return false;
+    }
+  }
 }
