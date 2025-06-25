@@ -177,8 +177,26 @@ class LLMService {
         },
       };
     } catch (error) {
-      console.error('OpenAI API error:', error);
-      throw new Error('Failed to generate response from OpenAI');
+      console.error('OpenAI API error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        status: (error as any)?.status,
+        code: (error as any)?.code,
+        type: (error as any)?.type,
+        error: error
+      });
+      
+      // More specific error messages
+      if ((error as any)?.status === 401) {
+        throw new Error('OpenAI API key is invalid or expired');
+      }
+      if ((error as any)?.status === 429) {
+        throw new Error('OpenAI API rate limit exceeded');
+      }
+      if ((error as any)?.status === 402) {
+        throw new Error('OpenAI API billing issue - check your account');
+      }
+      
+      throw new Error(`OpenAI API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
