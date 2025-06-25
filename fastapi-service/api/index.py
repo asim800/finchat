@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Vercel Serverless Handler for FastAPI Portfolio Analysis Service
-"""
-
 import sys
 import os
 
@@ -14,6 +9,3 @@ from mangum import Mangum
 
 # Create the Mangum handler for serverless deployment
 handler = Mangum(app, lifespan="off")
-
-# Export for Vercel
-app = handler
