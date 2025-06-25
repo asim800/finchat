@@ -6,7 +6,7 @@
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ChatInterface } from '@/components/chat/chat-interface';
+import { ChatWithChartLayout } from '@/components/chat/chat-with-chart-layout';
 
 export default async function ChatPage() {
   const headersList = await headers();
@@ -140,7 +140,7 @@ export default async function ChatPage() {
         )}
 
         <div className="h-[600px]">
-          <ChatInterface isGuestMode={isGuestMode} userId={user?.id} />
+          <ChatWithChartLayout isGuestMode={isGuestMode} userId={user?.id} />
         </div>
       </div>
     </div>

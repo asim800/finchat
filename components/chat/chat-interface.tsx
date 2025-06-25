@@ -19,9 +19,11 @@ import { generateGuestSessionId } from '@/lib/guest-portfolio';
 interface ChatInterfaceProps {
   isGuestMode?: boolean;
   userId?: string;
+  onChartUpdate?: (chartData: { type: 'pie' | 'bar'; title: string; data: Array<{ name: string; value: number }> } | null) => void;
+  hideInlineCharts?: boolean;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = false, userId }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = false, userId, onChartUpdate, hideInlineCharts = false }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const hasInitialized = useRef(false);
@@ -56,6 +58,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         // Load existing chat history
         setMessages(latestSession.messages);
         setCurrentSessionId(latestSession.sessionId);
+        
+        // Find the most recent chart data in the loaded messages
+        const messagesWithCharts = latestSession.messages.filter(msg => msg.chartData);
+        if (messagesWithCharts.length > 0 && onChartUpdate) {
+          const latestChartMessage = messagesWithCharts[messagesWithCharts.length - 1];
+          if (latestChartMessage.chartData) {
+            onChartUpdate(latestChartMessage.chartData);
+          }
+        }
       } else {
         // No existing session or empty session, show welcome message
         const welcomeMessage: Message = {
@@ -86,7 +97,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
       
       setMessages([welcomeMessage]);
     }
-  }, [isGuestMode, guestSessionId, loadLatestSession]);
+  }, [isGuestMode, guestSessionId, loadLatestSession, onChartUpdate]);
 
   // Initialize chat session - load existing history or show welcome message
   useEffect(() => {
@@ -151,6 +162,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         console.log(`✅ Response from: ${response.provider}`); // Debug log
         setMessages(prev => [...prev, response]);
         
+        // Update chart panel if chart data is available
+        if (response.chartData && onChartUpdate) {
+          onChartUpdate(response.chartData);
+        }
+        
         // Update session ID if this is a new session
         if (response.sessionId && !currentSessionId) {
           setCurrentSessionId(response.sessionId);
@@ -190,6 +206,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         };
 
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // Update chart panel if chart data is available from simulation
+        if (simulationResponse.chartData && onChartUpdate) {
+          onChartUpdate(simulationResponse.chartData);
+        }
         
       } catch (simulationError) {
         console.error('Both API and simulation failed:', simulationError);
@@ -342,7 +363,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         {messages.map((message) => (
           <div key={message.id}>
             <MessageBubble message={message} />
-            {message.chartData && (
+            {message.chartData && !hideInlineCharts && (
               <div className="mt-3">
                 <ChartDisplay data={message.chartData} />
               </div>

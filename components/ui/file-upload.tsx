@@ -25,7 +25,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const validateFile = (file: File): boolean => {
+  const validateFile = useCallback((file: File): boolean => {
     setError(null);
 
     // Check file size
@@ -42,7 +42,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     }
 
     return true;
-  };
+  }, [maxSize, acceptedTypes]);
 
   const handleFile = useCallback((file: File) => {
     if (validateFile(file)) {
