@@ -177,22 +177,24 @@ class LLMService {
         },
       };
     } catch (error) {
+      const errorDetails = error as { status?: number; code?: string; type?: string; message?: string };
+      
       console.error('OpenAI API error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
-        status: (error as any)?.status,
-        code: (error as any)?.code,
-        type: (error as any)?.type,
+        status: errorDetails.status,
+        code: errorDetails.code,
+        type: errorDetails.type,
         error: error
       });
       
       // More specific error messages
-      if ((error as any)?.status === 401) {
+      if (errorDetails.status === 401) {
         throw new Error('OpenAI API key is invalid or expired');
       }
-      if ((error as any)?.status === 429) {
+      if (errorDetails.status === 429) {
         throw new Error('OpenAI API rate limit exceeded');
       }
-      if ((error as any)?.status === 402) {
+      if (errorDetails.status === 402) {
         throw new Error('OpenAI API billing issue - check your account');
       }
       
