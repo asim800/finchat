@@ -44,12 +44,21 @@ class LLMService {
   private defaultProvider: LLMProvider = 'anthropic';
 
   constructor() {
+    // Debug logging for environment variables
+    console.log('LLM Service Init - Environment Check:');
+    console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
+    console.log('ANTHROPIC_API_KEY exists:', !!process.env.ANTHROPIC_API_KEY);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    
     // Initialize OpenAI if API key exists
     if (process.env.OPENAI_API_KEY) {
       this.openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       });
       this.defaultProvider = 'openai'; // Set this first
+      console.log('✅ OpenAI client initialized');
+    } else {
+      console.log('❌ OpenAI API key not found');
     }
 
     // Initialize Anthropic if API key exists
@@ -58,7 +67,13 @@ class LLMService {
         apiKey: process.env.ANTHROPIC_API_KEY,
       });
       this.defaultProvider = 'anthropic'; // This will override if available
+      console.log('✅ Anthropic client initialized');
+    } else {
+      console.log('❌ Anthropic API key not found');
     }
+    
+    console.log('Default provider:', this.defaultProvider);
+    console.log('Available providers:', this.getAvailableProviders());
   }
 
   // Get provider configuration
