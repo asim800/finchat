@@ -1,5 +1,5 @@
+# Vercel deployment requirements
 fastapi>=0.104.1
-uvicorn[standard]>=0.24.0
 pandas>=2.1.0
 numpy>=1.24.0
 yfinance>=0.2.24
@@ -8,3 +8,5 @@ psycopg2-binary>=2.9.0
 python-dotenv>=1.0.0
 pydantic>=2.5.0
 python-multipart>=0.0.6
+mangum>=0.17.0
+uvicorn>=0.24.0

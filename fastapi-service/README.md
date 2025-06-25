@@ -163,6 +163,29 @@ locust -f tests/load_test.py --host=http://localhost:8000
 
 ## Deployment
 
+### Vercel Deployment
+
+The service is configured for serverless deployment on Vercel:
+
+**1. Environment Variables in Vercel:**
+```bash
+DATABASE_URL=postgresql://user:password@host:port/database
+```
+
+**2. Deploy to Vercel:**
+```bash
+cd fastapi-service
+npx vercel --prod
+```
+
+**3. Update CORS Settings:**
+Replace `https://your-domain.com` in `main.py` with your actual frontend domain.
+
+**Files for Vercel:**
+- `vercel.json` - Vercel configuration
+- `api/index.py` - Serverless handler using Mangum
+- `requirements.txt` - Python dependencies
+
 ### Docker Deployment
 
 ```dockerfile
