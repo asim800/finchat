@@ -86,7 +86,7 @@ lib/
 ### Analysis Backend Configuration
 - `PRIMARY_ANALYSIS_BACKEND`: Choose 'mcp' or 'fastapi' (default: 'mcp')
 - `ENABLE_BACKEND_FALLBACK`: Enable automatic fallback (default: 'false')
-- `FASTAPI_SERVICE_URL`: FastAPI microservice URL (default: 'http://localhost:8000')
+- `FASTAPI_SERVICE_URL`: FastAPI microservice URL (external service, deployed separately)
 
 ## Development Notes
 
