@@ -1,0 +1,8 @@
+README.md
+main.py
+pyproject.toml
+fastapi_portfolio_service.egg-info/PKG-INFO
+fastapi_portfolio_service.egg-info/SOURCES.txt
+fastapi_portfolio_service.egg-info/dependency_links.txt
+fastapi_portfolio_service.egg-info/requires.txt
+fastapi_portfolio_service.egg-info/top_level.txt

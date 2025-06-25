@@ -8,7 +8,9 @@ import { llmService, LLMProvider } from '@/lib/llm-service';
 import { FINANCIAL_SYSTEM_PROMPT, generateFinancialPrompt } from '@/lib/financial-prompts';
 import { getUserFromRequest } from '@/lib/auth';
 import { ChatService } from '@/lib/chat-service';
-import { financeMCPClient, formatRiskAnalysis, formatSharpeAnalysis } from '@/lib/mcp-client';
+import { financeMCPClient } from '@/lib/mcp-client';
+import { unifiedAnalysisService } from '@/lib/unified-analysis-service';
+import { backendConfig } from '@/lib/backend-config';
 import { PortfolioService } from '@/lib/portfolio-service';
 import { GuestPortfolioService } from '@/lib/guest-portfolio';
 
@@ -353,16 +355,24 @@ async function analyzeMCPToolNeeds(
   }
 
   try {
-    // First, check if MCP server is available
-    console.log('🔍 Checking MCP server availability...');
-    const dependencyCheck = await financeMCPClient.checkDependencies();
+    // Check which backend we're using - skip MCP checks if FastAPI is primary and no fallback
+    const primaryBackend = backendConfig.getPrimaryBackend();
+    const fallbackEnabled = backendConfig.isFallbackEnabled();
     
-    if (!dependencyCheck.available) {
-      console.warn('⚠️ MCP server dependencies not available:', dependencyCheck.error);
-      return {
-        fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket),
-        mcpStatus: 'failed'
-      };
+    console.log(`🔍 Using ${primaryBackend.type.toUpperCase()} as primary backend, fallback: ${fallbackEnabled}`);
+    
+    // Only check MCP dependencies if MCP is primary OR fallback is enabled
+    if (primaryBackend.type === 'mcp' || fallbackEnabled) {
+      console.log('🔍 Checking MCP server availability...');
+      const dependencyCheck = await financeMCPClient.checkDependencies();
+      
+      if (!dependencyCheck.available && primaryBackend.type === 'mcp' && !fallbackEnabled) {
+        console.warn('⚠️ MCP server dependencies not available:', dependencyCheck.error);
+        return {
+          fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket),
+          mcpStatus: 'failed'
+        };
+      }
     }
 
     // Execute tools with individual error handling
@@ -370,13 +380,17 @@ async function analyzeMCPToolNeeds(
       totalAttemptedTools++;
       try {
         console.log('🔧 Executing portfolio risk analysis tool...');
-        const riskAnalysis = await financeMCPClient.calculatePortfolioRisk(userId);
+        const result = await unifiedAnalysisService.calculatePortfolioRisk(userId);
         
-        if (!('error' in riskAnalysis)) {
-          toolResults += formatRiskAnalysis(riskAnalysis) + '\n\n';
+        if (result.success && result.formattedData) {
+          toolResults += result.formattedData + '\n\n';
           successfulTools++;
+          
+          if (result.fallbackUsed) {
+            toolResults += `*Note: Analysis completed using ${result.backend.toUpperCase()} backend*\n\n`;
+          }
         } else {
-          console.error('Risk analysis error:', riskAnalysis.error);
+          console.error('Risk analysis error:', result.error);
           failedTools.push('Portfolio Risk Analysis');
         }
       } catch (error) {
@@ -389,13 +403,17 @@ async function analyzeMCPToolNeeds(
       totalAttemptedTools++;
       try {
         console.log('🔧 Executing Sharpe ratio calculation tool...');
-        const sharpeAnalysis = await financeMCPClient.calculateSharpeRatio(userId);
+        const result = await unifiedAnalysisService.calculateSharpeRatio(userId);
         
-        if (!('error' in sharpeAnalysis)) {
-          toolResults += formatSharpeAnalysis(sharpeAnalysis) + '\n\n';
+        if (result.success && result.formattedData) {
+          toolResults += result.formattedData + '\n\n';
           successfulTools++;
+          
+          if (result.fallbackUsed) {
+            toolResults += `*Note: Analysis completed using ${result.backend.toUpperCase()} backend*\n\n`;
+          }
         } else {
-          console.error('Sharpe analysis error:', sharpeAnalysis.error);
+          console.error('Sharpe analysis error:', result.error);
           failedTools.push('Sharpe Ratio Analysis');
         }
       } catch (error) {
@@ -408,17 +426,17 @@ async function analyzeMCPToolNeeds(
       totalAttemptedTools++;
       try {
         console.log('🔧 Executing market data analysis tool...');
-        const marketData = await financeMCPClient.getPortfolioMarketData(userId, '1mo');
+        const result = await unifiedAnalysisService.getPortfolioMarketData(userId, '1mo');
         
-        if (!('error' in marketData)) {
-          toolResults += `📊 **Market Data Summary** (${marketData.period})\n\n`;
-          Object.entries(marketData.market_data).forEach(([symbol, data]) => {
-            toolResults += `• **${symbol}**: $${data.current_price} (${data.period_return > 0 ? '+' : ''}${data.period_return}%)\n`;
-          });
-          toolResults += '\n';
+        if (result.success && result.formattedData) {
+          toolResults += result.formattedData;
           successfulTools++;
+          
+          if (result.fallbackUsed) {
+            toolResults += `*Note: Analysis completed using ${result.backend.toUpperCase()} backend*\n\n`;
+          }
         } else {
-          console.error('Market data error:', marketData.error);
+          console.error('Market data error:', result.error);
           failedTools.push('Market Data Analysis');
         }
       } catch (error) {

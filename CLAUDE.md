@@ -76,11 +76,17 @@ lib/
 
 ## Environment Variables Required
 
+### Core Application
 - `JWT_SECRET`: JWT signing secret
 - `DATABASE_URL`: PostgreSQL connection string
 - `OPENAI_API_KEY`: OpenAI API access
 - `ANTHROPIC_API_KEY`: Anthropic Claude API access
 - `BCRYPT_ROUNDS`: Password hashing complexity (optional, defaults to 12)
+
+### Analysis Backend Configuration
+- `PRIMARY_ANALYSIS_BACKEND`: Choose 'mcp' or 'fastapi' (default: 'mcp')
+- `ENABLE_BACKEND_FALLBACK`: Enable automatic fallback (default: 'false')
+- `FASTAPI_SERVICE_URL`: FastAPI microservice URL (default: 'http://localhost:8000')
 
 ## Development Notes
 
