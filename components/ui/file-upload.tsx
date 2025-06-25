@@ -44,11 +44,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     return true;
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = useCallback((file: File) => {
     if (validateFile(file)) {
       onFileSelect(file);
     }
-  };
+  }, [validateFile, onFileSelect]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();

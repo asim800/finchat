@@ -5,7 +5,6 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyToken } from '@/lib/auth';
 
 // Define different route categories
 const protectedRoutes = ['/portfolio', '/api-keys', '/accounts'];
@@ -16,8 +15,8 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('auth-token')?.value;
   
-  // Check if user is authenticated
-  const isAuthenticated = token && verifyToken(token);
+  // Simple check: if token exists, assume authenticated (JWT verification happens in API routes)
+  const isAuthenticated = !!token;
   
   // Redirect authenticated users away from auth pages
   if (isAuthenticated && authRoutes.some(route => pathname.startsWith(route))) {

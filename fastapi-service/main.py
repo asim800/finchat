@@ -48,19 +48,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database connection
+# Database connection - lazy initialization
 DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    logger.error("DATABASE_URL environment variable is required")
-    raise ValueError("DATABASE_URL is required")
+engine = None
 
-# Configure engine for SSL and connection pooling
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,  # Verify connections before use
-    pool_recycle=300,    # Recycle connections every 5 minutes
-    connect_args={"sslmode": "require"} if "sslmode=require" in DATABASE_URL else {}
-)
+def get_engine():
+    """Get database engine with lazy initialization"""
+    global engine
+    if engine is None:
+        if not DATABASE_URL:
+            logger.error("DATABASE_URL environment variable is required")
+            raise ValueError("DATABASE_URL is required")
+        
+        # Convert postgres:// to postgresql+psycopg2:// for better compatibility
+        db_url = DATABASE_URL
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            
+        logger.info(f"Using database URL scheme: {db_url.split('://')[0]}")
+        
+        # Configure engine for SSL and connection pooling
+        engine = create_engine(
+            db_url,
+            pool_pre_ping=True,  # Verify connections before use
+            pool_recycle=300,    # Recycle connections every 5 minutes
+            connect_args={"sslmode": "require"} if "sslmode=require" in db_url else {}
+        )
+    return engine
 
 # Risk-free rate (can be made configurable)
 RISK_FREE_RATE = 0.02  # 2% annual risk-free rate
@@ -98,7 +114,7 @@ class PortfolioAnalyzer:
             ORDER BY p.name, a.symbol
             """
             
-            with engine.connect() as conn:
+            with get_engine().connect() as conn:
                 result = conn.execute(text(query), {"user_id": user_id})
                 rows = result.fetchall()
                 
