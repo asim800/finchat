@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Start production server**: `npm start`
 - **Lint code**: `npm run lint`
 - **Database operations**: Requires Prisma CLI - `npx prisma` commands for migrations and schema changes
+- **Python package management**: Use `uv` consistently for all Python services (MCP server, FastAPI)
 
 ## Tech Stack & Architecture
 

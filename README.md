@@ -1,24 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finance App
+
+A comprehensive financial portfolio management application built with Next.js, featuring AI-powered chat assistance and real-time portfolio analysis.
+
+## Architecture
+
+This is a **microservice architecture** with the Next.js frontend communicating with external services:
+
+- **Next.js App**: Main frontend application (this repository)
+- **FastAPI Service**: Portfolio analysis microservice (separate repository) 
+- **MCP Server**: Local analysis server for development/fallback
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 18+ and npm
+- PostgreSQL database
+- Environment variables configured (see `.env.example`)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Quick Start
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Configure environment**:
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
+   ```
+
+3. **Run development server**:
+   ```bash
+   npm run dev --turbopack
+   ```
+
+4. **Visit the application**:
+   Open [http://localhost:3000](http://localhost:3000)
+
+## Features
+
+- 🤖 **AI Chat Assistant**: OpenAI/Anthropic-powered financial advice
+- 📊 **Portfolio Analysis**: Real-time risk metrics and performance tracking  
+- 📈 **Interactive Charts**: Portfolio visualization with dedicated chart panel
+- 👤 **User Management**: Authentication with JWT tokens
+- 🔒 **Guest Mode**: Demo functionality without registration
+- 📱 **Responsive Design**: Works on desktop and mobile devices
+
+## Development
+
+See detailed development information in:
+- [`CLAUDE.md`](./CLAUDE.md) - Project configuration and architecture
+- [`PYTHON_DEVELOPMENT.md`](./PYTHON_DEVELOPMENT.md) - Python services (MCP server)
+- [`MICROSERVICE_SEPARATION.md`](./MICROSERVICE_SEPARATION.md) - Architecture decisions
 
 ## Learn More
 

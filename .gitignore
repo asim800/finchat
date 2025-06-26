@@ -46,8 +46,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-fastapi-service/__pycache__/
+# Note: Python services now in separate repositories
+# MCP server: ./mcp-server/ (still in this repo)
+# FastAPI service: separate fastapi-portfolio-service repository
