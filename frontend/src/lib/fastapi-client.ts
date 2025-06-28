@@ -4,36 +4,17 @@
 // ============================================================================
 
 export interface PortfolioRiskAnalysis {
-  user_id: string;
-  analysis_date: string;
-  results: {
-    [portfolio_id: string]: {
-      portfolio_name: string;
-      total_value: number;
-      annual_return: number;
-      annual_volatility: number;
-      sharpe_ratio: number;
-      var_95_daily: number;
-      var_95_annual: number;
-      max_drawdown: number;
-      num_assets: number;
-      risk_free_rate: number;
-    } | { error: string };
-  };
+  totalValue: number;
+  dailyVaR: number;
+  annualizedVoL: number;
+  sharpeRatio: number;
+  beta: number;
+  riskLevel: string;
 }
 
 export interface SharpeRatioAnalysis {
-  user_id: string;
-  analysis_date: string;
-  sharpe_analysis: {
-    [portfolio_id: string]: {
-      portfolio_name: string;
-      sharpe_ratio: number;
-      annual_return: number;
-      annual_volatility: number;
-      risk_free_rate: number;
-    } | { error: string };
-  };
+  sharpeRatio: number;
+  explanation: string;
 }
 
 export interface MarketDataSummary {
@@ -139,25 +120,38 @@ class FastAPIClient {
   /**
    * Calculate comprehensive portfolio risk metrics
    */
-  async calculatePortfolioRisk(userId: string): Promise<PortfolioRiskAnalysis> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async calculatePortfolioRisk(_userId: string): Promise<PortfolioRiskAnalysis> {
+    // For demo purposes, use a sample portfolio
+    // In a real application, this would fetch the user's actual portfolio from the database
+    const demoAssets = [
+      { symbol: "AAPL", shares: 10 },
+      { symbol: "GOOGL", shares: 5 },
+      { symbol: "MSFT", shares: 8 }
+    ];
+    
     return await this.makeRequest<PortfolioRiskAnalysis>('/portfolio/risk', {
-      user_id: userId
+      assets: demoAssets,
+      timeframe: "1y"
     });
   }
 
   /**
    * Calculate Sharpe ratio for user's portfolios
    */
-  async calculateSharpeRatio(userId: string, portfolioId?: string): Promise<SharpeRatioAnalysis> {
-    const requestData: { user_id: string; portfolio_id?: string } = {
-      user_id: userId
-    };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async calculateSharpeRatio(_userId: string, _portfolioId?: string): Promise<SharpeRatioAnalysis> {
+    // For demo purposes, use a sample portfolio
+    // In a real application, this would fetch the user's actual portfolio from the database
+    const demoAssets = [
+      { symbol: "AAPL", shares: 10 },
+      { symbol: "GOOGL", shares: 5 },
+      { symbol: "MSFT", shares: 8 }
+    ];
 
-    if (portfolioId) {
-      requestData.portfolio_id = portfolioId;
-    }
-
-    return await this.makeRequest<SharpeRatioAnalysis>('/portfolio/sharpe', requestData);
+    return await this.makeRequest<SharpeRatioAnalysis>('/portfolio/sharpe', {
+      assets: demoAssets
+    });
   }
 
   /**
@@ -176,54 +170,32 @@ export const fastAPIClient = new FastAPIClient();
 
 // Utility functions for formatting results (compatible with MCP format)
 export const formatRiskAnalysis = (analysis: PortfolioRiskAnalysis): string => {
-  if (!analysis.results) return 'No portfolio data available';
-
-  let formatted = `📊 **Portfolio Risk Analysis** (${new Date(analysis.analysis_date).toLocaleDateString()})\n\n`;
-
-  Object.entries(analysis.results).forEach(([portfolioId, result]) => {
-    if ('error' in result) {
-      formatted += `❌ **${portfolioId}**: ${result.error}\n\n`;
-    } else {
-      formatted += `💼 **${result.portfolio_name}**\n`;
-      formatted += `• Total Value: $${result.total_value.toLocaleString()}\n`;
-      formatted += `• Annual Return: ${result.annual_return}%\n`;
-      formatted += `• Volatility: ${result.annual_volatility}%\n`;
-      formatted += `• Sharpe Ratio: ${result.sharpe_ratio}\n`;
-      formatted += `• VaR (95%): ${result.var_95_daily}% daily, ${result.var_95_annual}% annual\n`;
-      formatted += `• Max Drawdown: ${result.max_drawdown}%\n`;
-      formatted += `• Assets: ${result.num_assets}\n\n`;
-    }
-  });
-
-  return formatted;
+  const formatted = `📊 **Portfolio Risk Analysis** (${new Date().toLocaleDateString()})\n\n`;
+  
+  return formatted +
+    `💼 **Portfolio Analysis**\n` +
+    `• Total Value: $${analysis.totalValue.toLocaleString()}\n` +
+    `• Daily VaR (95%): ${analysis.dailyVaR}%\n` +
+    `• Annual Volatility: ${analysis.annualizedVoL}%\n` +
+    `• Sharpe Ratio: ${analysis.sharpeRatio}\n` +
+    `• Beta: ${analysis.beta}\n` +
+    `• Risk Level: ${analysis.riskLevel}\n\n`;
 };
 
 export const formatSharpeAnalysis = (analysis: SharpeRatioAnalysis): string => {
-  if (!analysis.sharpe_analysis) return 'No Sharpe ratio data available';
-
-  let formatted = `📈 **Sharpe Ratio Analysis** (${new Date(analysis.analysis_date).toLocaleDateString()})\n\n`;
-
-  Object.entries(analysis.sharpe_analysis).forEach(([portfolioId, result]) => {
-    if ('error' in result) {
-      formatted += `❌ **${portfolioId}**: ${result.error}\n\n`;
-    } else {
-      const rating = result.sharpe_ratio > 1 ? '🟢 Excellent' : 
-                    result.sharpe_ratio > 0.5 ? '🟡 Good' : 
-                    result.sharpe_ratio > 0 ? '🟠 Fair' : '🔴 Poor';
-      
-      formatted += `💼 **${result.portfolio_name}**\n`;
-      formatted += `• Sharpe Ratio: ${result.sharpe_ratio} (${rating})\n`;
-      formatted += `• Annual Return: ${result.annual_return}%\n`;
-      formatted += `• Volatility: ${result.annual_volatility}%\n`;
-      formatted += `• Risk-Free Rate: ${result.risk_free_rate}%\n\n`;
-    }
-  });
-
-  formatted += `💡 **Sharpe Ratio Guide:**\n`;
-  formatted += `• > 1.0: Excellent risk-adjusted returns\n`;
-  formatted += `• 0.5-1.0: Good performance\n`;
-  formatted += `• 0-0.5: Fair performance\n`;
-  formatted += `• < 0: Poor performance (losing money vs risk-free rate)\n`;
+  const rating = analysis.sharpeRatio > 1 ? '🟢 Excellent' : 
+                analysis.sharpeRatio > 0.5 ? '🟡 Good' : 
+                analysis.sharpeRatio > 0 ? '🟠 Fair' : '🔴 Poor';
+  
+  const formatted = `📈 **Sharpe Ratio Analysis** (${new Date().toLocaleDateString()})\n\n` +
+    `💼 **Portfolio Analysis**\n` +
+    `• Sharpe Ratio: ${analysis.sharpeRatio} (${rating})\n` +
+    `• ${analysis.explanation}\n\n` +
+    `💡 **Sharpe Ratio Guide:**\n` +
+    `• > 1.0: Excellent risk-adjusted returns\n` +
+    `• 0.5-1.0: Good performance\n` +
+    `• 0-0.5: Fair performance\n` +
+    `• < 0: Poor performance (losing money vs risk-free rate)\n`;
 
   return formatted;
 };

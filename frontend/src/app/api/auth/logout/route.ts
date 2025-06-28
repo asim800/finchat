@@ -3,10 +3,11 @@
 // User logout endpoint
 // ============================================================================
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST() {
-  const response = NextResponse.json({ message: 'Logged out successfully' });
+export async function POST(request: NextRequest) {
+  // Create a redirect response to the main page
+  const response = NextResponse.redirect(new URL('/', request.url));
   
   // Clear the auth cookie
   response.cookies.set('auth-token', '', {

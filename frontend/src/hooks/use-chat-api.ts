@@ -67,7 +67,7 @@ export const useChatAPI = () => {
       const data = await response.json();
       
       // Convert messages to the format expected by the chat interface
-      return data.session.messages.map((msg: { id: string; role: string; content: string; provider?: string; createdAt: string; metadata?: any }) => ({
+      return data.session.messages.map((msg: { id: string; role: string; content: string; provider?: string; createdAt: string; metadata?: Record<string, unknown> }) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,

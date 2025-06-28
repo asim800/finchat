@@ -9,7 +9,7 @@ import type { NextRequest } from 'next/server';
 // Define different route categories
 const protectedRoutes = ['/portfolio', '/api-keys', '/accounts'];
 const authRoutes = ['/login', '/register'];
-const guestAllowedRoutes = ['/chat', '/demo']; // Chat available for guests with limited features
+const guestAllowedRoutes = ['/dashboard/chat', '/demo']; // Chat available for guests with limited features
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
   
   // Redirect authenticated users away from auth pages
   if (isAuthenticated && authRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/chat', request.url));
+    return NextResponse.redirect(new URL('/dashboard/chat', request.url));
   }
   
   // Redirect unauthenticated users away from fully protected pages

@@ -3,11 +3,38 @@
 // Updated root page with landing page instead of immediate redirect
 // ============================================================================
 
+import { headers } from 'next/headers';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Check if user is authenticated
+  let user = null;
+  try {
+    const headersList = await headers();
+    const cookieHeader = headersList.get('cookie') || '';
+    const tokenMatch = cookieHeader.match(/auth-token=([^;]+)/);
+    
+    if (tokenMatch) {
+      const token = decodeURIComponent(tokenMatch[1]);
+      const jwt = await import('jsonwebtoken');
+      const payload = jwt.default.verify(token, process.env.JWT_SECRET!) as { userId: string; email: string };
+      
+      const { prisma } = await import('@/lib/db');
+      user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true
+        }
+      });
+    }
+  } catch {
+    // Not authenticated or invalid token
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -18,12 +45,31 @@ export default function HomePage() {
               <h1 className="text-2xl font-bold text-gray-900">Finance App</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/login">
-                <Button variant="outline">Sign In</Button>
-              </Link>
-              <Link href="/register">
-                <Button>Get Started</Button>
-              </Link>
+              {user ? (
+                <>
+                  <span className="text-gray-700 text-sm">
+                    Hi, <span className="font-medium">{user.firstName}</span>
+                  </span>
+                  <Link href="/dashboard/chat">
+                    <Button variant="outline">Chat</Button>
+                  </Link>
+                  <Link href="/dashboard/portfolio">
+                    <Button variant="outline">Portfolio</Button>
+                  </Link>
+                  <form action="/api/auth/logout" method="POST" className="inline">
+                    <Button type="submit" variant="outline">Logout</Button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button variant="outline">Sign In</Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button>Get Started</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -33,25 +79,54 @@ export default function HomePage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
           <h2 className="text-4xl font-bold text-gray-900 sm:text-6xl">
-            Your AI-Powered
-            <span className="text-blue-600"> Financial Assistant</span>
+            {user ? (
+              <>
+                Welcome back, {user.firstName}!
+                <span className="text-blue-600"> Your Financial Dashboard</span>
+              </>
+            ) : (
+              <>
+                Your AI-Powered
+                <span className="text-blue-600"> Financial Assistant</span>
+              </>
+            )}
           </h2>
           <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
-            Get personalized financial insights, manage your portfolio, and chat with AI about your investments. 
-            Start exploring with limited features, or sign up for full access.
+            {user ? (
+              "Ready to continue managing your investments? Access your chat history, analyze your portfolio, and get personalized AI insights."
+            ) : (
+              "Get personalized financial insights, manage your portfolio, and chat with AI about your investments. Start exploring with limited features, or sign up for full access."
+            )}
           </p>
           
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Link href="/dashboard/chat">
-              <Button size="lg">
-                Try Demo Chat
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button variant="outline" size="lg">
-                Create Account
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link href="/dashboard/chat">
+                  <Button size="lg">
+                    Open Chat
+                  </Button>
+                </Link>
+                <Link href="/dashboard/portfolio">
+                  <Button variant="outline" size="lg">
+                    Portfolio
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/dashboard/chat">
+                  <Button size="lg">
+                    Try Demo Chat
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button variant="outline" size="lg">
+                    Create Account
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
