@@ -48,6 +48,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Python (basic - services have their own .gitignore)
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
 # Note: Python services now in separate repositories
 # MCP server: ./mcp-server/ (still in this repo)
 # FastAPI service: separate fastapi-portfolio-service repository

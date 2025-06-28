@@ -113,3 +113,8 @@ lib/
 ## Debugging Notes
 
 - Please provide and explaination of the error and approach to resolve when prompted with error messages
+
+## Python Notes
+
+- Please use uv as package manager and Python version 3.12
+

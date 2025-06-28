@@ -18,9 +18,11 @@ export default async function HomePage() {
     
     if (tokenMatch) {
       const token = decodeURIComponent(tokenMatch[1]);
+      // Import JWT verification here to avoid circular imports
       const jwt = await import('jsonwebtoken');
       const payload = jwt.default.verify(token, process.env.JWT_SECRET!) as { userId: string; email: string };
       
+      // Fetch user from database
       const { prisma } = await import('@/lib/db');
       user = await prisma.user.findUnique({
         where: { id: payload.userId },

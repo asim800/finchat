@@ -6,7 +6,7 @@
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { TopBar } from '@/components/ui/top-bar';
-import { ChatWithChartLayout } from '@/components/chat/chat-with-chart-layout';
+import { ResponsiveChatLayout } from '@/components/chat/responsive-chat-layout';
 
 export default async function ChatPage() {
   const headersList = await headers();
@@ -44,12 +44,12 @@ export default async function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Top bar */}
       <TopBar isGuestMode={isGuestMode} user={user} />
 
       {/* Main content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
         {isGuestMode && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex">
@@ -98,8 +98,9 @@ export default async function ChatPage() {
           </div>
         )}
 
-        <div className="h-[600px]">
-          <ChatWithChartLayout isGuestMode={isGuestMode} userId={user?.id} />
+        {/* Chat Container - Takes remaining space */}
+        <div className="flex-1 min-h-0">
+          <ResponsiveChatLayout isGuestMode={isGuestMode} userId={user?.id} />
         </div>
       </div>
     </div>
