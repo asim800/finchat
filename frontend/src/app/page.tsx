@@ -44,7 +44,9 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Finance App</h1>
+              <Link href="/">
+                <h1 className="text-2xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">RiskLens</h1>
+              </Link>
             </div>
             <div className="flex items-center space-x-4">
               {user ? (
@@ -80,7 +82,7 @@ export default async function HomePage() {
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
-          <h2 className="text-4xl font-bold text-gray-900 sm:text-6xl">
+          <h1 className="text-4xl font-bold text-gray-900 sm:text-6xl">
             {user ? (
               <>
                 Welcome back, {user.firstName}!
@@ -88,16 +90,16 @@ export default async function HomePage() {
               </>
             ) : (
               <>
-                Your AI-Powered
-                <span className="text-blue-600"> Financial Assistant</span>
+                Professional Portfolio Analysis,
+                <span className="text-blue-600"> Finally Explained Clearly</span>
               </>
             )}
-          </h2>
+          </h1>
           <p className="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
             {user ? (
               "Ready to continue managing your investments? Access your chat history, analyze your portfolio, and get personalized AI insights."
             ) : (
-              "Get personalized financial insights, manage your portfolio, and chat with AI about your investments. Start exploring with limited features, or sign up for full access."
+              "Get the same risk analysis used by Wall Street professionals, with explanations you'll actually understand. No sales calls, no product pitches - just the insights you need."
             )}
           </p>
           
@@ -129,6 +131,35 @@ export default async function HomePage() {
                 </Link>
               </>
             )}
+          </div>
+        </div>
+
+        {/* Competitive Section */}
+        <div className="mt-20">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+            Why Smart Investors Choose RiskLens
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <p className="text-lg text-gray-700 italic">
+                "Unlike Personal Capital, we never call to sell you anything"
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <p className="text-lg text-gray-700 italic">
+                "Unlike Morningstar, we explain what the numbers actually mean"
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <p className="text-lg text-gray-700 italic">
+                "Unlike robo-advisors, you understand exactly how we calculate your risk"
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <p className="text-lg text-gray-700 italic">
+                "Unlike financial advisors, we don't charge thousands for basic analysis"
+              </p>
+            </div>
           </div>
         </div>
 
@@ -206,8 +237,11 @@ export default async function HomePage() {
             </Button>
           </Link>
         </div>
+
+
       </main>
     </div>
+    
   );
 }
 

@@ -24,8 +24,8 @@ export const TopBar: React.FC<TopBarProps> = ({ isGuestMode = false, user }) => 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-gray-900">
-              Finance App
+            <Link href="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
+              RiskLens
             </Link>
             {isGuestMode && (
               <span className="ml-4 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
