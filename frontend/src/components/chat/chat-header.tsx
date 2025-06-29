@@ -7,13 +7,24 @@
 
 import React from 'react';
 import { PageHeader } from '@/components/ui/page-header';
+import { CsvManager } from '@/components/portfolio/csv-manager';
 
 interface ChatHeaderProps {
   isGuestMode: boolean;
+  guestAssets?: Array<{
+    symbol: string;
+    quantity: number;
+    avgPrice?: number | null;
+    percentage?: number | null;
+    assetType: string;
+  }>;
+  onCsvUploadComplete?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
-  isGuestMode
+  isGuestMode,
+  guestAssets = [],
+  onCsvUploadComplete
 }) => {
   const title = 'Interactive Chat';
   const description = isGuestMode 
@@ -22,11 +33,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   const actions = [
     {
-      type: 'link' as const,
-      href: '/dashboard/portfolio',
-      label: 'Portfolio',
-      icon: '📊',
-      variant: 'outline' as const
+      type: 'component' as const,
+      component: (
+        <CsvManager 
+          isGuestMode={isGuestMode}
+          guestAssets={guestAssets}
+          onUploadComplete={onCsvUploadComplete || (() => window.location.reload())}
+        />
+      )
     }
   ];
 

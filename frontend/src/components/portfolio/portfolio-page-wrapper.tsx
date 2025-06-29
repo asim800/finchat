@@ -1,6 +1,6 @@
 // ============================================================================
 // FILE: components/portfolio/portfolio-page-wrapper.tsx
-// Client wrapper that manages asset state for CSV functionality
+// Client wrapper for portfolio page
 // ============================================================================
 
 'use client';

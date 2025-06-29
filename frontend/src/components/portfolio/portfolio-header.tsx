@@ -41,13 +41,6 @@ export const PortfolioHeader: React.FC<PortfolioHeaderProps> = ({
           onUploadComplete={onCsvUploadComplete || (() => window.location.reload())}
         />
       )
-    },
-    {
-      type: 'link' as const,
-      href: '/dashboard/chat',
-      label: 'Chat Assistant',
-      icon: '💬',
-      variant: 'outline' as const
     }
   ];
 
