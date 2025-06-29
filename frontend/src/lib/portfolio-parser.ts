@@ -7,6 +7,7 @@ export interface ParsedAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
+  percentage?: number | null;
   assetType?: string;
 }
 

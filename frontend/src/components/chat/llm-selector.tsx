@@ -6,7 +6,7 @@
 'use client';
 
 import React from 'react';
-import { llmService, LLMProvider } from '@/lib/llm-service';
+import { LLMProvider, getProviderConfig } from '@/lib/llm-config';
 
 interface LLMSelectorProps {
   selectedProvider: LLMProvider;
@@ -35,7 +35,7 @@ export const LLMSelector: React.FC<LLMSelectorProps> = ({
       >
         {availableProviders.map(provider => (
           <option key={provider} value={provider}>
-            {llmService.getProviderConfig(provider).displayName}
+            {getProviderConfig(provider).displayName}
           </option>
         ))}
       </select>

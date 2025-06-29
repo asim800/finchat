@@ -13,6 +13,7 @@ import { GuestPortfolioService, generateGuestSessionId } from '@/lib/guest-portf
 interface PortfolioTableProps {
   isGuestMode?: boolean;
   userId?: string;
+  onAssetsChange?: (assets: DisplayAsset[]) => void;
 }
 
 interface DisplayAsset {
@@ -20,6 +21,7 @@ interface DisplayAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
+  percentage?: number | null;
   assetType: string;
   totalValue: number;
   createdAt: Date;
@@ -30,6 +32,7 @@ interface NewAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
+  percentage?: number | null;
   assetType: string;
 }
 
@@ -38,14 +41,23 @@ interface ApiAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
+  percentage?: number | null;
   assetType: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = false, userId }) => {
+export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = false, userId, onAssetsChange }) => {
   const [assets, setAssets] = useState<DisplayAsset[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Custom setAssets that also calls the callback
+  const updateAssets = (newAssets: DisplayAsset[]) => {
+    setAssets(newAssets);
+    if (onAssetsChange) {
+      onAssetsChange(newAssets);
+    }
+  };
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<DisplayAsset>>({});
   const [showAddForm, setShowAddForm] = useState(false);
@@ -81,7 +93,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
           createdAt: asset.addedAt,
           updatedAt: asset.addedAt
         }));
-        setAssets(displayAssets);
+        updateAssets(displayAssets);
       } else if (userId) {
         // Load authenticated user portfolio via API
         const response = await fetch('/api/portfolio');
@@ -96,16 +108,16 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
           updatedAt: new Date(asset.updatedAt),
           totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
         }));
-        setAssets(displayAssets);
+        updateAssets(displayAssets);
       } else {
         // No userId provided - set empty portfolio
-        setAssets([]);
+        updateAssets([]);
       }
     } catch (err) {
       setError('Failed to load portfolio');
       console.error('Portfolio loading error:', err);
       // Set empty assets on error to avoid showing stale data
-      setAssets([]);
+      updateAssets([]);
     } finally {
       setLoading(false);
     }

@@ -5,9 +5,7 @@
 
 import { headers } from 'next/headers';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { TopBar } from '@/components/ui/top-bar';
-import { PortfolioTable } from '@/components/portfolio/portfolio-table';
+import { PortfolioPageWrapper } from '@/components/portfolio/portfolio-page-wrapper';
 
 export default async function PortfolioPage() {
   const headersList = await headers();
@@ -45,35 +43,7 @@ export default async function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
-      <TopBar isGuestMode={isGuestMode} user={user} />
-
-      {/* Main content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {isGuestMode ? 'Demo Portfolio' : 'My Portfolio'}
-              </h1>
-              <p className="text-gray-600 mt-2">
-                {isGuestMode 
-                  ? 'Manage your demo portfolio. Sign up to save permanently!'
-                  : 'Manage your investment portfolio and track your assets.'
-                }
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <Link href="/dashboard/chat">
-                <Button variant="outline">
-                  💬 Chat Assistant
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Guest Mode Notice */}
         {isGuestMode && (
@@ -101,34 +71,9 @@ export default async function PortfolioPage() {
           </div>
         )}
 
-        {/* Personalized Welcome for Authenticated Users */}
-        {!isGuestMode && user && (
-          <div className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 font-semibold text-lg">
-                    {user.firstName.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              </div>
-              <div className="ml-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Welcome to your portfolio, {user.firstName}! 📊
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Add, edit, or remove assets from your investment portfolio below.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Portfolio Table Component */}
-        <div className="bg-white rounded-lg shadow">
-          <PortfolioTable isGuestMode={isGuestMode || !user} userId={user?.id} />
-        </div>
-      </div>
+        {/* Portfolio Management with Header */}
+        <PortfolioPageWrapper isGuestMode={isGuestMode || !user} userId={user?.id} />
     </div>
   );
 }

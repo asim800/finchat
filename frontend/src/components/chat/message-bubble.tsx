@@ -4,7 +4,7 @@
 // ============================================================================
 
 import React from 'react';
-import { llmService } from '@/lib/llm-service';
+import { LLMProvider, getProviderConfig } from '@/lib/llm-config';
 
 interface ChartData {
   type: 'pie' | 'bar';
@@ -41,13 +41,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       case 'openai':
         return (
           <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
-            🤖 {llmService.getProviderConfig('openai').displayName}
+            🤖 {getProviderConfig('openai').displayName}
           </span>
         );
       case 'anthropic':
         return (
           <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
-            🧠 {llmService.getProviderConfig('anthropic').displayName}
+            🧠 {getProviderConfig('anthropic').displayName}
           </span>
         );
       case 'simulation':
