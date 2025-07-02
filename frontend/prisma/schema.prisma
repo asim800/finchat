@@ -47,6 +47,7 @@ model Asset {
   symbol      String
   quantity    Float
   avgPrice    Float?
+  price       Float?   // Current/most recent price from historical data
   assetType   String   // stock, bond, crypto, etc.
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -55,6 +56,22 @@ model Asset {
   portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
   
   @@map("assets")
+}
+
+model HistoricalPrice {
+  id        String   @id @default(cuid())
+  symbol    String
+  price     Float
+  date      DateTime
+  source    String?  // e.g., "yahoo", "alpha_vantage", "manual"
+  assetType String?  // stock, bond, crypto, etc.
+  createdAt DateTime @default(now())
+  
+  // Composite index for efficient queries
+  @@unique([symbol, date])
+  @@index([symbol, date(sort: Desc)]) // For latest price queries
+  @@index([date])
+  @@map("historical_prices")
 }
 
 model ApiKey {
