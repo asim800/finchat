@@ -6,9 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { PortfolioService } from '@/lib/portfolio-service';
-import { ParsedAsset } from '@/lib/portfolio-parser';
 
-// GET /api/portfolio - Get user's portfolio
+// GET /api/portfolio - Get user's portfolios (all or specific)
 export async function GET(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request);
@@ -16,29 +15,52 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get portfolio with market values from historical prices
-    const portfolio = await PortfolioService.getPortfolioWithMarketValues(user.id);
-    
-    // Transform assets to include totalValue (for backward compatibility)
-    const portfolioWithTotals = {
-      ...portfolio,
-      assets: portfolio.assets.map(asset => ({
-        ...asset,
-        totalValue: asset.currentValue || (asset.avgPrice ? asset.quantity * asset.avgPrice : 0)
-      }))
-    };
+    const { searchParams } = new URL(request.url);
+    const portfolioId = searchParams.get('portfolioId');
 
-    return NextResponse.json({ portfolio: portfolioWithTotals });
+    if (portfolioId) {
+      // Get specific portfolio with market values
+      const portfolio = await PortfolioService.getPortfolioWithMarketValues(user.id, portfolioId);
+      
+      if (!portfolio) {
+        return NextResponse.json({ error: 'Portfolio not found' }, { status: 404 });
+      }
+      
+      // Transform assets to include totalValue (for backward compatibility)
+      const portfolioWithTotals = {
+        ...portfolio,
+        assets: portfolio.assets.map(asset => ({
+          ...asset,
+          totalValue: asset.currentValue || (asset.avgPrice ? asset.quantity * asset.avgPrice : 0)
+        }))
+      };
+
+      return NextResponse.json({ portfolio: portfolioWithTotals });
+    } else {
+      // Get all portfolios with market values
+      const portfolios = await PortfolioService.getAllPortfoliosWithMarketValues(user.id);
+      
+      // Transform portfolios to include totalValue for assets
+      const portfoliosWithTotals = portfolios.map(portfolio => ({
+        ...portfolio,
+        assets: portfolio.assets.map(asset => ({
+          ...asset,
+          totalValue: asset.currentValue || (asset.avgPrice ? asset.quantity * asset.avgPrice : 0)
+        }))
+      }));
+
+      return NextResponse.json({ portfolios: portfoliosWithTotals });
+    }
   } catch (error) {
     console.error('Portfolio GET error:', error);
     return NextResponse.json(
-      { error: 'Failed to load portfolio' },
+      { error: 'Failed to load portfolio(s)' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/portfolio - Add assets to portfolio
+// POST /api/portfolio - Add assets to portfolio or create new portfolio
 export async function POST(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request);
@@ -46,8 +68,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { assets }: { assets: ParsedAsset[] } = await request.json();
+    const body = await request.json();
+    const { assets, portfolioId, name, description, action } = body;
+
+    // Handle different actions
+    if (action === 'create') {
+      // Create a new portfolio
+      if (!name) {
+        return NextResponse.json(
+          { error: 'Portfolio name is required' },
+          { status: 400 }
+        );
+      }
+
+      const portfolio = await PortfolioService.createPortfolio(user.id, name, description);
+      return NextResponse.json({ success: true, portfolio });
+    }
     
+    if (action === 'update') {
+      // Update portfolio name/description
+      if (!portfolioId) {
+        return NextResponse.json(
+          { error: 'Portfolio ID is required' },
+          { status: 400 }
+        );
+      }
+
+      const portfolio = await PortfolioService.updatePortfolio(portfolioId, user.id, name, description);
+      if (!portfolio) {
+        return NextResponse.json({ error: 'Portfolio not found' }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, portfolio });
+    }
+
+    // Default action: add assets to portfolio
     if (!assets || !Array.isArray(assets)) {
       return NextResponse.json(
         { error: 'Invalid assets data' },
@@ -55,7 +109,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await PortfolioService.addAssetsToPortfolio(user.id, assets);
+    let targetPortfolioId = portfolioId;
+    if (!targetPortfolioId) {
+      // Use default portfolio if none specified
+      const defaultPortfolio = await PortfolioService.getOrCreateDefaultPortfolio(user.id);
+      targetPortfolioId = defaultPortfolio.id;
+    }
+
+    const result = await PortfolioService.addAssetsToPortfolio(user.id, targetPortfolioId, assets);
     
     // Transform portfolio assets to include totalValue
     const portfolioWithTotals = {
@@ -75,13 +136,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Portfolio POST error:', error);
     return NextResponse.json(
-      { error: 'Failed to add assets to portfolio' },
+      { error: 'Failed to process portfolio request' },
       { status: 500 }
     );
   }
 }
 
-// PUT /api/portfolio - Update asset quantity
+// PUT /api/portfolio - Update asset quantity or portfolio details
 export async function PUT(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request);
@@ -89,20 +150,42 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { symbol, quantity, avgPrice }: { symbol: string; quantity: number; avgPrice?: number | null } = await request.json();
-    
-    if (!symbol || quantity == null || quantity <= 0) {
+    const body = await request.json();
+    const { symbol, quantity, avgPrice, portfolioId, name, description, action } = body;
+
+    if (action === 'update-portfolio') {
+      // Update portfolio details
+      if (!portfolioId) {
+        return NextResponse.json(
+          { error: 'Portfolio ID is required' },
+          { status: 400 }
+        );
+      }
+
+      const portfolio = await PortfolioService.updatePortfolio(portfolioId, user.id, name, description);
+      if (!portfolio) {
+        return NextResponse.json({ error: 'Portfolio not found' }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, portfolio });
+    }
+
+    // Default action: update asset
+    if (!symbol || !portfolioId || quantity == null || quantity <= 0) {
       return NextResponse.json(
-        { error: 'Invalid symbol or quantity' },
+        { error: 'Invalid symbol, portfolio ID, or quantity' },
         { status: 400 }
       );
     }
 
-    const success = await PortfolioService.updateAsset(user.id, symbol, quantity, avgPrice);
+    const success = await PortfolioService.updateAsset(user.id, portfolioId, symbol, quantity, avgPrice);
     
     if (success) {
       // Return updated portfolio
-      const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(user.id);
+      const portfolio = await PortfolioService.getPortfolioWithMarketValues(user.id, portfolioId);
+      if (!portfolio) {
+        return NextResponse.json({ error: 'Portfolio not found' }, { status: 404 });
+      }
+      
       const portfolioWithTotals = {
         ...portfolio,
         assets: portfolio.assets.map(asset => ({
@@ -114,20 +197,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true, portfolio: portfolioWithTotals });
     } else {
       return NextResponse.json(
-        { error: 'Failed to update asset quantity' },
+        { error: 'Failed to update asset' },
         { status: 400 }
       );
     }
   } catch (error) {
     console.error('Portfolio PUT error:', error);
     return NextResponse.json(
-      { error: 'Failed to update asset' },
+      { error: 'Failed to update asset or portfolio' },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/portfolio - Remove asset
+// DELETE /api/portfolio - Remove asset or delete portfolio
 export async function DELETE(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request);
@@ -137,19 +220,47 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get('symbol');
+    const portfolioId = searchParams.get('portfolioId');
+    const action = searchParams.get('action');
     
-    if (!symbol) {
+    if (action === 'delete-portfolio') {
+      // Delete entire portfolio
+      if (!portfolioId) {
+        return NextResponse.json(
+          { error: 'Portfolio ID is required' },
+          { status: 400 }
+        );
+      }
+
+      const success = await PortfolioService.deletePortfolio(portfolioId, user.id);
+      
+      if (success) {
+        return NextResponse.json({ success: true, message: 'Portfolio deleted successfully' });
+      } else {
+        return NextResponse.json(
+          { error: 'Failed to delete portfolio (cannot delete last portfolio)' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Default action: remove asset
+    if (!symbol || !portfolioId) {
       return NextResponse.json(
-        { error: 'Symbol is required' },
+        { error: 'Symbol and portfolio ID are required' },
         { status: 400 }
       );
     }
 
-    const success = await PortfolioService.removeAsset(user.id, symbol);
+    const success = await PortfolioService.removeAsset(user.id, portfolioId, symbol);
     
     if (success) {
       // Return updated portfolio
-      const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(user.id);
+      const portfolio = await PortfolioService.getPortfolioWithMarketValues(user.id, portfolioId);
+      if (!portfolio) {
+        return NextResponse.json({ error: 'Portfolio not found' }, { status: 404 });
+      }
+      
       const portfolioWithTotals = {
         ...portfolio,
         assets: portfolio.assets.map(asset => ({
@@ -168,7 +279,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('Portfolio DELETE error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete asset' },
+      { error: 'Failed to delete asset or portfolio' },
       { status: 500 }
     );
   }

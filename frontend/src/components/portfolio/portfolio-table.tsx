@@ -13,7 +13,10 @@ import { GuestPortfolioService, generateGuestSessionId } from '@/lib/guest-portf
 interface PortfolioTableProps {
   isGuestMode?: boolean;
   userId?: string;
+  portfolioId?: string; // For multi-portfolio support
+  initialAssets?: DisplayAsset[]; // Pre-loaded assets
   onAssetsChange?: (assets: DisplayAsset[]) => void;
+  showSummary?: boolean; // Whether to show portfolio summary boxes
 }
 
 interface DisplayAsset {
@@ -45,9 +48,16 @@ interface ApiAsset {
   updatedAt: string;
 }
 
-export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = false, userId, onAssetsChange }) => {
-  const [assets, setAssets] = useState<DisplayAsset[]>([]);
-  const [loading, setLoading] = useState(true);
+export const PortfolioTable: React.FC<PortfolioTableProps> = ({ 
+  isGuestMode = false, 
+  userId, 
+  portfolioId,
+  initialAssets,
+  onAssetsChange,
+  showSummary = true 
+}) => {
+  const [assets, setAssets] = useState<DisplayAsset[]>(initialAssets || []);
+  const [loading, setLoading] = useState(!initialAssets); // Only loading if no initial assets
 
   // Custom setAssets that also calls the callback
   const updateAssets = (newAssets: DisplayAsset[]) => {
@@ -70,8 +80,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
 
   // Load portfolio data
   useEffect(() => {
-    loadPortfolio();
-  }, [isGuestMode, userId, guestSessionId]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!initialAssets) {
+      loadPortfolio();
+    }
+  }, [isGuestMode, userId, portfolioId, guestSessionId, initialAssets]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadPortfolio = async () => {
     setLoading(true);
@@ -94,13 +106,24 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
         updateAssets(displayAssets);
       } else if (userId) {
         // Load authenticated user portfolio via API
-        const response = await fetch('/api/portfolio');
+        const url = portfolioId ? `/api/portfolio?portfolioId=${encodeURIComponent(portfolioId)}` : '/api/portfolio';
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to load portfolio from server');
         }
         
         const data = await response.json();
-        const displayAssets: DisplayAsset[] = data.portfolio.assets.map((asset: ApiAsset) => ({
+        
+        let portfolioData;
+        if (portfolioId) {
+          // Single portfolio response
+          portfolioData = data.portfolio;
+        } else {
+          // Multiple portfolios response - use the first (default) portfolio
+          portfolioData = data.portfolios && data.portfolios.length > 0 ? data.portfolios[0] : { assets: [] };
+        }
+        
+        const displayAssets: DisplayAsset[] = portfolioData.assets.map((asset: ApiAsset) => ({
           ...asset,
           createdAt: new Date(asset.createdAt),
           updatedAt: new Date(asset.updatedAt),
@@ -166,6 +189,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            portfolioId: portfolioId, // Include portfolio ID for multi-portfolio support
             assets: [{
               symbol: newAsset.symbol.toUpperCase(),
               quantity: newAsset.quantity,
@@ -260,6 +284,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+              portfolioId: portfolioId, // Include portfolio ID for multi-portfolio support
               symbol: asset.symbol,
               quantity: editValues.quantity,
               avgPrice: editValues.avgPrice
@@ -309,7 +334,8 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
         }
       } else if (userId) {
         // Remove from authenticated user portfolio via API
-        const response = await fetch(`/api/portfolio?symbol=${encodeURIComponent(asset.symbol)}`, {
+        const url = `/api/portfolio?symbol=${encodeURIComponent(asset.symbol)}${portfolioId ? `&portfolioId=${encodeURIComponent(portfolioId)}` : ''}`;
+        const response = await fetch(url, {
           method: 'DELETE'
         });
 
@@ -348,26 +374,28 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
   }
 
   return (
-    <div className="p-6">
+    <div className={showSummary ? "p-6" : ""}>
       {/* Portfolio Summary */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-blue-50 p-4 rounded-lg border">
-          <h3 className="text-sm font-medium text-blue-800">Total Assets</h3>
-          <p className="text-2xl font-bold text-blue-900">{totalAssets}</p>
+      {showSummary && (
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-blue-50 p-4 rounded-lg border">
+            <h3 className="text-sm font-medium text-blue-800">Total Assets</h3>
+            <p className="text-2xl font-bold text-blue-900">{totalAssets}</p>
+          </div>
+          <div className="bg-green-50 p-4 rounded-lg border">
+            <h3 className="text-sm font-medium text-green-800">Portfolio Value</h3>
+            <p className="text-2xl font-bold text-green-900">
+              ${totalPortfolioValue.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-lg border">
+            <h3 className="text-sm font-medium text-purple-800">Total Cost</h3>
+            <p className="text-2xl font-bold text-purple-900">
+              ${totalCost.toLocaleString()}
+            </p>
+          </div>
         </div>
-        <div className="bg-green-50 p-4 rounded-lg border">
-          <h3 className="text-sm font-medium text-green-800">Portfolio Value</h3>
-          <p className="text-2xl font-bold text-green-900">
-            ${totalPortfolioValue.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-purple-50 p-4 rounded-lg border">
-          <h3 className="text-sm font-medium text-purple-800">Total Cost</h3>
-          <p className="text-2xl font-bold text-purple-900">
-            ${totalCost.toLocaleString()}
-          </p>
-        </div>
-      </div>
+      )}
 
       {/* Error Display */}
       {error && (

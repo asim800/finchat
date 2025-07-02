@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { PortfolioHeader } from './portfolio-header';
 import { PortfolioTable } from './portfolio-table';
+import { MultiPortfolioManager } from './multi-portfolio-manager';
 
 interface PortfolioPageWrapperProps {
   isGuestMode: boolean;
@@ -45,23 +46,36 @@ export const PortfolioPageWrapper: React.FC<PortfolioPageWrapperProps> = ({
     assetType: asset.assetType
   }));
 
-  return (
-    <>
-      {/* Portfolio Header with action buttons */}
-      <PortfolioHeader 
-        isGuestMode={isGuestMode}
-        guestAssets={isGuestMode ? csvAssets : undefined}
-        onCsvUploadComplete={() => window.location.reload()}
-      />
-
-      {/* Portfolio Table */}
-      <div className="bg-white rounded-lg shadow">
-        <PortfolioTable 
-          isGuestMode={isGuestMode} 
-          userId={userId} 
-          onAssetsChange={handleAssetsChange}
+  if (isGuestMode) {
+    // Guest mode - use single portfolio table
+    return (
+      <>
+        {/* Portfolio Header with action buttons */}
+        <PortfolioHeader 
+          isGuestMode={isGuestMode}
+          guestAssets={csvAssets}
+          onCsvUploadComplete={() => window.location.reload()}
         />
-      </div>
-    </>
+
+        {/* Portfolio Table */}
+        <div className="bg-white rounded-lg shadow">
+          <PortfolioTable 
+            isGuestMode={isGuestMode} 
+            userId={userId} 
+            onAssetsChange={handleAssetsChange}
+          />
+        </div>
+      </>
+    );
+  }
+
+  // Authenticated mode - use multi-portfolio manager (no global header needed)
+  return (
+    <div className="bg-white rounded-lg shadow">
+      <MultiPortfolioManager 
+        isGuestMode={isGuestMode} 
+        userId={userId} 
+      />
+    </div>
   );
 };

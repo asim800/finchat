@@ -20,11 +20,13 @@ interface ParsedAsset {
 interface CsvUploadProps {
   onUploadComplete: () => void;
   isGuestMode?: boolean;
+  portfolioId?: string; // For multi-portfolio support
 }
 
 export const CsvUpload: React.FC<CsvUploadProps> = ({ 
   onUploadComplete, 
-  isGuestMode = false 
+  isGuestMode = false,
+  portfolioId
 }) => {
   const [, setSelectedFile] = useState<File | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -119,7 +121,10 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
           'Content-Type': 'application/json',
         },
         credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify({ assets: parsedAssets }),
+        body: JSON.stringify({ 
+          assets: parsedAssets,
+          portfolioId: portfolioId // Include portfolio ID if specified
+        }),
       });
 
       if (!response.ok) {

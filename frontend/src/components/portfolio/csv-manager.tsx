@@ -12,6 +12,7 @@ import { CsvExport } from './csv-export';
 
 interface CsvManagerProps {
   isGuestMode?: boolean;
+  portfolioId?: string; // For multi-portfolio support
   guestAssets?: Array<{
     symbol: string;
     quantity: number;
@@ -23,6 +24,7 @@ interface CsvManagerProps {
 
 export const CsvManager: React.FC<CsvManagerProps> = ({ 
   isGuestMode = false,
+  portfolioId,
   guestAssets = [],
   onUploadComplete
 }) => {
@@ -100,6 +102,7 @@ export const CsvManager: React.FC<CsvManagerProps> = ({
                 <CsvUpload 
                   onUploadComplete={handleUploadComplete}
                   isGuestMode={isGuestMode}
+                  portfolioId={portfolioId}
                 />
               ) : (
                 <div className="space-y-4">
