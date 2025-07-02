@@ -13,7 +13,6 @@ interface PortfolioEntry {
   symbol: string;
   quantity: number;
   price: number;
-  percentage?: number;
   name?: string;
   [key: string]: string | number | undefined;
 }
@@ -127,8 +126,6 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
           entry.quantity = parseFloat(value) || 0;
         } else if (['price', 'cost', 'value'].includes(header)) {
           entry.price = parseFloat(value) || 0;
-        } else if (['percentage', 'percent', '%', 'allocation'].includes(header)) {
-          entry.percentage = parseFloat(value) || 0;
         } else if (['name', 'company', 'description'].includes(header)) {
           entry.name = value;
         } else {
@@ -267,7 +264,7 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
         <div className="text-xs text-gray-500">
           <p><strong>Supported formats:</strong></p>
           <ul className="mt-1 space-y-1">
-            <li>• <strong>Portfolio CSV:</strong> Columns like Symbol, Quantity, Price, Percentage, Name</li>
+            <li>• <strong>Portfolio CSV:</strong> Columns like Symbol, Quantity, Price, Name</li>
             <li>• <strong>Preferences CSV:</strong> Settings like Risk Level, Goals, Time Horizon</li>
             <li>• <strong>Text files:</strong> Investment goals, notes, or preferences in plain text</li>
           </ul>

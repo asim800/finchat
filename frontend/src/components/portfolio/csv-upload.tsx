@@ -14,7 +14,6 @@ interface ParsedAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number;
-  percentage?: number;
   assetType?: string;
 }
 
@@ -87,8 +86,6 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
           asset.quantity = parseFloat(value) || 0;
         } else if (['price', 'avgprice', 'cost', 'average_price'].includes(header)) {
           asset.avgPrice = parseFloat(value) || undefined;
-        } else if (['percentage', 'percent', '%', 'allocation'].includes(header)) {
-          asset.percentage = parseFloat(value) || undefined;
         } else if (['type', 'assettype', 'asset_type'].includes(header)) {
           asset.assetType = value.toLowerCase() || 'stock';
         }
@@ -121,11 +118,14 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({ assets: parsedAssets }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload portfolio');
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || `Failed to upload portfolio (${response.status})`);
       }
 
       const result = await response.json();
@@ -195,7 +195,6 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
                     <span>{asset.symbol}: {asset.quantity} shares</span>
                     <span>
                       {asset.avgPrice && `$${asset.avgPrice.toFixed(2)}`}
-                      {asset.percentage && ` (${asset.percentage}%)`}
                     </span>
                   </div>
                 ))}
