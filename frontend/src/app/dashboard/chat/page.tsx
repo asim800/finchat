@@ -9,7 +9,6 @@ import { ChatPageClient } from '@/components/chat/chat-page-client';
 export default async function ChatPage() {
   const headersList = await headers();
   const isGuestMode = headersList.get('x-guest-mode') === 'true';
-  const guestModeHeader = headersList.get('x-guest-mode');
   
   // Get user information if not in guest mode
   let user = null;
