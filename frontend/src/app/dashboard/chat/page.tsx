@@ -9,37 +9,39 @@ import { ChatPageClient } from '@/components/chat/chat-page-client';
 export default async function ChatPage() {
   const headersList = await headers();
   const isGuestMode = headersList.get('x-guest-mode') === 'true';
+  const guestModeHeader = headersList.get('x-guest-mode');
+  
+  console.log(`Chat Page - x-guest-mode header: "${guestModeHeader}", isGuestMode: ${isGuestMode}`);
   
   // Get user information if not in guest mode
   let user = null;
   if (!isGuestMode) {
     try {
-      // Extract auth token from cookies
-      const cookieHeader = headersList.get('cookie') || '';
-      const tokenMatch = cookieHeader.match(/auth-token=([^;]+)/);
+      // Use the same authentication logic as API routes
+      const { getUserFromRequest } = await import('@/lib/auth');
       
-      if (tokenMatch) {
-        const token = decodeURIComponent(tokenMatch[1]);
-        // Import JWT verification here to avoid circular imports
-        const jwt = await import('jsonwebtoken');
-        const payload = jwt.default.verify(token, process.env.JWT_SECRET!) as { userId: string; email: string };
-        
-        // Fetch user from database
-        const { prisma } = await import('@/lib/db');
-        user = await prisma.user.findUnique({
-          where: { id: payload.userId },
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true
+      // Create a mock request object with the headers
+      const mockRequest = {
+        cookies: {
+          get: (name: string) => {
+            const cookieHeader = headersList.get('cookie') || '';
+            const match = cookieHeader.match(new RegExp(`${name}=([^;]+)`));
+            return match ? { value: decodeURIComponent(match[1]) } : undefined;
           }
-        });
-      }
+        },
+        headers: {
+          get: (name: string) => headersList.get(name)
+        }
+      } as any;
+      
+      user = await getUserFromRequest(mockRequest);
+      console.log(`Chat Page - User from auth: ${user ? user.email : 'null'}`);
     } catch (error) {
       console.error('Error getting user:', error);
     }
   }
+
+  console.log(`Chat Page - Final: isGuestMode: ${isGuestMode}, user: ${user ? 'exists' : 'null'}, final mode: ${isGuestMode || !user}`);
 
   return (
     <ChatPageClient 

@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define different route categories
-const protectedRoutes = ['/portfolio', '/api-keys', '/accounts'];
+const protectedRoutes = ['/dashboard/portfolio', '/api-keys', '/accounts'];
 const authRoutes = ['/login', '/register'];
 const guestAllowedRoutes = ['/dashboard/chat', '/demo']; // Chat available for guests with limited features
 
@@ -17,6 +17,9 @@ export function middleware(request: NextRequest) {
   
   // Simple token presence check (actual validation happens in API routes)
   const isAuthenticated = !!token;
+  
+  // Debug logging for troubleshooting
+  console.log(`Middleware - Path: ${pathname}, Has Token: ${!!token}, IsAuth: ${isAuthenticated}`);
   
   // Redirect authenticated users away from auth pages
   if (isAuthenticated && authRoutes.some(route => pathname.startsWith(route))) {
@@ -28,10 +31,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
   
-  // For guest-allowed routes, add a header to indicate guest status
-  if (!isAuthenticated && guestAllowedRoutes.some(route => pathname.startsWith(route))) {
+  // For guest-allowed routes, set appropriate mode headers
+  if (guestAllowedRoutes.some(route => pathname.startsWith(route))) {
     const response = NextResponse.next();
-    response.headers.set('x-guest-mode', 'true');
+    if (!isAuthenticated) {
+      response.headers.set('x-guest-mode', 'true');
+    } else {
+      response.headers.set('x-guest-mode', 'false');
+    }
     return response;
   }
   
