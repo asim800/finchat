@@ -334,7 +334,8 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
   };
 
   // Calculate portfolio totals
-  const totalPortfolioValue = assets.reduce((sum, asset) => sum + asset.totalValue, 0);
+  const totalPortfolioValue = assets.reduce((sum, asset) => sum + (asset.price ? asset.quantity * asset.price : 0), 0);
+  const totalCost = assets.reduce((sum, asset) => sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0), 0);
   const totalAssets = assets.length;
 
   if (loading && assets.length === 0) {
@@ -361,9 +362,9 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
           </p>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg border">
-          <h3 className="text-sm font-medium text-purple-800">Average Value per Asset</h3>
+          <h3 className="text-sm font-medium text-purple-800">Total Cost</h3>
           <p className="text-2xl font-bold text-purple-900">
-            ${totalAssets > 0 ? (totalPortfolioValue / totalAssets).toLocaleString() : '0'}
+            ${totalCost.toLocaleString()}
           </p>
         </div>
       </div>
@@ -429,7 +430,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Avg Price</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Avg Cost</label>
               <Input
                 type="number"
                 value={newAsset.avgPrice || ''}
@@ -508,10 +509,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
                   Quantity
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Avg Price
+                  Current Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Current Price
+                  Avg Cost
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Value
@@ -554,6 +555,11 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {asset.price ? `$${asset.price.toFixed(2)}` : 'N/A'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     {editingId === asset.id ? (
                       <Input
                         type="text"
@@ -568,11 +574,6 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
                         {asset.avgPrice ? `$${asset.avgPrice.toFixed(2)}` : '-'}
                       </div>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {asset.price ? `$${asset.price.toFixed(2)}` : 'N/A'}
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
