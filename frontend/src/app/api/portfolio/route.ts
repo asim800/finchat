@@ -16,14 +16,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(user.id);
+    // Get portfolio with market values from historical prices
+    const portfolio = await PortfolioService.getPortfolioWithMarketValues(user.id);
     
-    // Transform assets to include totalValue
+    // Transform assets to include totalValue (for backward compatibility)
     const portfolioWithTotals = {
       ...portfolio,
       assets: portfolio.assets.map(asset => ({
         ...asset,
-        totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
+        totalValue: asset.currentValue || (asset.avgPrice ? asset.quantity * asset.avgPrice : 0)
       }))
     };
 

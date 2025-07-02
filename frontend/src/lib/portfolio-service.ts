@@ -5,6 +5,7 @@
 
 import { prisma } from './db';
 import { ParsedAsset } from './portfolio-parser';
+import { HistoricalPriceService } from './historical-price-service';
 
 export interface Portfolio {
   id: string;
@@ -21,8 +22,9 @@ export interface Asset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
+  price?: number | null; // Current market price from historical data
   assetType: string;
-  currentValue?: number;
+  currentValue?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -270,5 +272,45 @@ export class PortfolioService {
       console.error('Error updating asset:', error);
       return false;
     }
+  }
+
+  // Refresh asset prices from historical data
+  static async refreshAssetPrices(userId: string): Promise<{ updated: number; notFound: number }> {
+    try {
+      const portfolio = await this.getOrCreateDefaultPortfolio(userId);
+      return await HistoricalPriceService.updateAssetPrices(portfolio.id);
+    } catch (error) {
+      console.error('Error refreshing asset prices:', error);
+      return { updated: 0, notFound: 0 };
+    }
+  }
+
+  // Get portfolio with updated market values
+  static async getPortfolioWithMarketValues(userId: string): Promise<Portfolio> {
+    const portfolio = await this.getOrCreateDefaultPortfolio(userId);
+    
+    // Get latest prices for all symbols
+    const symbols = portfolio.assets.map(asset => asset.symbol);
+    const priceMap = await HistoricalPriceService.getLatestPricesForSymbols(symbols);
+    
+    // Calculate market values
+    const assetsWithMarketValue = portfolio.assets.map(asset => {
+      const marketPrice = priceMap[asset.symbol.toUpperCase()];
+      return {
+        ...asset,
+        price: marketPrice,
+        currentValue: marketPrice ? asset.quantity * marketPrice : null
+      };
+    });
+
+    const totalMarketValue = assetsWithMarketValue.reduce((sum, asset) => {
+      return sum + (asset.currentValue || 0);
+    }, 0);
+
+    return {
+      ...portfolio,
+      assets: assetsWithMarketValue,
+      totalValue: totalMarketValue
+    };
   }
 }
