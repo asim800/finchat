@@ -8,7 +8,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +23,6 @@ type LoginFormData = z.infer<typeof LoginSchema>;
 export const LoginForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const {
     register,
@@ -53,8 +51,8 @@ export const LoginForm: React.FC = () => {
         throw new Error(result.error || 'Login failed');
       }
 
-      // Login successful, redirect to dashboard
-      router.push('/dashboard/chat');
+      // Login successful, force a full page reload to pick up auth cookie
+      window.location.href = '/dashboard/portfolio';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
