@@ -21,6 +21,7 @@ interface DisplayAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
+  price?: number | null;
   assetType: string;
   totalValue: number;
   createdAt: Date;
@@ -510,6 +511,9 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
                   Avg Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Current Price
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Value
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -529,7 +533,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
                         type="text"
                         value={editValues.symbol || ''}
                         onChange={(e) => setEditValues({...editValues, symbol: e.target.value.toUpperCase()})}
-                        className="w-20"
+                        className="w-full min-w-16 max-w-20"
                       />
                     ) : (
                       <div className="text-sm font-medium text-gray-900">{asset.symbol}</div>
@@ -538,12 +542,12 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
                   <td className="px-6 py-4 whitespace-nowrap">
                     {editingId === asset.id ? (
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         value={editValues.quantity || ''}
                         onChange={(e) => setEditValues({...editValues, quantity: parseFloat(e.target.value) || 0})}
-                        className="w-24"
-                        min="0"
-                        step="0.01"
+                        className="w-full min-w-20 max-w-28 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        placeholder="0"
                       />
                     ) : (
                       <div className="text-sm text-gray-900">{asset.quantity}</div>
@@ -552,12 +556,11 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
                   <td className="px-6 py-4 whitespace-nowrap">
                     {editingId === asset.id ? (
                       <Input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
                         value={editValues.avgPrice || ''}
                         onChange={(e) => setEditValues({...editValues, avgPrice: parseFloat(e.target.value) || undefined})}
-                        className="w-24"
-                        min="0"
-                        step="0.01"
+                        className="w-full min-w-20 max-w-32 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="Optional"
                       />
                     ) : (
@@ -565,6 +568,11 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({ isGuestMode = fa
                         {asset.avgPrice ? `$${asset.avgPrice.toFixed(2)}` : '-'}
                       </div>
                     )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {asset.price ? `$${asset.price.toFixed(2)}` : 'N/A'}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
