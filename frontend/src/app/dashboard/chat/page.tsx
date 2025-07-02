@@ -11,8 +11,6 @@ export default async function ChatPage() {
   const isGuestMode = headersList.get('x-guest-mode') === 'true';
   const guestModeHeader = headersList.get('x-guest-mode');
   
-  console.log(`Chat Page - x-guest-mode header: "${guestModeHeader}", isGuestMode: ${isGuestMode}`);
-  
   // Get user information if not in guest mode
   let user = null;
   if (!isGuestMode) {
@@ -35,13 +33,10 @@ export default async function ChatPage() {
       } as any;
       
       user = await getUserFromRequest(mockRequest);
-      console.log(`Chat Page - User from auth: ${user ? user.email : 'null'}`);
     } catch (error) {
       console.error('Error getting user:', error);
     }
   }
-
-  console.log(`Chat Page - Final: isGuestMode: ${isGuestMode}, user: ${user ? 'exists' : 'null'}, final mode: ${isGuestMode || !user}`);
 
   return (
     <ChatPageClient 

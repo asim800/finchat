@@ -18,8 +18,6 @@ export function middleware(request: NextRequest) {
   // Simple token presence check (actual validation happens in API routes)
   const isAuthenticated = !!token;
   
-  // Debug logging for troubleshooting
-  console.log(`Middleware - Path: ${pathname}, Has Token: ${!!token}, IsAuth: ${isAuthenticated}`);
   
   // Redirect authenticated users away from auth pages
   if (isAuthenticated && authRoutes.some(route => pathname.startsWith(route))) {
