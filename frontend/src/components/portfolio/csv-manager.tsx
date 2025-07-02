@@ -16,7 +16,6 @@ interface CsvManagerProps {
     symbol: string;
     quantity: number;
     avgPrice?: number | null;
-    percentage?: number | null;
     assetType: string;
   }>;
   onUploadComplete?: () => void;

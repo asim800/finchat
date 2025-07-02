@@ -24,7 +24,6 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
     symbol: string;
     quantity: number;
     avgPrice?: number | null;
-    percentage?: number | null;
     assetType: string;
   }>>([]);
 
@@ -34,14 +33,12 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
       const loadGuestAssets = () => {
         try {
           const guestSessionId = generateGuestSessionId();
-          const guestService = new GuestPortfolioService(guestSessionId);
-          const assets = guestService.getAssets();
+          const portfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
           
-          const formattedAssets = assets.map(asset => ({
+          const formattedAssets = portfolio.assets.map(asset => ({
             symbol: asset.symbol,
             quantity: asset.quantity,
             avgPrice: asset.avgPrice,
-            percentage: asset.percentage,
             assetType: asset.assetType
           }));
           
@@ -64,14 +61,12 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
     // Refresh guest assets after CSV upload
     if (isGuestMode) {
       const guestSessionId = generateGuestSessionId();
-      const guestService = new GuestPortfolioService(guestSessionId);
-      const assets = guestService.getAssets();
+      const portfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
       
-      const formattedAssets = assets.map(asset => ({
+      const formattedAssets = portfolio.assets.map(asset => ({
         symbol: asset.symbol,
         quantity: asset.quantity,
         avgPrice: asset.avgPrice,
-        percentage: asset.percentage,
         assetType: asset.assetType
       }));
       

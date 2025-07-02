@@ -21,7 +21,6 @@ export interface Asset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
-  percentage?: number | null;
   assetType: string;
   currentValue?: number;
   createdAt: Date;
@@ -125,7 +124,6 @@ export class PortfolioService {
               data: {
                 quantity: newQuantity,
                 avgPrice: newAvgPrice,
-                percentage: parsedAsset.percentage || (existingAsset as { percentage?: number | null }).percentage,
                 updatedAt: new Date()
               }
             });
@@ -139,7 +137,6 @@ export class PortfolioService {
                 symbol: parsedAsset.symbol,
                 quantity: parsedAsset.quantity,
                 avgPrice: parsedAsset.avgPrice,
-                percentage: parsedAsset.percentage,
                 assetType: parsedAsset.assetType || 'stock'
               }
             });
