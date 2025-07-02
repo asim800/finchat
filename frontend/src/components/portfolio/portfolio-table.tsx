@@ -21,7 +21,6 @@ interface DisplayAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
-  percentage?: number | null;
   assetType: string;
   totalValue: number;
   createdAt: Date;
@@ -32,7 +31,6 @@ interface NewAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
-  percentage?: number | null;
   assetType: string;
 }
 
@@ -41,7 +39,6 @@ interface ApiAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
-  percentage?: number | null;
   assetType: string;
   createdAt: string;
   updatedAt: string;

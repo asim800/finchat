@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('auth-token')?.value;
   
-  // Simple check: if token exists, assume authenticated (JWT verification happens in API routes)
+  // Simple token presence check (actual validation happens in API routes)
   const isAuthenticated = !!token;
   
   // Redirect authenticated users away from auth pages
@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
 
