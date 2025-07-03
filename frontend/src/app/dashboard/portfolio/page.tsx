@@ -6,6 +6,8 @@
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { PortfolioPageWrapper } from '@/components/portfolio/portfolio-page-wrapper';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default async function PortfolioPage() {
   const headersList = await headers();
@@ -44,6 +46,21 @@ export default async function PortfolioPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Enhanced UI Demo */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Portfolio Management</h1>
+          <div className="flex gap-2 mt-2">
+            <Badge variant="success">Profitable</Badge>
+            <Badge variant="warning">Volatile</Badge>
+            <Badge variant="destructive">At Risk</Badge>
+          </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Button variant="success" size="sm" className="text-sm font-medium">Add Asset</Button>
+          <Button variant="outline" size="sm" className="text-sm font-medium">Export</Button>
+        </div>
+      </div>
 
         {/* Guest Mode Notice */}
         {isGuestMode && (

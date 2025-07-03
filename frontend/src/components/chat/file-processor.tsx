@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { FileUpload } from '@/components/ui/file-upload';
 
 interface PortfolioEntry {
@@ -217,11 +217,11 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <h3 className="text-lg font-semibold">Upload Portfolio or Preferences</h3>
-        <p className="text-sm text-gray-600">
+        <CardTitle className="text-lg">Upload Portfolio or Preferences</CardTitle>
+        <CardDescription>
           Upload a CSV or text file containing your portfolio holdings, investment preferences, or financial goals.
           {isGuestMode && " In demo mode, data is processed locally and not saved."}
-        </p>
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <FileUpload

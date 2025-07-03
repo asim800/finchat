@@ -9,9 +9,9 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { ButtonWithLoading as Button } from '@/components/ui/button-with-loading';
+import { FormField } from '@/components/ui/form-field';
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 
 const LoginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -63,12 +63,12 @@ export const LoginForm: React.FC = () => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <h2 className="text-2xl font-bold text-center text-gray-900">
+        <CardTitle className="text-2xl text-center">
           Welcome Back
-        </h2>
-        <p className="text-center text-gray-600">
+        </CardTitle>
+        <CardDescription className="text-center">
           Sign in to your account
-        </p>
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -78,7 +78,7 @@ export const LoginForm: React.FC = () => {
             </div>
           )}
 
-          <Input
+          <FormField
             label="Email"
             type="email"
             {...register('email')}
@@ -86,7 +86,7 @@ export const LoginForm: React.FC = () => {
             placeholder="john@example.com"
           />
 
-          <Input
+          <FormField
             label="Password"
             type="password"
             {...register('password')}

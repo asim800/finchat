@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '@/components/ui/file-upload';
 
@@ -160,11 +160,11 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <h3 className="text-lg font-semibold">Upload Portfolio CSV</h3>
-        <p className="text-sm text-gray-600">
+        <CardTitle className="text-lg">Upload Portfolio CSV</CardTitle>
+        <CardDescription>
           Upload a CSV file containing your portfolio holdings to bulk import assets.
           {isGuestMode && " In demo mode, data is processed but not permanently saved."}
-        </p>
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         

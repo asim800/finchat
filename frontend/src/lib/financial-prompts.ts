@@ -38,9 +38,19 @@ When users ask about portfolio performance, risk, or Sharpe ratios, use the appr
 
 Always be encouraging while being realistic about risks and uncertainties in investing.`;
 
+interface Portfolio {
+  id: string;
+  name: string;
+  description?: string | null;
+  assets: Array<{ symbol: string; [key: string]: unknown }>;
+  totalValue: number;
+}
+
 interface PortfolioData {
   holdings?: Array<{ symbol: string; [key: string]: unknown }>;
   totalValue?: number;
+  portfolios?: Portfolio[];
+  selectedPortfolio?: Portfolio;
   [key: string]: unknown;
 }
 
@@ -51,23 +61,140 @@ interface UserPreferences {
   [key: string]: unknown;
 }
 
+interface PortfolioSelectionResult {
+  selectedPortfolio: Portfolio | null;
+  portfolioId: string | null;
+  feedbackMessage: string;
+  wasExplicitlyMentioned: boolean;
+}
+
+/**
+ * Detects portfolio name mentions in user message and selects appropriate portfolio
+ */
+export const detectPortfolioSelection = (
+  userMessage: string,
+  portfolios: Portfolio[]
+): PortfolioSelectionResult => {
+  if (!portfolios || portfolios.length === 0) {
+    return {
+      selectedPortfolio: null,
+      portfolioId: null,
+      feedbackMessage: "No portfolios available",
+      wasExplicitlyMentioned: false
+    };
+  }
+
+  // Get main portfolio (first in list)
+  const mainPortfolio = portfolios[0];
+  
+  // Create search patterns for portfolio names
+  const portfolioPatterns = portfolios.map(portfolio => ({
+    portfolio,
+    patterns: [
+      // Exact name match (case insensitive)
+      new RegExp(`\\b${portfolio.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i'),
+      // Remove "portfolio" suffix and match base name
+      new RegExp(`\\b${portfolio.name.replace(/['s]*\s*portfolio$/i, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i'),
+      // Match just the first word if it's a name (e.g., "John" from "John's Portfolio")
+      portfolio.name.includes("'s Portfolio") ? 
+        new RegExp(`\\b${portfolio.name.split("'s")[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i') : null
+    ].filter(Boolean)
+  }));
+
+  // Check for explicit portfolio mentions
+  for (const { portfolio, patterns } of portfolioPatterns) {
+    for (const pattern of patterns) {
+      if (pattern && pattern.test(userMessage)) {
+        return {
+          selectedPortfolio: portfolio,
+          portfolioId: portfolio.id,
+          feedbackMessage: `Analyzing ${portfolio.name}`,
+          wasExplicitlyMentioned: true
+        };
+      }
+    }
+  }
+
+  // Check for generic portfolio references
+  const genericPortfolioPatterns = [
+    /\bmain\s+portfolio\b/i,
+    /\bprimary\s+portfolio\b/i,
+    /\bdefault\s+portfolio\b/i,
+    /\bmy\s+main\s+portfolio\b/i
+  ];
+
+  for (const pattern of genericPortfolioPatterns) {
+    if (pattern.test(userMessage)) {
+      return {
+        selectedPortfolio: mainPortfolio,
+        portfolioId: mainPortfolio.id,
+        feedbackMessage: `Analyzing your main portfolio (${mainPortfolio.name})`,
+        wasExplicitlyMentioned: true
+      };
+    }
+  }
+
+  // No explicit mention - default to main portfolio
+  return {
+    selectedPortfolio: mainPortfolio,
+    portfolioId: mainPortfolio.id,
+    feedbackMessage: `No specific portfolio mentioned. Analyzing your main portfolio (${mainPortfolio.name})`,
+    wasExplicitlyMentioned: false
+  };
+};
+
 export const generateFinancialPrompt = (
   userMessage: string,
   context?: {
     isGuestMode?: boolean;
     portfolioData?: PortfolioData;
     userPreferences?: UserPreferences;
+    selectedPortfolioId?: string;
   }
 ) => {
   let prompt = userMessage;
+  let portfolioSelection: PortfolioSelectionResult | null = null;
 
-  if (context?.portfolioData) {
+  // Handle portfolio selection if we have multiple portfolios
+  if (context?.portfolioData?.portfolios && context.portfolioData.portfolios.length > 0) {
+    portfolioSelection = detectPortfolioSelection(userMessage, context.portfolioData.portfolios);
+    
+    // Override with explicitly provided portfolio ID if available
+    if (context.selectedPortfolioId) {
+      const explicitPortfolio = context.portfolioData.portfolios.find(p => p.id === context.selectedPortfolioId);
+      if (explicitPortfolio) {
+        portfolioSelection = {
+          selectedPortfolio: explicitPortfolio,
+          portfolioId: explicitPortfolio.id,
+          feedbackMessage: `Analyzing ${explicitPortfolio.name}`,
+          wasExplicitlyMentioned: true
+        };
+      }
+    }
+  }
+
+  // Add portfolio context
+  const selectedPortfolio = portfolioSelection?.selectedPortfolio || context?.portfolioData?.selectedPortfolio;
+  if (selectedPortfolio) {
+    prompt += `\n\nSelected Portfolio Context:
+- Portfolio Name: ${selectedPortfolio.name}
+- Portfolio ID: ${selectedPortfolio.id}
+- Holdings: ${selectedPortfolio.assets?.length || 0} positions
+- Total Value: $${selectedPortfolio.totalValue?.toLocaleString() || 'Unknown'}
+- Top Holdings: ${selectedPortfolio.assets?.slice(0, 3).map((h) => h.symbol).join(', ') || 'None'}`;
+
+    if (selectedPortfolio.description) {
+      prompt += `\n- Description: ${selectedPortfolio.description}`;
+    }
+  } else if (context?.portfolioData) {
+    // Fallback to legacy portfolio data structure
     prompt += `\n\nUser's Portfolio Context:
 - Total Holdings: ${context.portfolioData.holdings?.length || 0} positions
 - Total Value: $${context.portfolioData.totalValue?.toLocaleString() || 'Unknown'}
 - Top Holdings: ${context.portfolioData.holdings?.slice(0, 3).map((h) => h.symbol).join(', ') || 'None'}`;
   }
 
+  // Add user preferences
   if (context?.userPreferences) {
     prompt += `\n\nUser Preferences:
 - Risk Tolerance: ${context.userPreferences.riskLevel || 'Not specified'}
@@ -75,10 +202,14 @@ export const generateFinancialPrompt = (
 - Investment Goals: ${context.userPreferences.goals || 'Not specified'}`;
   }
 
+  // Add guest mode note
   if (context?.isGuestMode) {
     prompt += '\n\nNote: User is in demo mode. Provide general advice and encourage account creation for personalized features.';
   }
 
-  return prompt;
+  return {
+    prompt,
+    portfolioSelection
+  };
 };
 

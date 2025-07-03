@@ -72,15 +72,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if message requires MCP tools
-    const toolAnalysis = await analyzeMCPToolNeeds(message, user?.id, isGuestMode);
-    
-    // Generate contextual prompt
-    let financialPrompt = generateFinancialPrompt(message, {
+    // Get user's portfolios for portfolio selection
+    let userPortfolios = [];
+    if (user?.id && !isGuestMode) {
+      try {
+        userPortfolios = await PortfolioService.getUserPortfolios(user.id);
+      } catch (error) {
+        console.error('Error fetching user portfolios:', error);
+      }
+    }
+
+    // Generate contextual prompt with portfolio selection
+    const promptResult = generateFinancialPrompt(message, {
       isGuestMode,
-      portfolioData,
+      portfolioData: {
+        ...portfolioData,
+        portfolios: userPortfolios
+      },
       userPreferences,
     });
+
+    let financialPrompt = promptResult.prompt;
+    const portfolioSelection = promptResult.portfolioSelection;
+    
+    // Check if message requires MCP tools, passing selected portfolio context
+    const toolAnalysis = await analyzeMCPToolNeeds(
+      message, 
+      user?.id, 
+      isGuestMode, 
+      portfolioSelection?.portfolioId || undefined
+    );
 
     // Add MCP tool results or fallback message to prompt
     if (toolAnalysis.toolResults) {
@@ -153,6 +174,7 @@ export async function POST(request: NextRequest) {
       chartData: shouldGenerateChart,
       isGuestMode,
       sessionId: chatSession?.id,
+      portfolioFeedback: portfolioSelection?.feedbackMessage,
     });
 
   } catch (error) {
@@ -313,7 +335,8 @@ async function getRealPortfolioData(
 async function analyzeMCPToolNeeds(
   message: string, 
   userId?: string, 
-  isGuestMode: boolean = false
+  isGuestMode: boolean = false,
+  portfolioId?: string
 ): Promise<{ toolResults?: string; fallbackMessage?: string; mcpStatus: 'success' | 'partial' | 'failed' }> {
   // Skip MCP tools for guest mode (no user data available)
   if (isGuestMode || !userId) {
@@ -375,12 +398,12 @@ async function analyzeMCPToolNeeds(
       }
     }
 
-    // Execute tools with individual error handling
+    // Execute tools with individual error handling, using specific portfolio if specified
     if (needsRisk) {
       totalAttemptedTools++;
       try {
-        console.log('🔧 Executing portfolio risk analysis tool...');
-        const result = await unifiedAnalysisService.calculatePortfolioRisk(userId);
+        console.log(`🔧 Executing portfolio risk analysis tool${portfolioId ? ` for portfolio ${portfolioId}` : ''}...`);
+        const result = await unifiedAnalysisService.calculatePortfolioRisk(userId, portfolioId);
         
         if (result.success && result.formattedData) {
           toolResults += result.formattedData + '\n\n';
@@ -402,8 +425,8 @@ async function analyzeMCPToolNeeds(
     if (needsSharpe) {
       totalAttemptedTools++;
       try {
-        console.log('🔧 Executing Sharpe ratio calculation tool...');
-        const result = await unifiedAnalysisService.calculateSharpeRatio(userId);
+        console.log(`🔧 Executing Sharpe ratio calculation tool${portfolioId ? ` for portfolio ${portfolioId}` : ''}...`);
+        const result = await unifiedAnalysisService.calculateSharpeRatio(userId, portfolioId);
         
         if (result.success && result.formattedData) {
           toolResults += result.formattedData + '\n\n';
@@ -425,8 +448,8 @@ async function analyzeMCPToolNeeds(
     if (needsMarket) {
       totalAttemptedTools++;
       try {
-        console.log('🔧 Executing market data analysis tool...');
-        const result = await unifiedAnalysisService.getPortfolioMarketData(userId, '1mo');
+        console.log(`🔧 Executing market data analysis tool${portfolioId ? ` for portfolio ${portfolioId}` : ''}...`);
+        const result = await unifiedAnalysisService.getPortfolioMarketData(userId, '1mo', portfolioId);
         
         if (result.success && result.formattedData) {
           toolResults += result.formattedData;

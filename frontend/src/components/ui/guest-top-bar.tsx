@@ -8,6 +8,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 interface GuestTopBarProps {}
 
@@ -35,16 +36,18 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
             <div className="flex items-center space-x-2">
               <Link href="/dashboard/portfolio">
                 <Button 
-                  variant={isPortfolioPage ? "primary" : "outline"} 
+                  variant={isPortfolioPage ? "default" : "outline"} 
                   size="sm"
+                  className="text-sm font-medium"
                 >
                   Portfolio
                 </Button>
               </Link>
               <Link href="/dashboard/chat">
                 <Button 
-                  variant={pathname?.includes('/chat') ? "primary" : "outline"} 
+                  variant={pathname?.includes('/chat') ? "default" : "outline"} 
                   size="sm"
+                  className="text-sm font-medium"
                 >
                   Chat
                 </Button>
@@ -53,11 +56,12 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
 
             <div className="border-l border-gray-200 pl-4 flex items-center space-x-2">
               <Link href="/login">
-                <Button variant="outline" size="sm">Sign In</Button>
+                <Button variant="outline" size="sm" className="text-sm font-medium">Sign In</Button>
               </Link>
               <Link href="/register">
-                <Button size="sm">Sign Up</Button>
+                <Button size="sm" className="text-sm font-medium">Sign Up</Button>
               </Link>
+              <ThemeToggle />
             </div>
           </div>
         </div>

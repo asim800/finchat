@@ -8,6 +8,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FormField } from '@/components/ui/form-field';
+import { Badge } from '@/components/ui/badge';
+import { AlertCircle, X, Pencil, Check } from 'lucide-react';
 import { GuestPortfolioService, generateGuestSessionId } from '@/lib/guest-portfolio';
 
 interface PortfolioTableProps {
@@ -399,24 +405,20 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
       {/* Error Display */}
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-            <button
-              className="ml-auto text-red-500 hover:text-red-700"
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex justify-between items-center">
+            {error}
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setError(null)}
+              className="h-auto p-1 hover:bg-transparent"
             >
-              ×
-            </button>
-          </div>
-        </div>
+              <X className="h-4 w-4" />
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Add Asset Button */}
@@ -432,57 +434,52 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
       {/* Add Asset Form */}
       {showAddForm && (
-        <div className="mb-6 bg-gray-50 p-4 rounded-lg border">
-          <h3 className="text-md font-medium text-gray-900 mb-4">Add New Asset</h3>
+        <div className="mb-6 bg-muted/50 p-4 rounded-lg border">
+          <h3 className="text-md font-medium mb-4">Add New Asset</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <FormField
+              label="Symbol *"
+              type="text"
+              value={newAsset.symbol}
+              onChange={(e) => setNewAsset({...newAsset, symbol: e.target.value.toUpperCase()})}
+              placeholder="AAPL"
+            />
+            <FormField
+              label="Quantity *"
+              type="number"
+              value={newAsset.quantity || ''}
+              onChange={(e) => setNewAsset({...newAsset, quantity: parseFloat(e.target.value) || 0})}
+              placeholder="100"
+              min="0"
+              step="0.01"
+            />
+            <FormField
+              label="Avg Cost"
+              type="number"
+              value={newAsset.avgPrice || ''}
+              onChange={(e) => setNewAsset({...newAsset, avgPrice: parseFloat(e.target.value) || undefined})}
+              placeholder="150.00"
+              min="0"
+              step="0.01"
+            />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Symbol *</label>
-              <Input
-                type="text"
-                value={newAsset.symbol}
-                onChange={(e) => setNewAsset({...newAsset, symbol: e.target.value.toUpperCase()})}
-                placeholder="AAPL"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
-              <Input
-                type="number"
-                value={newAsset.quantity || ''}
-                onChange={(e) => setNewAsset({...newAsset, quantity: parseFloat(e.target.value) || 0})}
-                placeholder="100"
-                min="0"
-                step="0.01"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Avg Cost</label>
-              <Input
-                type="number"
-                value={newAsset.avgPrice || ''}
-                onChange={(e) => setNewAsset({...newAsset, avgPrice: parseFloat(e.target.value) || undefined})}
-                placeholder="150.00"
-                min="0"
-                step="0.01"
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select
+              <label className="block text-sm font-medium mb-2">Type</label>
+              <Select
                 value={newAsset.assetType}
-                onChange={(e) => setNewAsset({...newAsset, assetType: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                onValueChange={(value) => setNewAsset({...newAsset, assetType: value})}
               >
-                <option value="stock">Stock</option>
-                <option value="etf">ETF</option>
-                <option value="bond">Bond</option>
-                <option value="crypto">Crypto</option>
-                <option value="mutual_fund">Mutual Fund</option>
-                <option value="other">Other</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="stock">Stock</SelectItem>
+                  <SelectItem value="etf">ETF</SelectItem>
+                  <SelectItem value="bond">Bond</SelectItem>
+                  <SelectItem value="crypto">Crypto</SelectItem>
+                  <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="mt-4 flex space-x-2">
@@ -526,37 +523,23 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Symbol
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Quantity
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Current Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Avg Cost
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Value
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Symbol</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Current Price</TableHead>
+                <TableHead>Avg Cost</TableHead>
+                <TableHead>Total Value</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {assets.map((asset) => (
-                <tr key={asset.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <TableRow key={asset.id}>
+                  <TableCell>
                     {editingId === asset.id ? (
                       <Input
                         type="text"
@@ -567,8 +550,8 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     ) : (
                       <div className="text-sm font-medium text-gray-900">{asset.symbol}</div>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </TableCell>
+                  <TableCell>
                     {editingId === asset.id ? (
                       <Input
                         type="text"
@@ -581,13 +564,13 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     ) : (
                       <div className="text-sm text-gray-900">{asset.quantity}</div>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm text-gray-900">
                       {asset.price ? `$${asset.price.toFixed(2)}` : 'N/A'}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </TableCell>
+                  <TableCell>
                     {editingId === asset.id ? (
                       <Input
                         type="text"
@@ -602,33 +585,37 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         {asset.avgPrice ? `$${asset.avgPrice.toFixed(2)}` : '-'}
                       </div>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm font-medium text-gray-900">
                       ${asset.totalValue.toLocaleString()}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  </TableCell>
+                  <TableCell>
                     {editingId === asset.id ? (
-                      <select
+                      <Select
                         value={editValues.assetType || ''}
-                        onChange={(e) => setEditValues({...editValues, assetType: e.target.value})}
-                        className="text-sm border border-gray-300 rounded px-2 py-1 text-gray-900 bg-white"
+                        onValueChange={(value) => setEditValues({...editValues, assetType: value})}
                       >
-                        <option value="stock">Stock</option>
-                        <option value="etf">ETF</option>
-                        <option value="bond">Bond</option>
-                        <option value="crypto">Crypto</option>
-                        <option value="mutual_fund">Mutual Fund</option>
-                        <option value="other">Other</option>
-                      </select>
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="stock">Stock</SelectItem>
+                          <SelectItem value="etf">ETF</SelectItem>
+                          <SelectItem value="bond">Bond</SelectItem>
+                          <SelectItem value="crypto">Crypto</SelectItem>
+                          <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     ) : (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                      <Badge variant="secondary">
                         {asset.assetType}
-                      </span>
+                      </Badge>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  </TableCell>
+                  <TableCell>
                     {editingId === asset.id ? (
                       <div className="flex space-x-2">
                         <button
@@ -666,11 +653,11 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         </button>
                       </div>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>

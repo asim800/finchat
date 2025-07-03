@@ -9,9 +9,9 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { ButtonWithLoading as Button } from '@/components/ui/button-with-loading';
+import { FormField } from '@/components/ui/form-field';
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 
 const RegisterSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -65,12 +65,12 @@ export const RegisterForm: React.FC = () => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <h2 className="text-2xl font-bold text-center text-gray-900">
+        <CardTitle className="text-2xl text-center">
           Create Account
-        </h2>
-        <p className="text-center text-gray-600">
+        </CardTitle>
+        <CardDescription className="text-center">
           Join our finance platform
-        </p>
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -81,13 +81,13 @@ export const RegisterForm: React.FC = () => {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
+            <FormField
               label="First Name"
               {...register('firstName')}
               error={errors.firstName?.message}
               placeholder="John"
             />
-            <Input
+            <FormField
               label="Last Name"
               {...register('lastName')}
               error={errors.lastName?.message}
@@ -95,7 +95,7 @@ export const RegisterForm: React.FC = () => {
             />
           </div>
 
-          <Input
+          <FormField
             label="Email"
             type="email"
             {...register('email')}
@@ -103,7 +103,7 @@ export const RegisterForm: React.FC = () => {
             placeholder="john@example.com"
           />
 
-          <Input
+          <FormField
             label="Password"
             type="password"
             {...register('password')}

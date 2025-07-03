@@ -17,6 +17,39 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
+  // Profile fields
+  address              String?
+  city                 String?
+  state                String?
+  zipCode              String?
+  phone                String?
+  birthDate            DateTime?
+  
+  // Housing information
+  housingType          String?  // "rent" or "own"
+  homeValue            Float?   // If homeowner
+  monthlyRent          Float?   // If renter
+  monthlyMortgage      Float?   // If homeowner with mortgage
+  
+  // Income and expenses
+  monthlyIncome        Float?
+  monthlyAlimony       Float?
+  monthlyFixedExpenses Float?
+  
+  // Financial profile
+  employmentStatus     String?  // "employed", "self-employed", "unemployed", "retired"
+  dependents           Int?     // Number of dependents
+  emergencyFund        Float?   // Emergency fund amount
+  totalDebt            Float?   // Total debt excluding mortgage
+  
+  // Retirement planning
+  estimatedSocialSecurityAt65 Float?  // Estimated monthly Social Security income at age 65
+  
+  // Investment profile
+  investmentGoals      String?  // "retirement", "wealth-building", "income", "preservation"
+  riskTolerance        String?  // "conservative", "moderate", "aggressive"
+  investmentExperience String?  // "beginner", "intermediate", "advanced"
+  
   // Relations
   portfolio   Portfolio[]
   apiKeys     ApiKey[]

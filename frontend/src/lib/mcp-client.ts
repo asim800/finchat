@@ -180,8 +180,12 @@ print(json.dumps(result, default=str))
   /**
    * Calculate comprehensive portfolio risk metrics
    */
-  async calculatePortfolioRisk(userId: string): Promise<PortfolioRiskAnalysis> {
-    return await this.executeTool('calculate_portfolio_risk', { user_id: userId }) as PortfolioRiskAnalysis;
+  async calculatePortfolioRisk(userId: string, portfolioId?: string): Promise<PortfolioRiskAnalysis> {
+    const args: Record<string, unknown> = { user_id: userId };
+    if (portfolioId) {
+      args.portfolio_id = portfolioId;
+    }
+    return await this.executeTool('calculate_portfolio_risk', args) as PortfolioRiskAnalysis;
   }
 
   /**
@@ -198,11 +202,15 @@ print(json.dumps(result, default=str))
   /**
    * Get market data summary for portfolio symbols
    */
-  async getPortfolioMarketData(userId: string, period: string = '1mo'): Promise<MarketDataSummary> {
-    return await this.executeTool('get_portfolio_market_data', { 
+  async getPortfolioMarketData(userId: string, period: string = '1mo', portfolioId?: string): Promise<MarketDataSummary> {
+    const args: Record<string, unknown> = { 
       user_id: userId, 
       period: period 
-    }) as MarketDataSummary;
+    };
+    if (portfolioId) {
+      args.portfolio_id = portfolioId;
+    }
+    return await this.executeTool('get_portfolio_market_data', args) as MarketDataSummary;
   }
 
   /**

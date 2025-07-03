@@ -121,7 +121,7 @@ class FastAPIClient {
    * Calculate comprehensive portfolio risk metrics
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async calculatePortfolioRisk(_userId: string): Promise<PortfolioRiskAnalysis> {
+  async calculatePortfolioRisk(_userId: string, _portfolioId?: string): Promise<PortfolioRiskAnalysis> {
     // For demo purposes, use a sample portfolio
     // In a real application, this would fetch the user's actual portfolio from the database
     const demoAssets = [
@@ -157,7 +157,7 @@ class FastAPIClient {
   /**
    * Get market data summary for portfolio symbols
    */
-  async getPortfolioMarketData(userId: string, period: string = '1mo'): Promise<MarketDataSummary> {
+  async getPortfolioMarketData(userId: string, period: string = '1mo', _portfolioId?: string): Promise<MarketDataSummary> {
     return await this.makeRequest<MarketDataSummary>('/portfolio/market-data', {
       user_id: userId,
       period: period

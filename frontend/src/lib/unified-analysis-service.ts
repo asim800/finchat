@@ -125,23 +125,23 @@ class UnifiedAnalysisService {
   /**
    * Calculate portfolio risk using configured backend with fallback
    */
-  async calculatePortfolioRisk(userId: string): Promise<AnalysisResult> {
+  async calculatePortfolioRisk(userId: string, portfolioId?: string): Promise<AnalysisResult> {
     return await this.executeWithFallback(
       'portfolio risk analysis',
       () => {
         const primary = backendConfig.getPrimaryBackend();
         if (primary.type === 'fastapi') {
-          return fastAPIClient.calculatePortfolioRisk(userId);
+          return fastAPIClient.calculatePortfolioRisk(userId, portfolioId);
         } else {
-          return financeMCPClient.calculatePortfolioRisk(userId);
+          return financeMCPClient.calculatePortfolioRisk(userId, portfolioId);
         }
       },
       () => {
         const fallback = backendConfig.getFallbackBackend();
         if (fallback.type === 'fastapi') {
-          return fastAPIClient.calculatePortfolioRisk(userId);
+          return fastAPIClient.calculatePortfolioRisk(userId, portfolioId);
         } else {
-          return financeMCPClient.calculatePortfolioRisk(userId);
+          return financeMCPClient.calculatePortfolioRisk(userId, portfolioId);
         }
       },
       (data) => {
@@ -191,23 +191,23 @@ class UnifiedAnalysisService {
   /**
    * Get portfolio market data using configured backend with fallback
    */
-  async getPortfolioMarketData(userId: string, period: string = '1mo'): Promise<AnalysisResult> {
+  async getPortfolioMarketData(userId: string, period: string = '1mo', portfolioId?: string): Promise<AnalysisResult> {
     return await this.executeWithFallback(
       'market data analysis',
       () => {
         const primary = backendConfig.getPrimaryBackend();
         if (primary.type === 'fastapi') {
-          return fastAPIClient.getPortfolioMarketData(userId, period);
+          return fastAPIClient.getPortfolioMarketData(userId, period, portfolioId);
         } else {
-          return financeMCPClient.getPortfolioMarketData(userId, period);
+          return financeMCPClient.getPortfolioMarketData(userId, period, portfolioId);
         }
       },
       () => {
         const fallback = backendConfig.getFallbackBackend();
         if (fallback.type === 'fastapi') {
-          return fastAPIClient.getPortfolioMarketData(userId, period);
+          return fastAPIClient.getPortfolioMarketData(userId, period, portfolioId);
         } else {
-          return financeMCPClient.getPortfolioMarketData(userId, period);
+          return financeMCPClient.getPortfolioMarketData(userId, period, portfolioId);
         }
       },
       (data) => {
