@@ -238,7 +238,7 @@ export async function DELETE(request: NextRequest) {
         return NextResponse.json({ success: true, message: 'Portfolio deleted successfully' });
       } else {
         return NextResponse.json(
-          { error: 'Failed to delete portfolio (cannot delete last portfolio)' },
+          { error: 'Failed to delete portfolio' },
           { status: 400 }
         );
       }

@@ -154,18 +154,9 @@ export class PortfolioService {
     }
   }
 
-  // Delete a portfolio (except if it's the user's only portfolio)
+  // Delete a portfolio
   static async deletePortfolio(portfolioId: string, userId: string): Promise<boolean> {
     try {
-      // Check if user has more than one portfolio
-      const portfolioCount = await prisma.portfolio.count({
-        where: { userId }
-      });
-
-      if (portfolioCount <= 1) {
-        return false; // Cannot delete the last portfolio
-      }
-
       await prisma.portfolio.delete({
         where: {
           id: portfolioId,

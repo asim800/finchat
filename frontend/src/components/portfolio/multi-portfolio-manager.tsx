@@ -48,7 +48,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
   const [collapsedPortfolios, setCollapsedPortfolios] = useState<Set<string>>(new Set());
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPortfolio, setEditingPortfolio] = useState<string | null>(null);
-  const [newPortfolioName, setNewPortfolioName] = useState('');
+  const [newPortfolioName, setNewPortfolioName] = useState('Main Portfolio');
   const [newPortfolioDescription, setNewPortfolioDescription] = useState('');
 
   // Load all portfolios
@@ -126,7 +126,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
       if (result.success) {
         await loadPortfolios();
         setShowCreateForm(false);
-        setNewPortfolioName('');
+        setNewPortfolioName('Main Portfolio');
         setNewPortfolioDescription('');
       } else {
         setError('Failed to create portfolio');
@@ -305,7 +305,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                       type="text"
                       value={newPortfolioName}
                       onChange={(e) => setNewPortfolioName(e.target.value)}
-                      placeholder="e.g., My Portfolio"
+                      placeholder="e.g., Main Portfolio"
                       className="w-full"
                     />
                   </div>
@@ -328,7 +328,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                     variant="outline" 
                     onClick={() => {
                       setShowCreateForm(false);
-                      setNewPortfolioName('');
+                      setNewPortfolioName('Main Portfolio');
                       setNewPortfolioDescription('');
                     }}
                   >
@@ -409,17 +409,15 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                             >
                               Edit
                             </Button>
-                            {portfolios.length > 1 && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeletePortfolio(portfolio.id, portfolio.name)}
-                                disabled={loading}
-                                className="text-red-600 hover:text-red-800"
-                              >
-                                Delete
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeletePortfolio(portfolio.id, portfolio.name)}
+                              disabled={loading}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -522,7 +520,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                             variant="outline" 
                             onClick={() => {
                               setShowCreateForm(false);
-                              setNewPortfolioName('');
+                              setNewPortfolioName('Main Portfolio');
                               setNewPortfolioDescription('');
                             }}
                           >
