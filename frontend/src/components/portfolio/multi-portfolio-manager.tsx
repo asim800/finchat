@@ -288,11 +288,54 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
           <p className="mt-1 text-sm text-gray-500">
             Create your first portfolio to start tracking your investments.
           </p>
-          {!showCreateForm && (
+          {!showCreateForm ? (
             <div className="mt-6">
               <Button onClick={() => setShowCreateForm(true)}>
                 + Create Your First Portfolio
               </Button>
+            </div>
+          ) : (
+            <div className="mt-6 max-w-2xl mx-auto">
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <h3 className="text-md font-medium text-gray-900 mb-4">Create Your First Portfolio</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Portfolio Name *</label>
+                    <Input
+                      type="text"
+                      value={newPortfolioName}
+                      onChange={(e) => setNewPortfolioName(e.target.value)}
+                      placeholder="e.g., My Portfolio"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                    <Input
+                      type="text"
+                      value={newPortfolioDescription}
+                      onChange={(e) => setNewPortfolioDescription(e.target.value)}
+                      placeholder="e.g., Main investment portfolio"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 flex space-x-2">
+                  <Button onClick={handleCreatePortfolio} disabled={loading}>
+                    {loading ? 'Creating...' : 'Create Portfolio'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setNewPortfolioName('');
+                      setNewPortfolioDescription('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>
