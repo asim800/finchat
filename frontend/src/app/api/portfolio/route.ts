@@ -69,7 +69,48 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { assets, portfolioId, name, description, action } = body;
+    const { assets, portfolioId, name, description, action, userId } = body;
+    
+    // Handle portfolio fetch for FastAPI client
+    if (action === 'fetch' || userId) {
+      console.log('🔍 Portfolio fetch request from FastAPI client:', { userId: userId || user.id, portfolioId });
+      
+      const targetUserId = userId || user.id;
+      
+      if (portfolioId) {
+        // Get specific portfolio with market values
+        const portfolio = await PortfolioService.getPortfolioWithMarketValues(targetUserId, portfolioId);
+        
+        if (!portfolio) {
+          console.warn('❌ Portfolio not found:', { userId: targetUserId, portfolioId });
+          return NextResponse.json({ error: 'Portfolio not found', assets: [] }, { status: 404 });
+        }
+        
+        console.log('✅ Portfolio found with assets:', portfolio.assets?.length || 0);
+        return NextResponse.json({ 
+          portfolio,
+          assets: portfolio.assets || []
+        });
+      } else {
+        // Get default portfolio or first available portfolio
+        const portfolios = await PortfolioService.getUserPortfolios(targetUserId);
+        
+        if (!portfolios || portfolios.length === 0) {
+          console.warn('❌ No portfolios found for user:', targetUserId);
+          return NextResponse.json({ error: 'No portfolios found', assets: [] });
+        }
+        
+        // Use the first portfolio as default
+        const defaultPortfolio = portfolios[0];
+        const portfolioWithAssets = await PortfolioService.getPortfolioWithMarketValues(targetUserId, defaultPortfolio.id);
+        
+        console.log('✅ Default portfolio found with assets:', portfolioWithAssets?.assets?.length || 0);
+        return NextResponse.json({ 
+          portfolio: portfolioWithAssets,
+          assets: portfolioWithAssets?.assets || []
+        });
+      }
+    }
 
     // Handle different actions
     if (action === 'create') {

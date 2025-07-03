@@ -126,6 +126,7 @@ class UnifiedAnalysisService {
    * Calculate portfolio risk using configured backend with fallback
    */
   async calculatePortfolioRisk(userId: string, portfolioId?: string): Promise<AnalysisResult> {
+    console.log('🔍 UnifiedAnalysisService calculatePortfolioRisk called with:', { userId, portfolioId });
     return await this.executeWithFallback(
       'portfolio risk analysis',
       () => {

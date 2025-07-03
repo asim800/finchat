@@ -88,6 +88,56 @@ class FastAPIClient {
   }
 
   /**
+   * Fetch user's portfolio from database
+   */
+  private async fetchUserPortfolio(userId: string, portfolioId?: string): Promise<Array<{ symbol: string; shares: number }>> {
+    try {
+      // Call the internal API to get user's portfolio
+      const response = await fetch('/api/portfolio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'fetch', userId, portfolioId }),
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to fetch user portfolio - API request failed');
+        return []; // Return empty array instead of demo data
+      }
+
+      const portfolioData = await response.json();
+      console.log('✅ Portfolio data fetched:', portfolioData);
+
+      // Convert portfolio assets to the format expected by FastAPI
+      if (portfolioData.assets && Array.isArray(portfolioData.assets) && portfolioData.assets.length > 0) {
+        return portfolioData.assets.map((asset: { symbol: string; quantity: number }) => ({
+          symbol: asset.symbol,
+          shares: asset.quantity
+        }));
+      } else {
+        console.warn('Portfolio is empty - no assets found');
+        return []; // Return empty array instead of demo data
+      }
+    } catch (error) {
+      console.error('Error fetching user portfolio:', error);
+      console.warn('Returning empty portfolio due to error');
+      return []; // Return empty array instead of demo data
+    }
+  }
+
+  /**
+   * Get demo assets as fallback
+   */
+  private getDemoAssets(): Array<{ symbol: string; shares: number }> {
+    return [
+      { symbol: "AAPL", shares: 10 },
+      { symbol: "GOOGL", shares: 5 },
+      { symbol: "MSFT", shares: 8 }
+    ];
+  }
+
+  /**
    * Check if FastAPI service is available
    */
   async checkHealth(): Promise<{ available: boolean; error?: string }> {
@@ -120,18 +170,20 @@ class FastAPIClient {
   /**
    * Calculate comprehensive portfolio risk metrics
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async calculatePortfolioRisk(_userId: string, _portfolioId?: string): Promise<PortfolioRiskAnalysis> {
-    // For demo purposes, use a sample portfolio
-    // In a real application, this would fetch the user's actual portfolio from the database
-    const demoAssets = [
-      { symbol: "AAPL", shares: 10 },
-      { symbol: "GOOGL", shares: 5 },
-      { symbol: "MSFT", shares: 8 }
-    ];
+  async calculatePortfolioRisk(userId: string, portfolioId?: string): Promise<PortfolioRiskAnalysis> {
+    console.log('🔍 FastAPI calculatePortfolioRisk called with:', { userId, portfolioId });
+    
+    // Fetch user's actual portfolio from database
+    const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
+    console.log('📊 User assets fetched for FastAPI:', userAssets);
+    
+    // Check if portfolio is empty
+    if (!userAssets || userAssets.length === 0) {
+      throw new Error('Portfolio is empty - please add some assets to analyze risk metrics');
+    }
     
     return await this.makeRequest<PortfolioRiskAnalysis>('/portfolio/risk', {
-      assets: demoAssets,
+      assets: userAssets,
       timeframe: "1y"
     });
   }
@@ -139,18 +191,20 @@ class FastAPIClient {
   /**
    * Calculate Sharpe ratio for user's portfolios
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async calculateSharpeRatio(_userId: string, _portfolioId?: string): Promise<SharpeRatioAnalysis> {
-    // For demo purposes, use a sample portfolio
-    // In a real application, this would fetch the user's actual portfolio from the database
-    const demoAssets = [
-      { symbol: "AAPL", shares: 10 },
-      { symbol: "GOOGL", shares: 5 },
-      { symbol: "MSFT", shares: 8 }
-    ];
+  async calculateSharpeRatio(userId: string, portfolioId?: string): Promise<SharpeRatioAnalysis> {
+    console.log('🔍 FastAPI calculateSharpeRatio called with:', { userId, portfolioId });
+    
+    // Fetch user's actual portfolio from database
+    const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
+    console.log('📊 User assets fetched for FastAPI:', userAssets);
+
+    // Check if portfolio is empty
+    if (!userAssets || userAssets.length === 0) {
+      throw new Error('Portfolio is empty - please add some assets to calculate Sharpe ratio');
+    }
 
     return await this.makeRequest<SharpeRatioAnalysis>('/portfolio/sharpe', {
-      assets: demoAssets
+      assets: userAssets
     });
   }
 
