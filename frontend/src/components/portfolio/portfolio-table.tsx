@@ -617,40 +617,48 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                   </TableCell>
                   <TableCell>
                     {editingId === asset.id ? (
-                      <div className="flex space-x-2">
-                        <button
+                      <div className="flex space-x-3 sm:space-x-2">
+                        <Button
                           onClick={saveEdit}
-                          className="text-green-600 hover:text-green-900"
+                          variant="outline"
+                          size="sm"
                           disabled={loading}
+                          className="text-green-600 hover:text-green-900 border-green-200 hover:border-green-300"
                         >
                           Save
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => {
                             setEditingId(null);
                             setEditValues({});
                           }}
-                          className="text-gray-600 hover:text-gray-900"
+                          variant="outline"
+                          size="sm"
+                          className="text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300"
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </div>
                     ) : (
-                      <div className="flex space-x-2">
-                        <button
+                      <div className="flex space-x-3 sm:space-x-2">
+                        <Button
                           onClick={() => startEdit(asset)}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          variant="outline"
+                          size="sm"
                           disabled={loading}
+                          className="text-indigo-600 hover:text-indigo-900 border-indigo-200 hover:border-indigo-300"
                         >
                           Edit
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => deleteAsset(asset)}
-                          className="text-red-600 hover:text-red-900"
+                          variant="outline"
+                          size="sm"
                           disabled={loading}
+                          className="text-red-600 hover:text-red-900 border-red-200 hover:border-red-300"
                         >
                           Delete
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </TableCell>

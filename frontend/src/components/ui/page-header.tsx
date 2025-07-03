@@ -33,7 +33,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     <div className="mb-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-blue-600">
             {title}
           </h1>
           <p className="text-gray-600 mt-2">

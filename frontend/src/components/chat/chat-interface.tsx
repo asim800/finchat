@@ -38,11 +38,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
     keywords?: string[];
     [key: string]: unknown;
   } | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<'anthropic' | 'openai'>('openai');
-  const [availableProviders, setAvailableProviders] = useState<('anthropic' | 'openai')[]>(['openai']);
+  const [selectedProvider] = useState<'anthropic' | 'openai'>('openai');
   const [guestSessionId] = useState<string>(() => generateGuestSessionId());
   
-  const { sendMessage, loadLatestSession, isLoading, error } = useChatAPI();
+  const { sendMessage, loadLatestSession, isLoading } = useChatAPI();
 
   // Memoized initialization function
   const initializeSession = useCallback(async () => {
@@ -72,9 +71,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         const welcomeMessage: Message = {
           id: '1',
           role: 'assistant',
-          content: isGuestMode 
-            ? 'Hi! I\'m your AI financial assistant. In demo mode, I can help you with general financial questions, market trends, and basic investment concepts. You can also upload portfolio files for analysis. Try asking me about stocks, bonds, or financial planning!'
-            : 'Hi! I\'m your AI financial assistant. I can help you with your portfolio, market analysis, and personalized financial advice. You can also upload your portfolio or preference files for detailed analysis. What would you like to know?',
+          content: 'Portfolio Insights?',
           timestamp: new Date(),
           provider: 'simulation'
         };
@@ -88,9 +85,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
       const welcomeMessage: Message = {
         id: '1',
         role: 'assistant',
-        content: isGuestMode 
-          ? 'Hi! I\'m your AI financial assistant. In demo mode, I can help you with general financial questions, market trends, and basic investment concepts. You can also upload portfolio files for analysis. Try asking me about stocks, bonds, or financial planning!'
-          : 'Hi! I\'m your AI financial assistant. I can help you with your portfolio, market analysis, and personalized financial advice. You can also upload your portfolio or preference files for detailed analysis. What would you like to know?',
+        content: 'Portfolio Insights?',
         timestamp: new Date(),
         provider: 'simulation'
       };
@@ -114,26 +109,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
     scrollToBottom();
   }, [messages]);
 
-  // Check available providers on mount
-  useEffect(() => {
-    checkAvailableProviders();
-  }, []);
-
-  const checkAvailableProviders = async () => {
-    try {
-      const response = await fetch('/api/chat/providers');
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableProviders(data.providers || ['simulation']);
-        if (data.providers && data.providers.length > 0) {
-          setSelectedProvider(data.providers[0]);
-        }
-      }
-    } catch {
-      console.log('Could not fetch providers, using simulation mode');
-      setAvailableProviders(['openai']); // Fallback
-    }
-  };
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -262,43 +237,56 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[700px] bg-white rounded-lg shadow-lg">
-      {/* Chat Header */}
-      <div className="bg-blue-600 text-white p-4 rounded-t-lg">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="font-semibold">
-              {isGuestMode ? 'AI Assistant - Demo Mode' : 'AI Financial Assistant'}
-            </h3>
-            <p className="text-blue-100 text-sm">
-              {isGuestMode 
-                ? 'Ask general financial questions & upload files'
-                : 'Get personalized insights about your finances'
-              }
-            </p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <LLMSelector
-              selectedProvider={selectedProvider}
-              onProviderChange={setSelectedProvider}
-              availableProviders={availableProviders}
-              className="text-white"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFileUpload(!showFileUpload)}
-              className="bg-white text-blue-600 hover:bg-gray-100"
-            >
-              📎 Upload File
-            </Button>
-          </div>
+    <div className="flex flex-col h-full bg-white">
+      {/* Minimalist Header */}
+      <div className="flex justify-between items-center p-2 border-b border-gray-100">
+        <div className="flex items-center space-x-2">
+          {!isGuestMode && (
+            <>
+              <button
+                onClick={() => handleSampleQuestion("Analyze my portfolio performance")}
+                className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs hover:bg-blue-100 transition-colors"
+              >
+                Portfolio Analysis
+              </button>
+              <button
+                onClick={() => handleSampleQuestion("Show me market trends")}
+                className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs hover:bg-blue-100 transition-colors"
+              >
+                Market Trends
+              </button>
+            </>
+          )}
+          {isGuestMode && (
+            <>
+              <button
+                onClick={() => handleSampleQuestion("What's the difference between stocks and bonds?")}
+                className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs hover:bg-blue-100 transition-colors"
+              >
+                Stocks vs Bonds
+              </button>
+              <button
+                onClick={() => handleSampleQuestion("Show me a sample portfolio allocation chart")}
+                className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs hover:bg-blue-100 transition-colors"
+              >
+                Portfolio Chart
+              </button>
+            </>
+          )}
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowFileUpload(!showFileUpload)}
+          className="text-gray-600 hover:text-gray-900"
+        >
+          📎 Upload
+        </Button>
       </div>
 
       {/* File Upload Section */}
       {showFileUpload && (
-        <div className="p-4 bg-gray-50 border-b">
+        <div className="p-3 bg-gray-50 border-b">
           <FileProcessor
             onDataExtracted={handleFileDataExtracted}
             isGuestMode={isGuestMode}
@@ -306,57 +294,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         </div>
       )}
 
-      {/* Sample Questions */}
-      {messages.length === 1 && !showFileUpload && (
-        <div className="p-4 bg-gray-50 border-b">
-          <p className="text-sm text-gray-600 mb-3">Try asking:</p>
-          <div className="flex flex-wrap gap-2">
-            {isGuestMode ? (
-              <>
-                <button
-                  onClick={() => handleSampleQuestion("What's the difference between stocks and bonds?")}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                >
-                  Stocks vs Bonds
-                </button>
-                <button
-                  onClick={() => handleSampleQuestion("How does compound interest work?")}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                >
-                  Compound Interest
-                </button>
-                <button
-                  onClick={() => handleSampleQuestion("Show me a sample portfolio allocation chart")}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                >
-                  Portfolio Chart
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => handleSampleQuestion("Analyze my portfolio performance")}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                >
-                  Portfolio Analysis
-                </button>
-                <button
-                  onClick={() => handleSampleQuestion("What should I invest in next?")}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                >
-                  Investment Advice
-                </button>
-                <button
-                  onClick={() => handleSampleQuestion("Show me market trends")}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                >
-                  Market Trends
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -385,18 +322,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
       </div>
 
       {/* Input Area */}
-      <div className="border-t p-4">
+      <div className="border-t border-gray-100 p-3">
         {uploadedData && (
-          <div className="mb-3 bg-blue-50 border border-blue-200 rounded p-2">
-            <p className="text-sm text-blue-700">
-              📄 File data loaded: {uploadedData.type === 'portfolio' ? `${uploadedData.count} holdings` : 'Preferences & settings'}
+          <div className="mb-2 bg-blue-50 border border-blue-200 rounded p-2">
+            <p className="text-xs text-blue-700">
+              📄 {uploadedData.type === 'portfolio' ? `${uploadedData.count} holdings loaded` : 'File data loaded'}
             </p>
-          </div>
-        )}
-        
-        {error && (
-          <div className="mb-3 bg-red-50 border border-red-200 rounded p-2">
-            <p className="text-sm text-red-700">⚠️ Using demo mode: {error}</p>
           </div>
         )}
         
@@ -405,23 +336,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={uploadedData ? "Ask about your uploaded data..." : isGuestMode ? "Ask about finance basics..." : "Ask about your portfolio..."}
+            placeholder={uploadedData ? "Ask about your data..." : "Ask me anything..."}
             className="flex-1"
             disabled={isLoading}
           />
           <Button 
             onClick={handleSend} 
             disabled={!inputValue.trim() || isLoading}
-            className="px-6"
+            size="sm"
+            className="px-4"
           >
             Send
           </Button>
         </div>
-        {isGuestMode && (
-          <p className="text-xs text-gray-500 mt-2">
-            Demo mode: File analysis available, but data isn&apos;t saved. <a href="/register" className="text-blue-600 hover:underline">Sign up for persistent storage</a>
-          </p>
-        )}
       </div>
     </div>
   );
@@ -590,7 +517,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
 //       {messages.length === 1 && !showFileUpload && (
 //         <div className="p-4 bg-gray-50 border-b">
 //           <p className="text-sm text-gray-600 mb-3">Try asking:</p>
-//           <div className="flex flex-wrap gap-2">
+//           <div className="flex flex-wrap gap-3 sm:gap-2">
 //             {isGuestMode ? (
 //               <>
 //                 <button
@@ -673,7 +600,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
 //             </p>
 //           </div>
 //         )}
-//         <div className="flex space-x-2">
+//         <div className="flex space-x-3 sm:space-x-2">
 //           <Input
 //             value={inputValue}
 //             onChange={(e) => setInputValue(e.target.value)}

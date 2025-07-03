@@ -67,3 +67,35 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile touch optimizations */
+@layer base {
+  /* Remove tap highlights on iOS */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Improve touch responsiveness */
+  button, 
+  [role="button"], 
+  input[type="submit"], 
+  input[type="button"] {
+    touch-action: manipulation;
+  }
+  
+  /* Prevent text selection on touch for interactive elements */
+  button, 
+  [role="button"],
+  .interactive {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Improve scrolling performance on mobile */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+}

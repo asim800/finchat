@@ -24,24 +24,21 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
   className = '' 
 }) => {
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`}>
-      {/* Panel Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Portfolio Chart</h3>
-          {chartData && (
-            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+    <div className={`bg-white border border-gray-100 ${className}`}>
+      {/* Minimalist Header */}
+      {chartData && (
+        <div className="p-2 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">{chartData.title}</span>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
               {chartData.type.toUpperCase()}
-            </div>
-          )}
+            </span>
+          </div>
         </div>
-        <p className="text-sm text-gray-600 mt-1">
-          Visual representation of your portfolio data
-        </p>
-      </div>
+      )}
 
       {/* Chart Content */}
-      <div className="p-4">
+      <div className="p-3">
         {chartData ? (
           <div className="h-80">
             <ChartDisplay data={chartData} />
