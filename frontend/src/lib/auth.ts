@@ -28,6 +28,7 @@ export interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
+  role?: string;
 }
 
 // Hash password for storage
@@ -78,7 +79,8 @@ export async function getUserFromRequest(request: NextRequest): Promise<AuthUser
         id: true,
         email: true,
         firstName: true,
-        lastName: true
+        lastName: true,
+        role: true
       }
     });
 
@@ -88,7 +90,8 @@ export async function getUserFromRequest(request: NextRequest): Promise<AuthUser
       id: user.id,
       email: user.email,
       firstName: user.firstName,
-      lastName: user.lastName
+      lastName: user.lastName,
+      role: user.role
     };
   } catch {
     return null;

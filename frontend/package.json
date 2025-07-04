@@ -10,7 +10,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "update-prices": "npx tsx scripts/update-prices.ts",
+    "update-prices-advanced": "npx tsx scripts/update-prices-advanced.ts",
+    "check-prices": "npx tsx scripts/check-prices.ts",
+    "clear-prices": "npx tsx scripts/clear-prices.ts",
+    "test-csv": "npx tsx scripts/test-csv-export.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.22",

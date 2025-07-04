@@ -17,13 +17,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, MenuIcon, XIcon } from 'lucide-react';
+import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, MenuIcon, XIcon, ShieldIcon } from 'lucide-react';
 
 interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
+  role?: string;
 }
 
 interface AuthenticatedTopBarProps {
@@ -113,6 +114,17 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
                     Profile
                   </Link>
                 </DropdownMenuItem>
+                {user.role === 'admin' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center">
+                        <ShieldIcon className="mr-2 h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="flex items-center text-red-600 focus:text-red-600"
@@ -216,6 +228,18 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
                     Account
                   </Button>
                 </Link>
+                {user.role === 'admin' && (
+                  <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="w-full justify-start text-sm font-medium"
+                    >
+                      <ShieldIcon className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </Button>
+                  </Link>
+                )}
                 <Button 
                   variant="ghost" 
                   size="sm"

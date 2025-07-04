@@ -9,12 +9,16 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '@/components/ui/file-upload';
+import { CsvHelpModal } from './csv-help-modal';
 
 interface ParsedAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number;
   assetType?: string;
+  optionType?: string;
+  strikePrice?: number;
+  expirationDate?: string;
 }
 
 interface CsvUploadProps {
@@ -90,6 +94,12 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
           asset.avgPrice = parseFloat(value) || undefined;
         } else if (['type', 'assettype', 'asset_type'].includes(header)) {
           asset.assetType = value.toLowerCase() || 'stock';
+        } else if (['optiontype', 'option_type'].includes(header)) {
+          asset.optionType = value.toLowerCase();
+        } else if (['strike', 'strikeprice', 'strike_price'].includes(header)) {
+          asset.strikePrice = parseFloat(value) || undefined;
+        } else if (['expiration', 'expirationdate', 'expiration_date'].includes(header)) {
+          asset.expirationDate = value;
         }
       });
 
@@ -160,11 +170,16 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="text-lg">Upload Portfolio CSV</CardTitle>
-        <CardDescription>
-          Upload a CSV file containing your portfolio holdings to bulk import assets.
-          {isGuestMode && " In demo mode, data is processed but not permanently saved."}
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-lg">Upload Portfolio CSV</CardTitle>
+            <CardDescription>
+              Upload a CSV file containing your portfolio holdings to bulk import assets.
+              {isGuestMode && " In demo mode, data is processed but not permanently saved."}
+            </CardDescription>
+          </div>
+          <CsvHelpModal />
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         
@@ -234,9 +249,11 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
 
         <div className="text-xs text-gray-500">
           <p><strong>Required CSV format:</strong></p>
-          <p className="mt-1">Header row with columns: Symbol, Quantity, Price (optional), Percentage (optional)</p>
-          <p className="mt-1"><strong>Example:</strong> Symbol,Quantity,Price,Percentage</p>
-          <p>AAPL,100,150.50,25.5</p>
+          <p className="mt-1">Header row with columns: Symbol, Quantity, Price (optional), AssetType (optional)</p>
+          <p className="mt-1"><strong>Example:</strong> Symbol,Quantity,Price,AssetType</p>
+          <p>AAPL,100,150.50,stock</p>
+          <p>SPY,50,493.52,etf</p>
+          <p className="mt-2"><strong>Supported Asset Types:</strong> stock, etf, bond, crypto, mutual_fund, options, other</p>
         </div>
       </CardContent>
     </Card>

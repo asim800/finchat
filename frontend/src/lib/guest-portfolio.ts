@@ -11,6 +11,11 @@ export interface GuestAsset {
   avgPrice?: number | null;
   assetType: string;
   addedAt: Date;
+  
+  // Options-specific fields
+  optionType?: string;
+  expirationDate?: string;
+  strikePrice?: number;
 }
 
 export interface GuestPortfolio {
@@ -108,7 +113,13 @@ export class GuestPortfolioService {
               quantity: parsedAsset.quantity,
               avgPrice: parsedAsset.avgPrice,
               assetType: parsedAsset.assetType || 'stock',
-              addedAt: new Date()
+              addedAt: new Date(),
+              // Include options fields if present
+              ...(parsedAsset.assetType === 'options' && {
+                optionType: parsedAsset.optionType,
+                strikePrice: parsedAsset.strikePrice,
+                expirationDate: parsedAsset.expirationDate
+              })
             };
 
             portfolio.assets.push(newAsset);

@@ -1,0 +1,60 @@
+{
+  "description": "Example price configuration file. Copy this to price-config.json and update with your asset prices.",
+  "date": "2024-07-04",
+  "assets": [
+    {
+      "symbol": "AAPL",
+      "price": 195.89,
+      "assetType": "stock",
+      "source": "manual"
+    },
+    {
+      "symbol": "GOOGL", 
+      "price": 140.34,
+      "assetType": "stock",
+      "source": "manual"
+    },
+    {
+      "symbol": "MSFT",
+      "price": 378.85,
+      "assetType": "stock",
+      "source": "manual"
+    },
+    {
+      "symbol": "TSLA",
+      "price": 248.42,
+      "assetType": "stock",
+      "source": "manual"
+    },
+    {
+      "symbol": "NVDA",
+      "price": 875.28,
+      "assetType": "stock",
+      "source": "manual"
+    },
+    {
+      "symbol": "SPY",
+      "price": 493.52,
+      "assetType": "etf",
+      "source": "manual"
+    },
+    {
+      "symbol": "QQQ",
+      "price": 408.33,
+      "assetType": "etf",
+      "source": "manual"
+    },
+    {
+      "symbol": "BTC-USD",
+      "price": 43250.75,
+      "assetType": "crypto",
+      "source": "manual"
+    },
+    {
+      "symbol": "ETH-USD",
+      "price": 2380.42,
+      "assetType": "crypto",
+      "source": "manual"
+    }
+  ]
+}

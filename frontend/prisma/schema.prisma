@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,53 +8,40 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  password    String
-  firstName   String
-  lastName    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Profile fields
-  address              String?
-  city                 String?
-  state                String?
-  zipCode              String?
-  phone                String?
-  birthDate            DateTime?
-  
-  // Housing information
-  housingType          String?  // "rent" or "own"
-  homeValue            Float?   // If homeowner
-  monthlyRent          Float?   // If renter
-  monthlyMortgage      Float?   // If homeowner with mortgage
-  
-  // Income and expenses
-  monthlyIncome        Float?
-  monthlyAlimony       Float?
-  monthlyFixedExpenses Float?
-  
-  // Financial profile
-  employmentStatus     String?  // "employed", "self-employed", "unemployed", "retired"
-  dependents           Int?     // Number of dependents
-  emergencyFund        Float?   // Emergency fund amount
-  totalDebt            Float?   // Total debt excluding mortgage
-  
-  // Retirement planning
-  estimatedSocialSecurityAt65 Float?  // Estimated monthly Social Security income at age 65
-  
-  // Investment profile
-  investmentGoals      String?  // "retirement", "wealth-building", "income", "preservation"
-  riskTolerance        String?  // "conservative", "moderate", "aggressive"
-  investmentExperience String?  // "beginner", "intermediate", "advanced"
-  
-  // Relations
-  portfolio   Portfolio[]
-  apiKeys     ApiKey[]
-  accounts    Account[]
-  chatSessions ChatSession[]
-  
+  id                          String        @id @default(cuid())
+  email                       String        @unique
+  password                    String
+  firstName                   String
+  lastName                    String
+  createdAt                   DateTime      @default(now())
+  updatedAt                   DateTime      @updatedAt
+  address                     String?
+  birthDate                   DateTime?
+  city                        String?
+  dependents                  Int?
+  emergencyFund               Float?
+  employmentStatus            String?
+  estimatedSocialSecurityAt65 Float?
+  homeValue                   Float?
+  housingType                 String?
+  investmentExperience        String?
+  investmentGoals             String?
+  monthlyAlimony              Float?
+  monthlyFixedExpenses        Float?
+  monthlyIncome               Float?
+  monthlyMortgage             Float?
+  monthlyRent                 Float?
+  phone                       String?
+  riskTolerance               String?
+  state                       String?
+  totalDebt                   Float?
+  zipCode                     String?
+  role                        String        @default("user")
+  accounts                    Account[]
+  apiKeys                     ApiKey[]
+  chatSessions                ChatSession[]
+  portfolio                   Portfolio[]
+
   @@map("users")
 }
 
@@ -66,28 +52,30 @@ model Portfolio {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   assets      Asset[]
-  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("portfolios")
 }
 
 model Asset {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   portfolioId String
   symbol      String
   quantity    Float
   avgPrice    Float?
-  price       Float?   // Current/most recent price from historical data
-  assetType   String   // stock, bond, crypto, etc.
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  assetType   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  price       Float?
   
-  // Relations
+  // Options-specific fields (only used when assetType = "options")
+  optionType      String?   // "call" or "put"
+  expirationDate  DateTime? // Options expiration date
+  strikePrice     Float?    // Strike price for options
+  
   portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
-  
+
   @@map("assets")
 }
 
@@ -96,82 +84,72 @@ model HistoricalPrice {
   symbol    String
   price     Float
   date      DateTime
-  source    String?  // e.g., "yahoo", "alpha_vantage", "manual"
-  assetType String?  // stock, bond, crypto, etc.
+  source    String?
+  assetType String?
   createdAt DateTime @default(now())
-  
-  // Composite index for efficient queries
+
   @@unique([symbol, date])
-  @@index([symbol, date(sort: Desc)]) // For latest price queries
+  @@index([symbol, date(sort: Desc)])
   @@index([date])
   @@map("historical_prices")
 }
 
 model ApiKey {
-  id          String   @id @default(cuid())
-  userId      String
-  provider    String   // bank name or financial service
-  keyName     String
+  id           String   @id @default(cuid())
+  userId       String
+  provider     String
+  keyName      String
   encryptedKey String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("api_keys")
 }
 
 model Account {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   provider    String
   accountId   String
   accountName String
-  accountType String   // checking, savings, investment, etc.
+  accountType String
   balance     Float?
-  currency    String   @default("USD")
-  isActive    Boolean  @default(true)
+  currency    String    @default("USD")
+  isActive    Boolean   @default(true)
   lastSync    DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("accounts")
 }
 
 model ChatSession {
-  id            String   @id @default(cuid())
-  userId        String?  // Nullable for guest sessions
-  guestSessionId String? // For guest users
-  title         String?
-  isGuestSession Boolean @default(false)
-  expiresAt     DateTime? // For guest session cleanup
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  // Relations
-  user          User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages      Message[]
-  
+  id             String    @id @default(cuid())
+  userId         String?
+  title          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  expiresAt      DateTime?
+  guestSessionId String?
+  isGuestSession Boolean   @default(false)
+  user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages       Message[]
+
   @@map("chat_sessions")
 }
 
 model Message {
-  id          String   @id @default(cuid())
-  sessionId   String
-  role        String   // user, assistant
-  content     String
-  provider    String?  // openai, anthropic, simulation
-  metadata    Json?    // for storing chart data, etc.
-  createdAt   DateTime @default(now())
-  
-  // Relations
-  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  id        String      @id @default(cuid())
+  sessionId String
+  role      String
+  content   String
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  provider  String?
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   @@map("messages")
 }
-

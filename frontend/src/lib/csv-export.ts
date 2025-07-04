@@ -7,26 +7,30 @@ export interface ExportableAsset {
   symbol: string;
   quantity: number;
   avgPrice?: number | null;
-  percentage?: number | null;
   assetType: string;
   totalValue?: number;
+  
+  // Options-specific fields
+  optionType?: string | null;
+  expirationDate?: Date | null;
+  strikePrice?: number | null;
 }
 
 export interface CsvExportOptions {
   includeHeaders?: boolean;
-  includePercentage?: boolean;
   includePrice?: boolean;
   includeTotalValue?: boolean;
   includeAssetType?: boolean;
+  includeOptionsFields?: boolean;
   delimiter?: string;
 }
 
 const DEFAULT_OPTIONS: CsvExportOptions = {
   includeHeaders: true,
-  includePercentage: true,
   includePrice: true,
   includeTotalValue: true,
   includeAssetType: true,
+  includeOptionsFields: true,
   delimiter: ','
 };
 
@@ -56,10 +60,6 @@ export function exportPortfolioToCsv(
       row.push(asset.avgPrice?.toString() || '');
     }
     
-    if (opts.includePercentage) {
-      row.push(asset.percentage?.toString() || '');
-    }
-    
     if (opts.includeTotalValue) {
       const totalValue = asset.totalValue || (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
       row.push(totalValue.toString());
@@ -67,6 +67,15 @@ export function exportPortfolioToCsv(
     
     if (opts.includeAssetType) {
       row.push(asset.assetType);
+    }
+    
+    if (opts.includeOptionsFields && asset.assetType === 'options') {
+      row.push(asset.optionType || '');
+      row.push(asset.strikePrice?.toString() || '');
+      row.push(asset.expirationDate ? asset.expirationDate.toISOString().split('T')[0] : '');
+    } else if (opts.includeOptionsFields) {
+      // Add empty fields for non-options assets to maintain consistent column count
+      row.push('', '', '');
     }
     
     rows.push(row.join(delimiter));
@@ -82,16 +91,16 @@ function getHeaders(options: CsvExportOptions): string[] {
     headers.push('Price');
   }
   
-  if (options.includePercentage) {
-    headers.push('Percentage');
-  }
-  
   if (options.includeTotalValue) {
     headers.push('Total Value');
   }
   
   if (options.includeAssetType) {
     headers.push('Asset Type');
+  }
+  
+  if (options.includeOptionsFields) {
+    headers.push('Option Type', 'Strike Price', 'Expiration Date');
   }
   
   return headers;

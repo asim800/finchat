@@ -27,6 +27,11 @@ export interface Asset {
   currentValue?: number | null;
   createdAt: Date;
   updatedAt: Date;
+  
+  // Options-specific fields
+  optionType?: string | null;
+  expirationDate?: Date | null;
+  strikePrice?: number | null;
 }
 
 export class PortfolioService {
@@ -247,7 +252,13 @@ export class PortfolioService {
                 symbol: parsedAsset.symbol,
                 quantity: parsedAsset.quantity,
                 avgPrice: parsedAsset.avgPrice,
-                assetType: parsedAsset.assetType || 'stock'
+                assetType: parsedAsset.assetType || 'stock',
+                // Add options-specific fields if asset is an option
+                ...(parsedAsset.assetType === 'options' && {
+                  optionType: parsedAsset.optionType,
+                  strikePrice: parsedAsset.strikePrice,
+                  expirationDate: parsedAsset.expirationDate ? new Date(parsedAsset.expirationDate) : null
+                })
               }
             });
 

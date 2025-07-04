@@ -15,8 +15,10 @@ interface CsvExportProps {
     symbol: string;
     quantity: number;
     avgPrice?: number | null;
-    percentage?: number | null;
     assetType: string;
+    optionType?: string | null;
+    expirationDate?: Date | null;
+    strikePrice?: number | null;
   }>;
 }
 
@@ -59,9 +61,11 @@ export const CsvExport: React.FC<CsvExportProps> = ({
       symbol: asset.symbol,
       quantity: asset.quantity,
       avgPrice: asset.avgPrice,
-      percentage: asset.percentage,
       assetType: asset.assetType,
-      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
+      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+      optionType: asset.optionType,
+      expirationDate: asset.expirationDate,
+      strikePrice: asset.strikePrice
     }));
 
     const csvContent = exportPortfolioToCsv(exportableAssets);

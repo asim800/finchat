@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, X, Pencil, Check } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 import { GuestPortfolioService, generateGuestSessionId } from '@/lib/guest-portfolio';
 
 interface PortfolioTableProps {
@@ -35,6 +35,11 @@ interface DisplayAsset {
   totalValue: number;
   createdAt: Date;
   updatedAt: Date;
+  
+  // Options-specific fields
+  optionType?: string | null;
+  expirationDate?: Date | null;
+  strikePrice?: number | null;
 }
 
 interface NewAsset {
@@ -42,6 +47,11 @@ interface NewAsset {
   quantity: number;
   avgPrice?: number | null;
   assetType: string;
+  
+  // Options-specific fields
+  optionType?: string;
+  expirationDate?: string; // String for form input
+  strikePrice?: number;
 }
 
 interface ApiAsset {
@@ -52,6 +62,11 @@ interface ApiAsset {
   assetType: string;
   createdAt: string;
   updatedAt: string;
+  
+  // Options-specific fields
+  optionType?: string | null;
+  expirationDate?: string | null;
+  strikePrice?: number | null;
 }
 
 export const PortfolioTable: React.FC<PortfolioTableProps> = ({ 
@@ -79,7 +94,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     symbol: '',
     quantity: 0,
     avgPrice: undefined,
-    assetType: 'stock'
+    assetType: 'stock',
+    optionType: undefined,
+    expirationDate: undefined,
+    strikePrice: undefined
   });
   const [guestSessionId] = useState<string>(() => generateGuestSessionId());
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +125,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           assetType: asset.assetType,
           totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
           createdAt: asset.addedAt,
-          updatedAt: asset.addedAt
+          updatedAt: asset.addedAt,
+          optionType: asset.optionType || null,
+          expirationDate: asset.expirationDate ? new Date(asset.expirationDate) : null,
+          strikePrice: asset.strikePrice || null
         }));
         updateAssets(displayAssets);
       } else if (userId) {
@@ -133,7 +154,8 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           ...asset,
           createdAt: new Date(asset.createdAt),
           updatedAt: new Date(asset.updatedAt),
-          totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
+          totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+          expirationDate: asset.expirationDate ? new Date(asset.expirationDate) : null
         }));
         updateAssets(displayAssets);
       } else {
@@ -157,6 +179,22 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
       return;
     }
 
+    // Validate options-specific fields
+    if (newAsset.assetType === 'options') {
+      if (!newAsset.optionType) {
+        setError('Please select an option type (Call or Put)');
+        return;
+      }
+      if (!newAsset.strikePrice || newAsset.strikePrice <= 0) {
+        setError('Please enter a valid strike price greater than 0');
+        return;
+      }
+      if (!newAsset.expirationDate) {
+        setError('Please select an expiration date');
+        return;
+      }
+    }
+
     if (!isGuestMode && !userId) {
       setError('Unable to add asset: Please sign in or use guest mode');
       return;
@@ -168,12 +206,18 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     try {
       if (isGuestMode) {
         // Add to guest portfolio
-        const result = GuestPortfolioService.addAssetsToGuestPortfolio(guestSessionId, [{
+        const assetToAdd = {
           symbol: newAsset.symbol.toUpperCase(),
           quantity: newAsset.quantity,
           avgPrice: newAsset.avgPrice,
-          assetType: newAsset.assetType
-        }]);
+          assetType: newAsset.assetType,
+          ...(newAsset.assetType === 'options' && {
+            optionType: newAsset.optionType,
+            strikePrice: newAsset.strikePrice,
+            expirationDate: newAsset.expirationDate
+          })
+        };
+        const result = GuestPortfolioService.addAssetsToGuestPortfolio(guestSessionId, [assetToAdd]);
 
         if (result.success) {
           await loadPortfolio();
@@ -182,7 +226,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
             symbol: '',
             quantity: 0,
             avgPrice: undefined,
-            assetType: 'stock'
+            assetType: 'stock',
+            optionType: undefined,
+            expirationDate: undefined,
+            strikePrice: undefined
           });
         } else {
           setError('Failed to add asset to guest portfolio: ' + (result.errors.length > 0 ? result.errors.join(', ') : 'Unknown error'));
@@ -200,7 +247,12 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
               symbol: newAsset.symbol.toUpperCase(),
               quantity: newAsset.quantity,
               avgPrice: newAsset.avgPrice,
-              assetType: newAsset.assetType
+              assetType: newAsset.assetType,
+              ...(newAsset.assetType === 'options' && {
+                optionType: newAsset.optionType,
+                strikePrice: newAsset.strikePrice,
+                expirationDate: newAsset.expirationDate
+              })
             }]
           })
         });
@@ -218,7 +270,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
             symbol: '',
             quantity: 0,
             avgPrice: undefined,
-            assetType: 'stock'
+            assetType: 'stock',
+            optionType: undefined,
+            expirationDate: undefined,
+            strikePrice: undefined
           });
         } else {
           setError('Failed to add asset to portfolio: ' + (result.errors.length > 0 ? result.errors.join(', ') : 'Unknown error'));
@@ -239,7 +294,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
       symbol: asset.symbol,
       quantity: asset.quantity,
       avgPrice: asset.avgPrice,
-      assetType: asset.assetType
+      assetType: asset.assetType,
+      optionType: asset.optionType,
+      expirationDate: asset.expirationDate,
+      strikePrice: asset.strikePrice
     });
   };
 
@@ -477,11 +535,52 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                   <SelectItem value="bond">Bond</SelectItem>
                   <SelectItem value="crypto">Crypto</SelectItem>
                   <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
+                  <SelectItem value="options">Options</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+          
+          {/* Options-specific fields */}
+          {newAsset.assetType === 'options' && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border">
+              <h4 className="text-sm font-medium text-blue-800 mb-3">Options Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Option Type *</label>
+                  <Select
+                    value={newAsset.optionType || ''}
+                    onValueChange={(value) => setNewAsset({...newAsset, optionType: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="call">Call</SelectItem>
+                      <SelectItem value="put">Put</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <FormField
+                  label="Strike Price *"
+                  type="number"
+                  value={newAsset.strikePrice || ''}
+                  onChange={(e) => setNewAsset({...newAsset, strikePrice: parseFloat(e.target.value) || undefined})}
+                  placeholder="100.00"
+                  min="0"
+                  step="0.01"
+                />
+                <FormField
+                  label="Expiration Date *"
+                  type="date"
+                  value={newAsset.expirationDate || ''}
+                  onChange={(e) => setNewAsset({...newAsset, expirationDate: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
+          
           <div className="mt-4 flex space-x-2">
             <Button onClick={handleAddAsset} disabled={loading}>
               Add Asset
@@ -494,7 +593,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                   symbol: '',
                   quantity: 0,
                   avgPrice: undefined,
-                  assetType: 'stock'
+                  assetType: 'stock',
+                  optionType: undefined,
+                  expirationDate: undefined,
+                  strikePrice: undefined
                 });
               }}
             >
@@ -533,6 +635,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <TableHead>Avg Cost</TableHead>
                 <TableHead>Total Value</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Options Details</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -606,6 +709,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                           <SelectItem value="bond">Bond</SelectItem>
                           <SelectItem value="crypto">Crypto</SelectItem>
                           <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
+                          <SelectItem value="options">Options</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
@@ -613,6 +717,24 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                       <Badge variant="secondary">
                         {asset.assetType}
                       </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {asset.assetType === 'options' ? (
+                      <div className="text-xs space-y-1">
+                        <div className="font-medium text-gray-900">
+                          {asset.optionType ? asset.optionType.toUpperCase() : 'N/A'}
+                        </div>
+                        <div className="text-gray-600">
+                          Strike: ${asset.strikePrice ? asset.strikePrice.toFixed(2) : 'N/A'}
+                        </div>
+                        <div className="text-gray-600">
+                          Exp: {asset.expirationDate ? 
+                            new Date(asset.expirationDate).toLocaleDateString() : 'N/A'}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-400">-</div>
                     )}
                   </TableCell>
                   <TableCell>

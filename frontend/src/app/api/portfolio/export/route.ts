@@ -18,10 +18,10 @@ export async function GET(request: NextRequest) {
 
     // Get query parameters for export options
     const { searchParams } = new URL(request.url);
-    const includePercentage = searchParams.get('includePercentage') !== 'false';
     const includePrice = searchParams.get('includePrice') !== 'false';
     const includeTotalValue = searchParams.get('includeTotalValue') !== 'false';
     const includeAssetType = searchParams.get('includeAssetType') !== 'false';
+    const includeOptionsFields = searchParams.get('includeOptionsFields') !== 'false';
     const format = searchParams.get('format') || 'download'; // 'download' or 'json'
 
     const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(user.id);
@@ -31,17 +31,19 @@ export async function GET(request: NextRequest) {
       symbol: asset.symbol,
       quantity: asset.quantity,
       avgPrice: asset.avgPrice,
-      percentage: (asset as { percentage?: number | null }).percentage,
       assetType: asset.assetType,
-      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
+      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+      optionType: asset.optionType,
+      expirationDate: asset.expirationDate,
+      strikePrice: asset.strikePrice
     }));
 
     const exportOptions: CsvExportOptions = {
       includeHeaders: true,
-      includePercentage,
       includePrice,
       includeTotalValue,
       includeAssetType,
+      includeOptionsFields,
       delimiter: ','
     };
 
@@ -94,9 +96,11 @@ export async function POST(request: NextRequest) {
       symbol: asset.symbol,
       quantity: asset.quantity,
       avgPrice: asset.avgPrice,
-      percentage: (asset as { percentage?: number | null }).percentage,
       assetType: asset.assetType,
-      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
+      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+      optionType: asset.optionType,
+      expirationDate: asset.expirationDate,
+      strikePrice: asset.strikePrice
     }));
 
     const csvContent = exportPortfolioToCsv(exportableAssets, exportOptions);

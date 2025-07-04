@@ -8,6 +8,11 @@ export interface ParsedAsset {
   quantity: number;
   avgPrice?: number | null;
   assetType?: string;
+  
+  // Options-specific fields
+  optionType?: string;
+  expirationDate?: string;
+  strikePrice?: number;
 }
 
 export interface PortfolioParseResult {
