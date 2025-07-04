@@ -253,8 +253,8 @@ export class PortfolioService {
                 quantity: parsedAsset.quantity,
                 avgPrice: parsedAsset.avgPrice,
                 assetType: parsedAsset.assetType || 'stock',
-                // Add options-specific fields if asset is an option
-                ...(parsedAsset.assetType === 'options' && {
+                // Add options-specific fields if asset is an option or bond
+                ...((parsedAsset.assetType === 'option' || parsedAsset.assetType === 'bond') && {
                   optionType: parsedAsset.optionType,
                   strikePrice: parsedAsset.strikePrice,
                   expirationDate: parsedAsset.expirationDate ? new Date(parsedAsset.expirationDate) : null

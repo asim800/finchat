@@ -180,7 +180,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     }
 
     // Validate options-specific fields
-    if (newAsset.assetType === 'options') {
+    if (newAsset.assetType === 'option') {
       if (!newAsset.optionType) {
         setError('Please select an option type (Call or Put)');
         return;
@@ -191,6 +191,22 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
       }
       if (!newAsset.expirationDate) {
         setError('Please select an expiration date');
+        return;
+      }
+    }
+
+    // Validate bond-specific fields
+    if (newAsset.assetType === 'bond') {
+      if (!newAsset.optionType) {
+        setError('Please select a bond type');
+        return;
+      }
+      if (!newAsset.strikePrice || newAsset.strikePrice <= 0) {
+        setError('Please enter a valid coupon rate greater than 0');
+        return;
+      }
+      if (!newAsset.expirationDate) {
+        setError('Please select a maturity date');
         return;
       }
     }
@@ -211,7 +227,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           quantity: newAsset.quantity,
           avgPrice: newAsset.avgPrice,
           assetType: newAsset.assetType,
-          ...(newAsset.assetType === 'options' && {
+          ...((newAsset.assetType === 'option' || newAsset.assetType === 'bond') && {
             optionType: newAsset.optionType,
             strikePrice: newAsset.strikePrice,
             expirationDate: newAsset.expirationDate
@@ -248,7 +264,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
               quantity: newAsset.quantity,
               avgPrice: newAsset.avgPrice,
               assetType: newAsset.assetType,
-              ...(newAsset.assetType === 'options' && {
+              ...((newAsset.assetType === 'option' || newAsset.assetType === 'bond') && {
                 optionType: newAsset.optionType,
                 strikePrice: newAsset.strikePrice,
                 expirationDate: newAsset.expirationDate
@@ -535,7 +551,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                   <SelectItem value="bond">Bond</SelectItem>
                   <SelectItem value="crypto">Crypto</SelectItem>
                   <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
-                  <SelectItem value="options">Options</SelectItem>
+                  <SelectItem value="option">Option</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
@@ -543,7 +559,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           </div>
           
           {/* Options-specific fields */}
-          {newAsset.assetType === 'options' && (
+          {newAsset.assetType === 'option' && (
             <div className="mt-4 p-4 bg-blue-50 rounded-lg border">
               <h4 className="text-sm font-medium text-blue-800 mb-3">Options Details</h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -573,6 +589,64 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 />
                 <FormField
                   label="Expiration Date *"
+                  type="date"
+                  value={newAsset.expirationDate || ''}
+                  onChange={(e) => setNewAsset({...newAsset, expirationDate: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Bond-specific fields */}
+          {newAsset.assetType === 'bond' && (
+            <div className="mt-4 p-4 bg-green-50 rounded-lg border">
+              <h4 className="text-sm font-medium text-green-800 mb-3">Bond Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Bond Type *</label>
+                  <Select
+                    value={newAsset.optionType || ''}
+                    onValueChange={(value) => setNewAsset({...newAsset, optionType: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="usd">USD - US Treasury</SelectItem>
+                      <SelectItem value="ii">II - US TIPS</SelectItem>
+                      <SelectItem value="dem">DEM - Germany (Bundesanleihe)</SelectItem>
+                      <SelectItem value="gbp">GBP - United Kingdom (Gilt)</SelectItem>
+                      <SelectItem value="jpy">JPY - Japan Government</SelectItem>
+                      <SelectItem value="cad">CAD - Canada Government</SelectItem>
+                      <SelectItem value="mexn">MEXN - Mexico Government</SelectItem>
+                      <SelectItem value="brl">BRL - Brazil Government</SelectItem>
+                      <SelectItem value="frf">FRF - France (OAT)</SelectItem>
+                      <SelectItem value="inr">INR - India Government</SelectItem>
+                      <SelectItem value="aud">AUD - Australia Government</SelectItem>
+                      <SelectItem value="nzd">NZD - New Zealand Government</SelectItem>
+                      <SelectItem value="itl">ITL - Italy Government</SelectItem>
+                      <SelectItem value="esp">ESP - Spain Government</SelectItem>
+                      <SelectItem value="sek">SEK - Sweden Government</SelectItem>
+                      <SelectItem value="pte">PTE - Portugal Government</SelectItem>
+                      <SelectItem value="nlg">NLG - Netherlands Government</SelectItem>
+                      <SelectItem value="chf">CHF - Switzerland Government</SelectItem>
+                      <SelectItem value="tr">TR - Turkey Government</SelectItem>
+                      <SelectItem value="corporate">Corporate</SelectItem>
+                      <SelectItem value="municipal">Municipal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <FormField
+                  label="Coupon Rate (%) *"
+                  type="number"
+                  value={newAsset.strikePrice || ''}
+                  onChange={(e) => setNewAsset({...newAsset, strikePrice: parseFloat(e.target.value) || undefined})}
+                  placeholder="4.5"
+                  min="0"
+                  step="0.01"
+                />
+                <FormField
+                  label="Maturity Date *"
                   type="date"
                   value={newAsset.expirationDate || ''}
                   onChange={(e) => setNewAsset({...newAsset, expirationDate: e.target.value})}
@@ -635,7 +709,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 <TableHead>Avg Cost</TableHead>
                 <TableHead>Total Value</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Options Details</TableHead>
+                <TableHead>Asset Details</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -709,7 +783,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                           <SelectItem value="bond">Bond</SelectItem>
                           <SelectItem value="crypto">Crypto</SelectItem>
                           <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
-                          <SelectItem value="options">Options</SelectItem>
+                          <SelectItem value="option">Option</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
@@ -720,7 +794,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                     )}
                   </TableCell>
                   <TableCell>
-                    {asset.assetType === 'options' ? (
+                    {asset.assetType === 'option' ? (
                       <div className="text-xs space-y-1">
                         <div className="font-medium text-gray-900">
                           {asset.optionType ? asset.optionType.toUpperCase() : 'N/A'}
@@ -730,6 +804,19 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                         </div>
                         <div className="text-gray-600">
                           Exp: {asset.expirationDate ? 
+                            new Date(asset.expirationDate).toLocaleDateString() : 'N/A'}
+                        </div>
+                      </div>
+                    ) : asset.assetType === 'bond' ? (
+                      <div className="text-xs space-y-1">
+                        <div className="font-medium text-gray-900">
+                          {asset.optionType ? asset.optionType.toUpperCase() : 'N/A'}
+                        </div>
+                        <div className="text-gray-600">
+                          Coupon: {asset.strikePrice ? `${asset.strikePrice}%` : 'N/A'}
+                        </div>
+                        <div className="text-gray-600">
+                          Maturity: {asset.expirationDate ? 
                             new Date(asset.expirationDate).toLocaleDateString() : 'N/A'}
                         </div>
                       </div>
