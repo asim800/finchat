@@ -14,7 +14,7 @@ interface PortfolioPageClientProps {
   onAssetsChange?: (assets: Array<{
     symbol: string;
     quantity: number;
-    avgPrice?: number | null;
+    avgCost?: number | null;
     percentage?: number | null;
     assetType: string;
   }>) => void;
@@ -24,7 +24,7 @@ interface DisplayAsset {
   id: string;
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   percentage?: number | null;
   assetType: string;
   totalValue: number;
@@ -47,7 +47,7 @@ export const PortfolioPageClient: React.FC<PortfolioPageClientProps> = ({
       const exportableAssets = assets.map(asset => ({
         symbol: asset.symbol,
         quantity: asset.quantity,
-        avgPrice: asset.avgPrice,
+        avgCost: asset.avgCost,
         percentage: asset.percentage,
         assetType: asset.assetType
       }));

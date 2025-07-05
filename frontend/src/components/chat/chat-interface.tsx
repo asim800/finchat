@@ -26,6 +26,9 @@ interface ChatInterfaceProps {
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = false, userId, onChartUpdate, hideInlineCharts = false }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isInitiallyLoaded, setIsInitiallyLoaded] = useState(false);
   const hasInitialized = useRef(false);
   
   const [inputValue, setInputValue] = useState('');
@@ -41,7 +44,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
   const [selectedProvider] = useState<'anthropic' | 'openai'>('openai');
   const [guestSessionId] = useState<string>(() => generateGuestSessionId());
   
-  const { sendMessage, loadLatestSession, isLoading } = useChatAPI();
+  const { sendMessage, loadLatestSession, loadMoreMessages, isLoading } = useChatAPI();
 
   // Memoized initialization function
   const initializeSession = useCallback(async () => {
@@ -57,6 +60,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         // Load existing chat history
         setMessages(latestSession.messages);
         setCurrentSessionId(latestSession.sessionId);
+        
+        // Assume there are more messages unless we know otherwise
+        setHasMoreMessages(true);
+        
+        // Mark as initially loaded after a small delay to prevent immediate scroll triggers
+        setTimeout(() => {
+          setIsInitiallyLoaded(true);
+        }, 500);
         
         // Find the most recent chart data in the loaded messages
         const messagesWithCharts = latestSession.messages.filter(msg => msg.chartData);
@@ -77,6 +88,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
         };
         
         setMessages([welcomeMessage]);
+        setTimeout(() => {
+          setIsInitiallyLoaded(true);
+        }, 500);
       }
     } catch (error) {
       console.error('Error initializing chat session:', error);
@@ -91,6 +105,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
       };
       
       setMessages([welcomeMessage]);
+      setTimeout(() => {
+        setIsInitiallyLoaded(true);
+      }, 500);
     }
   }, [isGuestMode, guestSessionId, loadLatestSession, onChartUpdate]);
 
@@ -100,14 +117,89 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
   }, [initializeSession]); // Include memoized initializeSession
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Only auto-scroll to bottom for new messages, not when loading more history
+  const lastMessageCount = useRef(0);
+  
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Only scroll to bottom if messages were added at the end (not at the beginning)
+    if (messages.length > lastMessageCount.current) {
+      const wasAtBottom = messagesContainerRef.current && 
+        messagesContainerRef.current.scrollHeight - messagesContainerRef.current.scrollTop <= 
+        messagesContainerRef.current.clientHeight + 50;
+      
+      // Only auto-scroll if user was already at/near the bottom or it's the initial load
+      if (wasAtBottom || !isInitiallyLoaded) {
+        scrollToBottom();
+      }
+    }
+    lastMessageCount.current = messages.length;
+  }, [messages, isInitiallyLoaded]);
+
+  // Load more messages when scrolled to top
+  const handleLoadMore = useCallback(async () => {
+    if (!currentSessionId || isLoadingMore || !hasMoreMessages || messages.length === 0) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+    
+    try {
+      const oldestMessage = messages[0];
+      
+      const moreMessages = await loadMoreMessages(
+        currentSessionId,
+        oldestMessage.id,
+        10, // Load 10 more messages
+        isGuestMode ? guestSessionId : undefined
+      );
+
+      if (moreMessages && moreMessages.length > 0) {
+        // Store current scroll position
+        const container = messagesContainerRef.current;
+        const scrollTop = container?.scrollTop || 0;
+        const scrollHeight = container?.scrollHeight || 0;
+
+        // Add new messages to the beginning
+        setMessages(prev => [...moreMessages, ...prev]);
+
+        // Restore scroll position (maintain user's position)
+        setTimeout(() => {
+          if (container) {
+            const newScrollHeight = container.scrollHeight;
+            container.scrollTop = scrollTop + (newScrollHeight - scrollHeight);
+          }
+        }, 0);
+
+        // Check if we got fewer messages than requested (indicates no more messages)
+        if (moreMessages.length < 10) {
+          setHasMoreMessages(false);
+        }
+      } else {
+        setHasMoreMessages(false);
+      }
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentSessionId, isLoadingMore, hasMoreMessages, messages, loadMoreMessages, isGuestMode, guestSessionId]);
+
+  // Scroll event handler for infinite scroll
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    
+    // Trigger load more when user scrolls within 10px of top
+    // Only trigger after initial load is complete to prevent auto-loading on page load
+    if (container.scrollTop <= 10 && hasMoreMessages && !isLoadingMore && messages.length > 0 && isInitiallyLoaded) {
+      handleLoadMore();
+    }
+  }, [handleLoadMore, hasMoreMessages, isLoadingMore, messages.length, currentSessionId, isInitiallyLoaded]);
 
 
   const handleSend = async () => {
@@ -296,7 +388,37 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
 
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px] max-h-[500px]"
+        onScroll={handleScroll}
+      >
+
+        {/* Load More Indicator */}
+        {isLoadingMore && (
+          <div className="flex justify-center py-4">
+            <div className="bg-gray-100 rounded-lg px-4 py-2">
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+                <span className="text-sm text-gray-600">Loading more messages...</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* End of History Indicator */}
+        {!hasMoreMessages && messages.length > 5 && (
+          <div className="flex justify-center py-2">
+            <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+              Beginning of conversation
+            </div>
+          </div>
+        )}
+
         {messages.map((message) => (
           <div key={message.id}>
             <MessageBubble message={message} />
@@ -307,6 +429,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
             )}
           </div>
         ))}
+        
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-lg p-3 max-w-xs">

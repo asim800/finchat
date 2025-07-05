@@ -62,10 +62,10 @@ export async function simulateAIResponse(
             
             // Generate chart data for guest portfolio
             const chartData = result.portfolio.assets
-              .filter(asset => asset.avgPrice && asset.avgPrice > 0)
+              .filter(asset => asset.avgCost && asset.avgCost > 0)
               .map(asset => ({
                 name: asset.symbol,
-                value: asset.quantity * (asset.avgPrice || 0)
+                value: asset.quantity * (asset.avgCost || 0)
               }));
 
             return {
@@ -100,10 +100,10 @@ export async function simulateAIResponse(
                 
                 // Generate chart data for user portfolio
                 const chartData = result.portfolio.assets
-                  .filter((asset: { avgPrice?: number | null; quantity: number; symbol: string }) => asset.avgPrice && asset.avgPrice > 0)
-                  .map((asset: { avgPrice: number; quantity: number; symbol: string }) => ({
+                  .filter((asset: { avgCost?: number | null; quantity: number; symbol: string }) => asset.avgCost && asset.avgCost > 0)
+                  .map((asset: { avgCost: number; quantity: number; symbol: string }) => ({
                     name: asset.symbol,
-                    value: asset.quantity * asset.avgPrice
+                    value: asset.quantity * asset.avgCost
                   }));
 
                 return {

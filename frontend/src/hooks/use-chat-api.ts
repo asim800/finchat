@@ -50,12 +50,16 @@ export const useChatAPI = () => {
 
   const loadSession = useCallback(async (
     sessionId: string,
-    guestSessionId?: string
+    guestSessionId?: string,
+    messageLimit?: number
   ): Promise<ChatMessage[] | null> => {
     try {
       const url = new URL(`/api/chat/sessions/${sessionId}`, window.location.origin);
       if (guestSessionId) {
         url.searchParams.set('guestSessionId', guestSessionId);
+      }
+      if (messageLimit) {
+        url.searchParams.set('messageLimit', messageLimit.toString());
       }
 
       const response = await fetch(url.toString());
@@ -78,6 +82,44 @@ export const useChatAPI = () => {
     } catch (err) {
       console.error('Error loading session:', err);
       setError(err instanceof Error ? err.message : 'Failed to load session');
+      return null;
+    }
+  }, []);
+
+  const loadMoreMessages = useCallback(async (
+    sessionId: string,
+    beforeMessageId: string,
+    limit: number = 10,
+    guestSessionId?: string
+  ): Promise<ChatMessage[] | null> => {
+    try {
+      const url = new URL(`/api/chat/sessions/${sessionId}/messages`, window.location.origin);
+      url.searchParams.set('before', beforeMessageId);
+      url.searchParams.set('limit', limit.toString());
+      if (guestSessionId) {
+        url.searchParams.set('guestSessionId', guestSessionId);
+      }
+
+      const response = await fetch(url.toString());
+      
+      if (!response.ok) {
+        throw new Error('Failed to load more messages');
+      }
+
+      const data = await response.json();
+      
+      // Convert messages to the format expected by the chat interface
+      return data.messages.map((msg: { id: string; role: string; content: string; provider?: string; createdAt: string; metadata?: Record<string, unknown> }) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        provider: msg.provider || 'unknown',
+        timestamp: new Date(msg.createdAt),
+        chartData: msg.metadata?.chartData || undefined,
+      }));
+    } catch (err) {
+      console.error('Error loading more messages:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load more messages');
       return null;
     }
   }, []);
@@ -177,6 +219,7 @@ export const useChatAPI = () => {
     sendMessage,
     loadSession,
     loadLatestSession,
+    loadMoreMessages,
     isLoading,
     error,
   };

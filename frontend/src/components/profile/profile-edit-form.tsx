@@ -39,6 +39,7 @@ interface User {
   investmentGoals?: string | null;
   riskTolerance?: string | null;
   investmentExperience?: string | null;
+  chatHistoryLimit?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,6 +75,7 @@ export const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, onSave, 
     investmentGoals: user.investmentGoals || '',
     riskTolerance: user.riskTolerance || '',
     investmentExperience: user.investmentExperience || '',
+    chatHistoryLimit: user.chatHistoryLimit?.toString() || '5',
   });
 
   const [loading, setLoading] = useState(false);
@@ -114,6 +116,7 @@ export const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, onSave, 
         investmentGoals: formData.investmentGoals || null,
         riskTolerance: formData.riskTolerance || null,
         investmentExperience: formData.investmentExperience || null,
+        chatHistoryLimit: formData.chatHistoryLimit ? parseInt(formData.chatHistoryLimit) : null,
       };
 
       const response = await fetch('/api/profile', {
@@ -471,6 +474,37 @@ export const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, onSave, 
                   <SelectItem value="advanced">Advanced</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
+
+      {/* Chat Settings Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Chat Preferences</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="chatHistoryLimit">Chat History Limit</Label>
+              <Select value={formData.chatHistoryLimit} onValueChange={(value) => handleInputChange('chatHistoryLimit', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select number of chats to display" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 chat</SelectItem>
+                  <SelectItem value="3">3 chats</SelectItem>
+                  <SelectItem value="5">5 chats (default)</SelectItem>
+                  <SelectItem value="10">10 chats</SelectItem>
+                  <SelectItem value="20">20 chats</SelectItem>
+                  <SelectItem value="50">50 chats</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-gray-600 mt-1">
+                Number of recent chat conversations to display in the chat sidebar
+              </p>
             </div>
           </div>
         </CardContent>

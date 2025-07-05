@@ -19,6 +19,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     const { sessionId } = await params;
     const { searchParams } = new URL(request.url);
     const guestSessionId = searchParams.get('guestSessionId');
+    const messageLimit = searchParams.get('messageLimit');
     
     // Try to get authenticated user
     const user = await getUserFromRequest(request);
@@ -26,6 +27,14 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     let session;
     
     if (user) {
+      // Get user's chat history limit setting
+      const userWithSettings = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { chatHistoryLimit: true }
+      });
+      
+      const historyLimit = messageLimit ? parseInt(messageLimit) : (userWithSettings?.chatHistoryLimit || 5);
+      
       // Get authenticated user's session
       session = await prisma.chatSession.findFirst({
         where: {
@@ -35,11 +44,20 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
         },
         include: {
           messages: {
-            orderBy: { createdAt: 'asc' }
+            orderBy: { createdAt: 'desc' },
+            take: historyLimit
           }
         }
       });
+      
+      // Reverse messages to show oldest first (conversation order)
+      if (session?.messages) {
+        session.messages = session.messages.reverse();
+      }
     } else if (guestSessionId) {
+      // Default limit for guest sessions
+      const guestHistoryLimit = messageLimit ? parseInt(messageLimit) : 5;
+      
       // Get guest session
       session = await prisma.chatSession.findFirst({
         where: {
@@ -53,10 +71,16 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
         },
         include: {
           messages: {
-            orderBy: { createdAt: 'asc' }
+            orderBy: { createdAt: 'desc' },
+            take: guestHistoryLimit
           }
         }
       });
+      
+      // Reverse messages to show oldest first (conversation order)
+      if (session?.messages) {
+        session.messages = session.messages.reverse();
+      }
     } else {
       return NextResponse.json(
         { error: 'Authentication required or guest session ID missing' },

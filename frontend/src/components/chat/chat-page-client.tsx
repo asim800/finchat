@@ -23,7 +23,7 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
   const [guestAssets, setGuestAssets] = useState<Array<{
     symbol: string;
     quantity: number;
-    avgPrice?: number | null;
+    avgCost?: number | null;
     assetType: string;
   }>>([]);
 
@@ -38,7 +38,7 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
           const formattedAssets = portfolio.assets.map(asset => ({
             symbol: asset.symbol,
             quantity: asset.quantity,
-            avgPrice: asset.avgPrice,
+            avgCost: asset.avgCost,
             assetType: asset.assetType
           }));
           
@@ -66,7 +66,7 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
       const formattedAssets = portfolio.assets.map(asset => ({
         symbol: asset.symbol,
         quantity: asset.quantity,
-        avgPrice: asset.avgPrice,
+        avgCost: asset.avgCost,
         assetType: asset.assetType
       }));
       

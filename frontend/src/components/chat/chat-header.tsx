@@ -14,7 +14,7 @@ interface ChatHeaderProps {
   guestAssets?: Array<{
     symbol: string;
     quantity: number;
-    avgPrice?: number | null;
+    avgCost?: number | null;
     percentage?: number | null;
     assetType: string;
   }>;

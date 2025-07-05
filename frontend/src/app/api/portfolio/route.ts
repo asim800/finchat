@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         ...portfolio,
         assets: portfolio.assets.map(asset => ({
           ...asset,
-          totalValue: asset.currentValue || (asset.avgPrice ? asset.quantity * asset.avgPrice : 0)
+          totalValue: asset.currentValue || (asset.avgCost ? asset.quantity * asset.avgCost : 0)
         }))
       };
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         ...portfolio,
         assets: portfolio.assets.map(asset => ({
           ...asset,
-          totalValue: asset.currentValue || (asset.avgPrice ? asset.quantity * asset.avgPrice : 0)
+          totalValue: asset.currentValue || (asset.avgCost ? asset.quantity * asset.avgCost : 0)
         }))
       }));
 
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
       ...result.portfolio,
       assets: result.portfolio.assets.map(asset => ({
         ...asset,
-        totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
+        totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0
       }))
     };
 
@@ -192,7 +192,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { symbol, quantity, avgPrice, portfolioId, name, description, action } = body;
+    const { symbol, quantity, avgCost, portfolioId, name, description, action } = body;
 
     if (action === 'update-portfolio') {
       // Update portfolio details
@@ -218,7 +218,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const success = await PortfolioService.updateAsset(user.id, portfolioId, symbol, quantity, avgPrice);
+    const success = await PortfolioService.updateAsset(user.id, portfolioId, symbol, quantity, avgCost);
     
     if (success) {
       // Return updated portfolio
@@ -231,7 +231,7 @@ export async function PUT(request: NextRequest) {
         ...portfolio,
         assets: portfolio.assets.map(asset => ({
           ...asset,
-          totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
+          totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0
         }))
       };
       
@@ -306,7 +306,7 @@ export async function DELETE(request: NextRequest) {
         ...portfolio,
         assets: portfolio.assets.map(asset => ({
           ...asset,
-          totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0
+          totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0
         }))
       };
       

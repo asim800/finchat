@@ -14,7 +14,8 @@ interface CsvExportProps {
   guestAssets?: Array<{
     symbol: string;
     quantity: number;
-    avgPrice?: number | null;
+    avgCost?: number | null;
+    price?: number | null;
     assetType: string;
     optionType?: string | null;
     expirationDate?: Date | null;
@@ -60,9 +61,10 @@ export const CsvExport: React.FC<CsvExportProps> = ({
     const exportableAssets = guestAssets.map(asset => ({
       symbol: asset.symbol,
       quantity: asset.quantity,
-      avgPrice: asset.avgPrice,
+      avgCost: asset.avgCost,
+      currentPrice: asset.price,
       assetType: asset.assetType,
-      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+      totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
       optionType: asset.optionType,
       expirationDate: asset.expirationDate,
       strikePrice: asset.strikePrice

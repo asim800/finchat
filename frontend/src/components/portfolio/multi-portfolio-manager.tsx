@@ -25,7 +25,7 @@ interface DisplayAsset {
   id: string;
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   price?: number | null;
   assetType: string;
   totalValue: number;
@@ -346,7 +346,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
               sum + (asset.price ? asset.quantity * asset.price : 0), 0
             );
             const portfolioCost = portfolio.assets.reduce((sum, asset) => 
-              sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0), 0
+              sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0), 0
             );
             
             return (

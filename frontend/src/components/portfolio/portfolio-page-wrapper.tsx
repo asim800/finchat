@@ -19,7 +19,7 @@ interface DisplayAsset {
   id: string;
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   percentage?: number | null;
   assetType: string;
   totalValue: number;
@@ -41,7 +41,7 @@ export const PortfolioPageWrapper: React.FC<PortfolioPageWrapperProps> = ({
   const csvAssets = currentAssets.map(asset => ({
     symbol: asset.symbol,
     quantity: asset.quantity,
-    avgPrice: asset.avgPrice,
+    avgCost: asset.avgCost,
     percentage: asset.percentage,
     assetType: asset.assetType
   }));

@@ -8,7 +8,7 @@ import { ParsedAsset } from './portfolio-parser';
 export interface GuestAsset {
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   assetType: string;
   addedAt: Date;
   
@@ -50,7 +50,7 @@ export class GuestPortfolioService {
 
     // Recalculate totals
     const totalValue = portfolio.assets.reduce((sum, asset) => {
-      return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+      return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
     }, 0);
 
     return {
@@ -86,21 +86,21 @@ export class GuestPortfolioService {
             // Update existing asset
             const existingAsset = portfolio.assets[existingAssetIndex];
             const newQuantity = existingAsset.quantity + parsedAsset.quantity;
-            let newAvgPrice = existingAsset.avgPrice;
+            let newAvgPrice = existingAsset.avgCost;
 
-            if (parsedAsset.avgPrice && existingAsset.avgPrice) {
+            if (parsedAsset.avgCost && existingAsset.avgCost) {
               // Calculate weighted average price
-              const totalValue = (existingAsset.quantity * existingAsset.avgPrice) + 
-                               (parsedAsset.quantity * parsedAsset.avgPrice);
+              const totalValue = (existingAsset.quantity * existingAsset.avgCost) + 
+                               (parsedAsset.quantity * parsedAsset.avgCost);
               newAvgPrice = totalValue / newQuantity;
-            } else if (parsedAsset.avgPrice) {
-              newAvgPrice = parsedAsset.avgPrice;
+            } else if (parsedAsset.avgCost) {
+              newAvgPrice = parsedAsset.avgCost;
             }
 
             const updatedAsset: GuestAsset = {
               ...existingAsset,
               quantity: newQuantity,
-              avgPrice: newAvgPrice,
+              avgCost: newAvgPrice,
               addedAt: new Date()
             };
 
@@ -111,7 +111,7 @@ export class GuestPortfolioService {
             const newAsset: GuestAsset = {
               symbol: parsedAsset.symbol,
               quantity: parsedAsset.quantity,
-              avgPrice: parsedAsset.avgPrice,
+              avgCost: parsedAsset.avgCost,
               assetType: parsedAsset.assetType || 'stock',
               addedAt: new Date(),
               // Include options fields if present
@@ -134,7 +134,7 @@ export class GuestPortfolioService {
       portfolio.lastUpdated = new Date();
       portfolio.totalAssets = portfolio.assets.length;
       portfolio.totalValue = portfolio.assets.reduce((sum, asset) => {
-        return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+        return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
       }, 0);
 
       // Store updated portfolio
@@ -169,7 +169,7 @@ export class GuestPortfolioService {
     const topHoldings = portfolio.assets
       .map(asset => ({
         symbol: asset.symbol,
-        value: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+        value: asset.avgCost ? asset.quantity * asset.avgCost : 0,
         percentage: 0
       }))
       .filter(holding => holding.value > 0)
@@ -202,7 +202,7 @@ export class GuestPortfolioService {
         portfolio.lastUpdated = new Date();
         portfolio.totalAssets = portfolio.assets.length;
         portfolio.totalValue = portfolio.assets.reduce((sum, asset) => {
-          return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+          return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
         }, 0);
 
         guestPortfolios.set(sessionId, portfolio);
@@ -243,7 +243,7 @@ export class GuestPortfolioService {
     return portfolio.assets.map(asset => ({
       symbol: asset.symbol,
       quantity: asset.quantity,
-      avgPrice: asset.avgPrice,
+      avgCost: asset.avgCost,
       assetType: asset.assetType
     }));
   }

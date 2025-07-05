@@ -11,6 +11,7 @@ import { ChatService } from '@/lib/chat-service';
 import { financeMCPClient } from '@/lib/mcp-client';
 import { unifiedAnalysisService } from '@/lib/unified-analysis-service';
 import { backendConfig } from '@/lib/backend-config';
+import { fastAPIClient } from '@/lib/fastapi-client';
 import { PortfolioService } from '@/lib/portfolio-service';
 import { GuestPortfolioService } from '@/lib/guest-portfolio';
 
@@ -73,10 +74,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's portfolios for portfolio selection
-    let userPortfolios = [];
+    let userPortfolios: any[] = [];
     if (user?.id && !isGuestMode) {
       try {
         userPortfolios = await PortfolioService.getUserPortfolios(user.id);
+        
+        // Enrich portfolios with FastAPI-calculated market values
+        for (const portfolio of userPortfolios) {
+          try {
+            // Get FastAPI total value for risk analysis accuracy
+            const riskAnalysis = await fastAPIClient.calculatePortfolioRisk(user.id, portfolio.id);
+            portfolio.marketTotalValue = riskAnalysis.totalValue;
+            // Successfully enriched portfolio with market value
+          } catch (error) {
+            console.warn(`Could not get FastAPI total value for portfolio ${portfolio.id}:`, error);
+            // Keep original totalValue if FastAPI fails
+          }
+        }
       } catch (error) {
         console.error('Error fetching user portfolios:', error);
       }
@@ -290,32 +304,27 @@ async function getRealPortfolioData(
       const guestData = GuestPortfolioService.getGuestPortfolio(guestSessionId);
       if (guestData && guestData.assets.length > 0) {
         return guestData.assets
-          .filter(asset => asset.quantity > 0) // Only filter by quantity, not avgPrice
+          .filter(asset => asset.quantity > 0) // Only filter by quantity, not avgCost
           .map(asset => ({
             name: asset.symbol,
-            value: asset.avgPrice && asset.avgPrice > 0 
-              ? asset.quantity * asset.avgPrice  // Use dollar value if avgPrice available
-              : asset.quantity // Use quantity as weight if no avgPrice
+            value: asset.avgCost && asset.avgCost > 0 
+              ? asset.quantity * asset.avgCost  // Use dollar value if avgCost available
+              : asset.quantity // Use quantity as weight if no avgCost
           }))
           .filter(item => item.value > 0);
       }
     } else if (userId) {
       // Get authenticated user's portfolio data
       const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(userId);
-      console.log('📊 Portfolio assets from DB:', portfolio.assets.map(a => ({
-        symbol: a.symbol,
-        quantity: a.quantity,
-        avgPrice: a.avgPrice
-      })));
       
       if (portfolio.assets.length > 0) {
         const chartData = portfolio.assets
-          .filter(asset => asset.quantity > 0) // Only filter by quantity, not avgPrice
+          .filter(asset => asset.quantity > 0) // Only filter by quantity, not avgCost
           .map(asset => ({
             name: asset.symbol,
-            value: asset.avgPrice && asset.avgPrice > 0 
-              ? asset.quantity * asset.avgPrice  // Use dollar value if avgPrice available
-              : asset.quantity // Use quantity as weight if no avgPrice
+            value: asset.avgCost && asset.avgCost > 0 
+              ? asset.quantity * asset.avgCost  // Use dollar value if avgCost available
+              : asset.quantity // Use quantity as weight if no avgCost
           }))
           .filter(item => item.value > 0);
         

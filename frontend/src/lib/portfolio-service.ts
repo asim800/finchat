@@ -21,7 +21,7 @@ export interface Asset {
   id: string;
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   price?: number | null; // Current market price from historical data
   assetType: string;
   currentValue?: number | null;
@@ -49,7 +49,7 @@ export class PortfolioService {
     const portfoliosWithValue = portfolios.map(portfolio => ({
       ...portfolio,
       totalValue: portfolio.assets.reduce((sum, asset) => {
-        return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+        return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
       }, 0)
     }));
 
@@ -102,7 +102,7 @@ export class PortfolioService {
     return {
       ...portfolio,
       totalValue: portfolio.assets.reduce((sum, asset) => {
-        return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+        return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
       }, 0)
     };
   }
@@ -150,7 +150,7 @@ export class PortfolioService {
       return {
         ...portfolio,
         totalValue: portfolio.assets.reduce((sum, asset) => {
-          return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+          return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
         }, 0)
       };
     } catch (error) {
@@ -205,7 +205,7 @@ export class PortfolioService {
       const portfolio: Portfolio = {
         ...portfolioData,
         totalValue: portfolioData.assets.reduce((sum, asset) => {
-          return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+          return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
         }, 0)
       };
 
@@ -223,22 +223,22 @@ export class PortfolioService {
           if (existingAsset) {
             // Update existing asset (add to quantity, average the price)
             const newQuantity = existingAsset.quantity + parsedAsset.quantity;
-            let newAvgPrice = existingAsset.avgPrice;
+            let newAvgPrice = existingAsset.avgCost;
 
-            if (parsedAsset.avgPrice && existingAsset.avgPrice) {
+            if (parsedAsset.avgCost && existingAsset.avgCost) {
               // Calculate weighted average price
-              const totalValue = (existingAsset.quantity * existingAsset.avgPrice) + 
-                               (parsedAsset.quantity * parsedAsset.avgPrice);
+              const totalValue = (existingAsset.quantity * existingAsset.avgCost) + 
+                               (parsedAsset.quantity * parsedAsset.avgCost);
               newAvgPrice = totalValue / newQuantity;
-            } else if (parsedAsset.avgPrice) {
-              newAvgPrice = parsedAsset.avgPrice;
+            } else if (parsedAsset.avgCost) {
+              newAvgPrice = parsedAsset.avgCost;
             }
 
             const updatedAsset = await prisma.asset.update({
               where: { id: existingAsset.id },
               data: {
                 quantity: newQuantity,
-                avgPrice: newAvgPrice,
+                avgCost: newAvgPrice,
                 updatedAt: new Date()
               }
             });
@@ -251,7 +251,7 @@ export class PortfolioService {
                 portfolioId: portfolioId,
                 symbol: parsedAsset.symbol,
                 quantity: parsedAsset.quantity,
-                avgPrice: parsedAsset.avgPrice,
+                avgCost: parsedAsset.avgCost,
                 assetType: parsedAsset.assetType || 'stock',
                 // Add options-specific fields if asset is an option or bond
                 ...((parsedAsset.assetType === 'option' || parsedAsset.assetType === 'bond') && {
@@ -283,7 +283,7 @@ export class PortfolioService {
       const updatedPortfolio: Portfolio = {
         ...updatedPortfolioData!,
         totalValue: updatedPortfolioData!.assets.reduce((sum, asset) => {
-          return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+          return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
         }, 0)
       };
 
@@ -339,7 +339,7 @@ export class PortfolioService {
     const topHoldings = allAssets
       .map(asset => ({
         symbol: asset.symbol,
-        value: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+        value: asset.avgCost ? asset.quantity * asset.avgCost : 0,
         percentage: 0
       }))
       .filter(holding => holding.value > 0)
@@ -441,14 +441,14 @@ export class PortfolioService {
         return false;
       }
       
-      const updateData: { quantity: number; avgPrice?: number | null; updatedAt: Date } = {
+      const updateData: { quantity: number; avgCost?: number | null; updatedAt: Date } = {
         quantity: newQuantity,
         updatedAt: new Date()
       };
 
-      // Only update avgPrice if it's provided (allow null to clear the price)
+      // Only update avgCost if it's provided (allow null to clear the price)
       if (newAvgPrice !== undefined) {
-        updateData.avgPrice = newAvgPrice;
+        updateData.avgCost = newAvgPrice;
       }
       
       const updatedAsset = await prisma.asset.updateMany({

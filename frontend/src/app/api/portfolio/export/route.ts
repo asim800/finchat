@@ -18,21 +18,25 @@ export async function GET(request: NextRequest) {
 
     // Get query parameters for export options
     const { searchParams } = new URL(request.url);
-    const includePrice = searchParams.get('includePrice') !== 'false';
+    const includeAvgCost = searchParams.get('includeAvgCost') !== 'false';
+    const includeCurrentPrice = searchParams.get('includeCurrentPrice') !== 'false';
     const includeTotalValue = searchParams.get('includeTotalValue') !== 'false';
     const includeAssetType = searchParams.get('includeAssetType') !== 'false';
     const includeOptionsFields = searchParams.get('includeOptionsFields') !== 'false';
     const format = searchParams.get('format') || 'download'; // 'download' or 'json'
 
+    // Get portfolio with current market values
     const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(user.id);
+    const portfolioWithMarketValues = await PortfolioService.getPortfolioWithMarketValues(user.id, portfolio.id);
     
     // Transform assets to exportable format
-    const exportableAssets: ExportableAsset[] = portfolio.assets.map(asset => ({
+    const exportableAssets: ExportableAsset[] = (portfolioWithMarketValues?.assets || portfolio.assets).map(asset => ({
       symbol: asset.symbol,
       quantity: asset.quantity,
-      avgPrice: asset.avgPrice,
+      avgCost: asset.avgCost,
+      currentPrice: asset.price,
       assetType: asset.assetType,
-      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+      totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
       optionType: asset.optionType,
       expirationDate: asset.expirationDate,
       strikePrice: asset.strikePrice
@@ -40,7 +44,8 @@ export async function GET(request: NextRequest) {
 
     const exportOptions: CsvExportOptions = {
       includeHeaders: true,
-      includePrice,
+      includeAvgCost,
+      includeCurrentPrice,
       includeTotalValue,
       includeAssetType,
       includeOptionsFields,
@@ -89,15 +94,18 @@ export async function POST(request: NextRequest) {
 
     const { exportOptions }: { exportOptions?: CsvExportOptions } = await request.json();
 
+    // Get portfolio with current market values
     const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(user.id);
+    const portfolioWithMarketValues = await PortfolioService.getPortfolioWithMarketValues(user.id, portfolio.id);
     
     // Transform assets to exportable format
-    const exportableAssets: ExportableAsset[] = portfolio.assets.map(asset => ({
+    const exportableAssets: ExportableAsset[] = (portfolioWithMarketValues?.assets || portfolio.assets).map(asset => ({
       symbol: asset.symbol,
       quantity: asset.quantity,
-      avgPrice: asset.avgPrice,
+      avgCost: asset.avgCost,
+      currentPrice: asset.price,
       assetType: asset.assetType,
-      totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+      totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
       optionType: asset.optionType,
       expirationDate: asset.expirationDate,
       strikePrice: asset.strikePrice

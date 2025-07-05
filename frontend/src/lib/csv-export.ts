@@ -6,7 +6,8 @@
 export interface ExportableAsset {
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
+  currentPrice?: number | null; // Current market price
   assetType: string;
   totalValue?: number;
   
@@ -18,7 +19,8 @@ export interface ExportableAsset {
 
 export interface CsvExportOptions {
   includeHeaders?: boolean;
-  includePrice?: boolean;
+  includeAvgCost?: boolean;
+  includeCurrentPrice?: boolean;
   includeTotalValue?: boolean;
   includeAssetType?: boolean;
   includeOptionsFields?: boolean;
@@ -27,7 +29,8 @@ export interface CsvExportOptions {
 
 const DEFAULT_OPTIONS: CsvExportOptions = {
   includeHeaders: true,
-  includePrice: true,
+  includeAvgCost: true,
+  includeCurrentPrice: true,
   includeTotalValue: true,
   includeAssetType: true,
   includeOptionsFields: true,
@@ -56,12 +59,16 @@ export function exportPortfolioToCsv(
   for (const asset of assets) {
     const row: string[] = [asset.symbol, asset.quantity.toString()];
     
-    if (opts.includePrice) {
-      row.push(asset.avgPrice?.toString() || '');
+    if (opts.includeAvgCost) {
+      row.push(asset.avgCost?.toString() || '');
+    }
+    
+    if (opts.includeCurrentPrice) {
+      row.push(asset.currentPrice?.toString() || '');
     }
     
     if (opts.includeTotalValue) {
-      const totalValue = asset.totalValue || (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+      const totalValue = asset.totalValue || (asset.avgCost ? asset.quantity * asset.avgCost : 0);
       row.push(totalValue.toString());
     }
     
@@ -69,7 +76,7 @@ export function exportPortfolioToCsv(
       row.push(asset.assetType);
     }
     
-    if (opts.includeOptionsFields && asset.assetType === 'options') {
+    if (opts.includeOptionsFields && (asset.assetType === 'option' || asset.assetType === 'bond')) {
       row.push(asset.optionType || '');
       row.push(asset.strikePrice?.toString() || '');
       row.push(asset.expirationDate ? asset.expirationDate.toISOString().split('T')[0] : '');
@@ -87,8 +94,12 @@ export function exportPortfolioToCsv(
 function getHeaders(options: CsvExportOptions): string[] {
   const headers = ['Symbol', 'Quantity'];
   
-  if (options.includePrice) {
-    headers.push('Price');
+  if (options.includeAvgCost) {
+    headers.push('Avg Cost');
+  }
+  
+  if (options.includeCurrentPrice) {
+    headers.push('Current Price');
   }
   
   if (options.includeTotalValue) {

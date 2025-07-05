@@ -29,7 +29,7 @@ interface DisplayAsset {
   id: string;
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   price?: number | null;
   assetType: string;
   totalValue: number;
@@ -45,7 +45,7 @@ interface DisplayAsset {
 interface NewAsset {
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   assetType: string;
   
   // Options-specific fields
@@ -58,7 +58,7 @@ interface ApiAsset {
   id: string;
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   assetType: string;
   createdAt: string;
   updatedAt: string;
@@ -93,7 +93,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
   const [newAsset, setNewAsset] = useState<NewAsset>({
     symbol: '',
     quantity: 0,
-    avgPrice: undefined,
+    avgCost: undefined,
     assetType: 'stock',
     optionType: undefined,
     expirationDate: undefined,
@@ -121,9 +121,9 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           id: `guest_${index}`,
           symbol: asset.symbol,
           quantity: asset.quantity,
-          avgPrice: asset.avgPrice,
+          avgCost: asset.avgCost,
           assetType: asset.assetType,
-          totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+          totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
           createdAt: asset.addedAt,
           updatedAt: asset.addedAt,
           optionType: asset.optionType || null,
@@ -154,7 +154,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           ...asset,
           createdAt: new Date(asset.createdAt),
           updatedAt: new Date(asset.updatedAt),
-          totalValue: asset.avgPrice ? asset.quantity * asset.avgPrice : 0,
+          totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
           expirationDate: asset.expirationDate ? new Date(asset.expirationDate) : null
         }));
         updateAssets(displayAssets);
@@ -225,7 +225,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
         const assetToAdd = {
           symbol: newAsset.symbol.toUpperCase(),
           quantity: newAsset.quantity,
-          avgPrice: newAsset.avgPrice,
+          avgCost: newAsset.avgCost,
           assetType: newAsset.assetType,
           ...((newAsset.assetType === 'option' || newAsset.assetType === 'bond') && {
             optionType: newAsset.optionType,
@@ -241,7 +241,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           setNewAsset({
             symbol: '',
             quantity: 0,
-            avgPrice: undefined,
+            avgCost: undefined,
             assetType: 'stock',
             optionType: undefined,
             expirationDate: undefined,
@@ -262,7 +262,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
             assets: [{
               symbol: newAsset.symbol.toUpperCase(),
               quantity: newAsset.quantity,
-              avgPrice: newAsset.avgPrice,
+              avgCost: newAsset.avgCost,
               assetType: newAsset.assetType,
               ...((newAsset.assetType === 'option' || newAsset.assetType === 'bond') && {
                 optionType: newAsset.optionType,
@@ -285,7 +285,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
           setNewAsset({
             symbol: '',
             quantity: 0,
-            avgPrice: undefined,
+            avgCost: undefined,
             assetType: 'stock',
             optionType: undefined,
             expirationDate: undefined,
@@ -309,7 +309,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     setEditValues({
       symbol: asset.symbol,
       quantity: asset.quantity,
-      avgPrice: asset.avgPrice,
+      avgCost: asset.avgCost,
       assetType: asset.assetType,
       optionType: asset.optionType,
       expirationDate: asset.expirationDate,
@@ -346,7 +346,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
             ...guestPortfolio.assets[assetIndex],
             symbol: editValues.symbol || asset.symbol,
             quantity: editValues.quantity || asset.quantity,
-            avgPrice: editValues.avgPrice !== undefined ? editValues.avgPrice : guestPortfolio.assets[assetIndex].avgPrice,
+            avgCost: editValues.avgCost !== undefined ? editValues.avgCost : guestPortfolio.assets[assetIndex].avgCost,
             assetType: editValues.assetType || asset.assetType
           };
           
@@ -356,8 +356,8 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
         }
       } else if (userId) {
         // For authenticated users, use API
-        // Check if quantity or avgPrice changed
-        if (editValues.quantity !== asset.quantity || editValues.avgPrice !== asset.avgPrice) {
+        // Check if quantity or avgCost changed
+        if (editValues.quantity !== asset.quantity || editValues.avgCost !== asset.avgCost) {
           const response = await fetch('/api/portfolio', {
             method: 'PUT',
             headers: {
@@ -367,7 +367,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
               portfolioId: portfolioId, // Include portfolio ID for multi-portfolio support
               symbol: asset.symbol,
               quantity: editValues.quantity,
-              avgPrice: editValues.avgPrice
+              avgCost: editValues.avgCost
             })
           });
 
@@ -441,7 +441,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
 
   // Calculate portfolio totals
   const totalPortfolioValue = assets.reduce((sum, asset) => sum + (asset.price ? asset.quantity * asset.price : 0), 0);
-  const totalCost = assets.reduce((sum, asset) => sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0), 0);
+  const totalCost = assets.reduce((sum, asset) => sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0), 0);
   const totalAssets = assets.length;
 
   if (loading && assets.length === 0) {
@@ -530,8 +530,8 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
             <FormField
               label="Avg Cost"
               type="number"
-              value={newAsset.avgPrice || ''}
-              onChange={(e) => setNewAsset({...newAsset, avgPrice: parseFloat(e.target.value) || undefined})}
+              value={newAsset.avgCost || ''}
+              onChange={(e) => setNewAsset({...newAsset, avgCost: parseFloat(e.target.value) || undefined})}
               placeholder="150.00"
               min="0"
               step="0.01"
@@ -666,7 +666,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                 setNewAsset({
                   symbol: '',
                   quantity: 0,
-                  avgPrice: undefined,
+                  avgCost: undefined,
                   assetType: 'stock',
                   optionType: undefined,
                   expirationDate: undefined,
@@ -752,14 +752,14 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
                       <Input
                         type="text"
                         inputMode="decimal"
-                        value={editValues.avgPrice || ''}
-                        onChange={(e) => setEditValues({...editValues, avgPrice: parseFloat(e.target.value) || undefined})}
+                        value={editValues.avgCost || ''}
+                        onChange={(e) => setEditValues({...editValues, avgCost: parseFloat(e.target.value) || undefined})}
                         className="w-full min-w-20 max-w-32 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="Optional"
                       />
                     ) : (
                       <div className="text-sm text-gray-900">
-                        {asset.avgPrice ? `$${asset.avgPrice.toFixed(2)}` : '-'}
+                        {asset.avgCost ? `$${asset.avgCost.toFixed(2)}` : '-'}
                       </div>
                     )}
                   </TableCell>

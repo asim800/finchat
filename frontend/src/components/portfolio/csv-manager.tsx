@@ -16,7 +16,7 @@ interface CsvManagerProps {
   guestAssets?: Array<{
     symbol: string;
     quantity: number;
-    avgPrice?: number | null;
+    avgCost?: number | null;
     assetType: string;
   }>;
   onUploadComplete?: () => void;

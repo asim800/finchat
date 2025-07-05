@@ -6,7 +6,7 @@
 export interface ParsedAsset {
   symbol: string;
   quantity: number;
-  avgPrice?: number | null;
+  avgCost?: number | null;
   assetType?: string;
   
   // Options-specific fields
@@ -85,19 +85,19 @@ export function parsePortfolioInput(message: string): PortfolioParseResult {
     
     while ((match = pattern.exec(cleanMessage)) !== null) {
       try {
-        let symbol: string, quantity: number, avgPrice: number | undefined;
+        let symbol: string, quantity: number, avgCost: number | undefined;
         
         // Determine which pattern matched and extract values
         if (pattern.source.includes('([A-Z]{1,5}).*?(\\d+')) {
           // Symbol first patterns
           symbol = match[1].toUpperCase();
           quantity = parseFloat(match[2]);
-          avgPrice = match[3] ? parseFloat(match[3]) : undefined;
+          avgCost = match[3] ? parseFloat(match[3]) : undefined;
         } else {
           // Quantity first patterns  
           quantity = parseFloat(match[1]);
           symbol = match[2].toUpperCase();
-          avgPrice = match[3] ? parseFloat(match[3]) : undefined;
+          avgCost = match[3] ? parseFloat(match[3]) : undefined;
         }
         
         // Validate symbol length
@@ -116,17 +116,17 @@ export function parsePortfolioInput(message: string): PortfolioParseResult {
         const existingAsset = assets.find(asset => asset.symbol === symbol);
         if (existingAsset) {
           existingAsset.quantity += quantity;
-          if (avgPrice && existingAsset.avgPrice) {
+          if (avgCost && existingAsset.avgCost) {
             // Simple average for now
-            existingAsset.avgPrice = (existingAsset.avgPrice + avgPrice) / 2;
-          } else if (avgPrice) {
-            existingAsset.avgPrice = avgPrice;
+            existingAsset.avgCost = (existingAsset.avgCost + avgCost) / 2;
+          } else if (avgCost) {
+            existingAsset.avgCost = avgCost;
           }
         } else {
           assets.push({
             symbol,
             quantity,
-            avgPrice,
+            avgCost,
             assetType: 'stock' // Default to stock
           });
         }
@@ -141,7 +141,7 @@ export function parsePortfolioInput(message: string): PortfolioParseResult {
   if (assets.length > 0) {
     message_text = `Found ${assets.length} asset${assets.length > 1 ? 's' : ''}:\n`;
     assets.forEach(asset => {
-      const priceText = asset.avgPrice ? ` at $${asset.avgPrice.toFixed(2)}` : '';
+      const priceText = asset.avgCost ? ` at $${asset.avgCost.toFixed(2)}` : '';
       message_text += `• ${asset.symbol}: ${asset.quantity} shares${priceText}\n`;
     });
     
@@ -170,14 +170,14 @@ export function formatPortfolioResponse(parseResult: PortfolioParseResult, isGue
   }
   
   const totalValue = parseResult.assets.reduce((sum, asset) => {
-    return sum + (asset.avgPrice ? asset.quantity * asset.avgPrice : 0);
+    return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
   }, 0);
   
   let response = `Great! I've added ${parseResult.totalAssets} asset${parseResult.totalAssets > 1 ? 's' : ''} to your portfolio:\n\n`;
   
   parseResult.assets.forEach(asset => {
-    const value = asset.avgPrice ? asset.quantity * asset.avgPrice : 0;
-    const priceText = asset.avgPrice ? ` ($${asset.avgPrice.toFixed(2)} each)` : '';
+    const value = asset.avgCost ? asset.quantity * asset.avgCost : 0;
+    const priceText = asset.avgCost ? ` ($${asset.avgCost.toFixed(2)} each)` : '';
     const valueText = value > 0 ? ` = $${value.toLocaleString()}` : '';
     response += `📈 **${asset.symbol}**: ${asset.quantity} shares${priceText}${valueText}\n`;
   });

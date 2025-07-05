@@ -176,11 +176,15 @@ export const generateFinancialPrompt = (
   // Add portfolio context
   const selectedPortfolio = portfolioSelection?.selectedPortfolio || context?.portfolioData?.selectedPortfolio;
   if (selectedPortfolio) {
+    // Use FastAPI market value if available, otherwise fall back to cost basis
+    const totalValue = selectedPortfolio.marketTotalValue || selectedPortfolio.totalValue;
+    const valueLabel = selectedPortfolio.marketTotalValue ? 'Total Value (current market)' : 'Total Value (cost basis)';
+    
     prompt += `\n\nSelected Portfolio Context:
 - Portfolio Name: ${selectedPortfolio.name}
 - Portfolio ID: ${selectedPortfolio.id}
 - Holdings: ${selectedPortfolio.assets?.length || 0} positions
-- Total Value: $${selectedPortfolio.totalValue?.toLocaleString() || 'Unknown'}
+- ${valueLabel}: $${totalValue?.toLocaleString() || 'Unknown'}
 - Top Holdings: ${selectedPortfolio.assets?.slice(0, 3).map((h) => h.symbol).join(', ') || 'None'}`;
 
     if (selectedPortfolio.description) {
@@ -188,9 +192,12 @@ export const generateFinancialPrompt = (
     }
   } else if (context?.portfolioData) {
     // Fallback to legacy portfolio data structure
+    const totalValue = context.portfolioData.marketTotalValue || context.portfolioData.totalValue;
+    const valueLabel = context.portfolioData.marketTotalValue ? 'Total Value (current market)' : 'Total Value (cost basis)';
+    
     prompt += `\n\nUser's Portfolio Context:
 - Total Holdings: ${context.portfolioData.holdings?.length || 0} positions
-- Total Value: $${context.portfolioData.totalValue?.toLocaleString() || 'Unknown'}
+- ${valueLabel}: $${totalValue?.toLocaleString() || 'Unknown'}
 - Top Holdings: ${context.portfolioData.holdings?.slice(0, 3).map((h) => h.symbol).join(', ') || 'None'}`;
   }
 

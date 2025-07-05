@@ -14,7 +14,7 @@ import { CsvHelpModal } from './csv-help-modal';
 interface ParsedAsset {
   symbol: string;
   quantity: number;
-  avgPrice?: number;
+  avgCost?: number;
   assetType?: string;
   optionType?: string;
   strikePrice?: number;
@@ -106,7 +106,7 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
 
       // Column 2: Price
       if (values[2]) {
-        asset.avgPrice = parseFloat(values[2]) || undefined;
+        asset.avgCost = parseFloat(values[2]) || undefined;
       }
 
       // Column 3: AssetType
@@ -278,7 +278,7 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
                     <div className="flex justify-between">
                       <span>{asset.symbol}: {asset.quantity} shares ({asset.assetType})</span>
                       <span>
-                        {asset.avgPrice && `$${asset.avgPrice.toFixed(2)}`}
+                        {asset.avgCost && `$${asset.avgCost.toFixed(2)}`}
                       </span>
                     </div>
                     {asset.assetType === 'option' && (

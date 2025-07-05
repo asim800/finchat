@@ -37,6 +37,7 @@ model User {
   totalDebt                   Float?
   zipCode                     String?
   role                        String        @default("user")
+  chatHistoryLimit            Int           @default(5)
   accounts                    Account[]
   apiKeys                     ApiKey[]
   chatSessions                ChatSession[]
@@ -63,7 +64,7 @@ model Asset {
   portfolioId String
   symbol      String
   quantity    Float
-  avgPrice    Float?
+  avgCost     Float?
   assetType   String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

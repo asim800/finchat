@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
         investmentGoals: true,
         riskTolerance: true,
         investmentExperience: true,
+        chatHistoryLimit: true,
         createdAt: true,
         updatedAt: true
       }
@@ -121,6 +122,17 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Validate chat history limit
+    if (body.chatHistoryLimit !== null && body.chatHistoryLimit !== undefined) {
+      const chatHistoryLimit = parseInt(body.chatHistoryLimit);
+      if (isNaN(chatHistoryLimit) || chatHistoryLimit < 1 || chatHistoryLimit > 50) {
+        return NextResponse.json(
+          { error: 'Chat history limit must be between 1 and 50' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Validate birth date
     if (body.birthDate) {
       const birthDate = new Date(body.birthDate);
@@ -160,6 +172,7 @@ export async function PUT(request: NextRequest) {
         investmentGoals: body.investmentGoals || null,
         riskTolerance: body.riskTolerance || null,
         investmentExperience: body.investmentExperience || null,
+        chatHistoryLimit: body.chatHistoryLimit ? parseInt(body.chatHistoryLimit) : undefined,
       },
       select: {
         id: true,
@@ -187,6 +200,7 @@ export async function PUT(request: NextRequest) {
         investmentGoals: true,
         riskTolerance: true,
         investmentExperience: true,
+        chatHistoryLimit: true,
         createdAt: true,
         updatedAt: true
       }

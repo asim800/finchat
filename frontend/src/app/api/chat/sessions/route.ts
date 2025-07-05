@@ -17,7 +17,15 @@ export async function GET(request: NextRequest) {
     const user = await getUserFromRequest(request);
     
     if (user) {
-      // Get authenticated user's sessions
+      // Get user's chat history limit setting
+      const userWithSettings = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { chatHistoryLimit: true }
+      });
+      
+      const historyLimit = userWithSettings?.chatHistoryLimit || 5;
+      
+      // Get authenticated user's sessions with limit
       const sessions = await prisma.chatSession.findMany({
         where: { 
           userId: user.id,
@@ -32,12 +40,15 @@ export async function GET(request: NextRequest) {
             select: { messages: true }
           }
         },
-        orderBy: { updatedAt: 'desc' }
+        orderBy: { updatedAt: 'desc' },
+        take: historyLimit
       });
 
-      return NextResponse.json({ sessions });
+      return NextResponse.json({ sessions, historyLimit });
     } else if (guestSessionId) {
-      // Get guest sessions
+      // Get guest sessions with default limit of 5
+      const guestHistoryLimit = 5;
+      
       const sessions = await prisma.chatSession.findMany({
         where: { 
           guestSessionId,
@@ -56,10 +67,11 @@ export async function GET(request: NextRequest) {
             select: { messages: true }
           }
         },
-        orderBy: { updatedAt: 'desc' }
+        orderBy: { updatedAt: 'desc' },
+        take: guestHistoryLimit
       });
 
-      return NextResponse.json({ sessions });
+      return NextResponse.json({ sessions, historyLimit: guestHistoryLimit });
     } else {
       return NextResponse.json(
         { error: 'Authentication required or guest session ID missing' },

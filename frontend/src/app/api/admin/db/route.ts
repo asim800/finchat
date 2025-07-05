@@ -127,7 +127,7 @@ async function executeTableList(table: string) {
           id: true,
           symbol: true,
           quantity: true,
-          avgPrice: true,
+          avgCost: true,
           price: true,
           assetType: true,
           createdAt: true,
@@ -265,7 +265,7 @@ async function getTableSchema(table: string) {
       relations: ['user', 'assets']
     },
     assets: {
-      fields: ['id', 'portfolioId', 'symbol', 'quantity', 'avgPrice', 'price', 'assetType', 'createdAt', 'updatedAt'],
+      fields: ['id', 'portfolioId', 'symbol', 'quantity', 'avgCost', 'price', 'assetType', 'createdAt', 'updatedAt'],
       relations: ['portfolio']
     },
     chat_sessions: {

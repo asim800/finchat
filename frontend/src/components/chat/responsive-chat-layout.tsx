@@ -40,53 +40,28 @@ export const ResponsiveChatLayout: React.FC<ResponsiveChatLayoutProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col lg:flex-row lg:gap-4 min-h-0">
+    <div className="h-full flex flex-col min-h-0">
       {/* Chat Interface */}
       <div className="flex-1 flex flex-col min-h-0">
-        {/* Mobile Chart Toggle Button */}
-        {currentChartData && (
-          <div className="lg:hidden mb-2">
-            <Button 
-              onClick={toggleChart}
-              variant="ghost" 
-              size="sm"
-              className="w-full text-gray-600 hover:text-gray-900"
-            >
-              {isChartVisible ? 'Hide Chart' : 'Show Chart'} 📊
-            </Button>
-          </div>
-        )}
-
-        {/* Mobile Chart Panel (when visible) */}
-        {currentChartData && isChartVisible && (
-          <div className="lg:hidden mb-3">
-            <div className="h-80 border border-gray-100 rounded">
-              <PortfolioChartPanel 
-                chartData={currentChartData}
-                className="h-full"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Chat Interface */}
-        <div className="flex-1 min-h-0">
-          <ChatInterface 
-            isGuestMode={isGuestMode} 
-            userId={userId}
-            onChartUpdate={handleChartUpdate}
-            hideInlineCharts={true}
-          />
-        </div>
-      </div>
-
-      {/* Desktop/Tablet Chart Panel - Right Sidebar */}
-      <div className="hidden lg:block lg:w-96 lg:flex-shrink-0">
-        <PortfolioChartPanel 
-          chartData={currentChartData}
-          className="h-full sticky top-0 border border-gray-100 rounded"
+        <ChatInterface 
+          isGuestMode={isGuestMode} 
+          userId={userId}
+          onChartUpdate={handleChartUpdate}
+          hideInlineCharts={true}
         />
       </div>
+
+      {/* Chart Panel - Follows Chat Box */}
+      {currentChartData && (
+        <div className="flex-shrink-0 mt-4">
+          <div className="h-80 border border-gray-100 rounded">
+            <PortfolioChartPanel 
+              chartData={currentChartData}
+              className="h-full"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EditIcon, UserIcon, HomeIcon, DollarSignIcon, TrendingUpIcon } from 'lucide-react';
+import { EditIcon, UserIcon, HomeIcon, DollarSignIcon, TrendingUpIcon, SettingsIcon } from 'lucide-react';
 import { ProfileEditForm } from './profile-edit-form';
 
 interface User {
@@ -38,6 +38,7 @@ interface User {
   investmentGoals?: string | null;
   riskTolerance?: string | null;
   investmentExperience?: string | null;
+  chatHistoryLimit?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -309,13 +310,26 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
         </CardContent>
       </Card>
 
-      {/* Account Information */}
+      {/* Account Preferences */}
       <Card>
         <CardHeader>
-          <CardTitle>Account Information</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <SettingsIcon className="h-5 w-5" />
+            <span>Account Preferences</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Chat History Limit</label>
+              <div className="flex items-center space-x-2">
+                <p className="text-gray-900">{user.chatHistoryLimit || 5} chats</p>
+                <Badge variant="outline">
+                  {user.chatHistoryLimit === 1 ? '1 chat' : `${user.chatHistoryLimit || 5} chats`}
+                </Badge>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Number of recent conversations displayed in chat sidebar</p>
+            </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Member Since</label>
               <p className="text-gray-900">{formatDate(user.createdAt)}</p>
