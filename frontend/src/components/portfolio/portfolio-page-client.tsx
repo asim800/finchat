@@ -37,10 +37,10 @@ export const PortfolioPageClient: React.FC<PortfolioPageClientProps> = ({
   userId,
   onAssetsChange: parentOnAssetsChange
 }) => {
-  const [currentAssets, setCurrentAssets] = useState<DisplayAsset[]>([]);
+  // const [currentAssets, setCurrentAssets] = useState<DisplayAsset[]>([]);
 
   const handleAssetsChange = (assets: DisplayAsset[]) => {
-    setCurrentAssets(assets);
+    // setCurrentAssets(assets);
     
     // Notify parent component of asset changes for CSV functionality
     if (parentOnAssetsChange) {

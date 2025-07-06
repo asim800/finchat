@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { MenuIcon, XIcon } from 'lucide-react';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface GuestTopBarProps {}
 
 export const GuestTopBar: React.FC<GuestTopBarProps> = () => {

@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { MessageBubble, Message } from './message-bubble';
 import { ChartDisplay } from './chart-display';
 import { FileProcessor } from './file-processor';
-import { LLMSelector } from './llm-selector';
 import { useChatAPI } from '@/hooks/use-chat-api';
 import { simulateAIResponse } from '@/lib/chat-simulation';
 import { generateGuestSessionId } from '@/lib/guest-portfolio';
@@ -120,22 +119,42 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Use both scrollIntoView and manual scroll for better reliability
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+    
+    // Fallback: manually scroll the container to bottom
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 100);
+    }
   };
 
   // Only auto-scroll to bottom for new messages, not when loading more history
   const lastMessageCount = useRef(0);
+  const shouldAutoScroll = useRef(true);
   
   useEffect(() => {
     // Only scroll to bottom if messages were added at the end (not at the beginning)
     if (messages.length > lastMessageCount.current) {
-      const wasAtBottom = messagesContainerRef.current && 
-        messagesContainerRef.current.scrollHeight - messagesContainerRef.current.scrollTop <= 
-        messagesContainerRef.current.clientHeight + 50;
+      const container = messagesContainerRef.current;
       
-      // Only auto-scroll if user was already at/near the bottom or it's the initial load
-      if (wasAtBottom || !isInitiallyLoaded) {
-        scrollToBottom();
+      if (container) {
+        const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+        
+        // Auto-scroll if:
+        // 1. User was near the bottom (within 100px)
+        // 2. It's the initial load
+        // 3. This is a new response to user's message (shouldAutoScroll is true)
+        if (wasAtBottom || !isInitiallyLoaded || shouldAutoScroll.current) {
+          // Use requestAnimationFrame for smoother scrolling
+          requestAnimationFrame(() => {
+            scrollToBottom();
+          });
+        }
       }
     }
     lastMessageCount.current = messages.length;
@@ -190,7 +209,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
     }
   }, [currentSessionId, isLoadingMore, hasMoreMessages, messages, loadMoreMessages, isGuestMode, guestSessionId]);
 
-  // Scroll event handler for infinite scroll
+  // Scroll event handler for infinite scroll and auto-scroll detection
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
     
@@ -199,11 +218,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
     if (container.scrollTop <= 10 && hasMoreMessages && !isLoadingMore && messages.length > 0 && isInitiallyLoaded) {
       handleLoadMore();
     }
-  }, [handleLoadMore, hasMoreMessages, isLoadingMore, messages.length, currentSessionId, isInitiallyLoaded]);
+    
+    // Detect if user is near the bottom to enable/disable auto-scroll
+    const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+    shouldAutoScroll.current = isNearBottom;
+  }, [handleLoadMore, hasMoreMessages, isLoadingMore, messages.length, isInitiallyLoaded]);
 
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
+
+    // Enable auto-scroll when user sends a message
+    shouldAutoScroll.current = true;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -304,6 +330,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
   }, summary: string) => {
     setUploadedData(data);
     
+    // Enable auto-scroll when adding file message
+    shouldAutoScroll.current = true;
+    
     const fileMessage: Message = {
       id: Date.now().toString(),
       role: 'assistant',
@@ -326,6 +355,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
 
   const handleSampleQuestion = (question: string) => {
     setInputValue(question);
+    // Enable auto-scroll when user selects a sample question
+    shouldAutoScroll.current = true;
   };
 
   return (

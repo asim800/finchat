@@ -112,28 +112,28 @@ export default async function HomePage() {
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  "Unlike Personal Capital, we never call to sell you anything"
+                  &ldquo;Unlike Personal Capital, we never call to sell you anything&rdquo;
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  "Unlike Morningstar, we explain what the numbers actually mean"
+                  &ldquo;Unlike Morningstar, we explain what the numbers actually mean&rdquo;
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  "Unlike robo-advisors, you understand exactly how we calculate your risk"
+                  &ldquo;Unlike robo-advisors, you understand exactly how we calculate your risk&rdquo;
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  "Unlike financial advisors, we don't charge thousands for basic analysis"
+                  &ldquo;Unlike financial advisors, we don&apos;t charge thousands for basic analysis&rdquo;
                 </p>
               </CardContent>
             </Card>

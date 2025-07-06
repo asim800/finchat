@@ -120,7 +120,7 @@ export class PortfolioCrudHandler {
     try {
       if (isGuestMode && guestSessionId) {
         // Handle guest mode
-        const guestPortfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
+        // const guestPortfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
         GuestPortfolioService.addAssetsToGuestPortfolio(guestSessionId, [parsedAsset]);
         
         const portfolioDisplayName = portfolioName || 'main';
@@ -208,26 +208,69 @@ export class PortfolioCrudHandler {
     guestSessionId?: string,
     isGuestMode: boolean = false
   ): Promise<CrudResult> {
-    const { symbol, portfolioName } = match;
+    const { symbol, quantity, portfolioName } = match;
     
     try {
       if (isGuestMode && guestSessionId) {
         // Handle guest mode
-        const success = GuestPortfolioService.removeAssetFromGuestPortfolio(guestSessionId, symbol);
+        const guestPortfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
+        const asset = guestPortfolio?.assets?.find(a => a.symbol.toUpperCase() === symbol.toUpperCase());
         const portfolioDisplayName = portfolioName || 'main';
+        
+        if (!asset) {
+          return {
+            success: false,
+            message: `${symbol} not found in ${portfolioDisplayName} portfolio`,
+            error: 'Asset not found',
+            executionTimeMs: 0
+          };
+        }
+        
+        let success = false;
+        let message = '';
+        let removedQuantity = 0;
+        
+        if (quantity && quantity > 0) {
+          // Partial quantity removal
+          if (quantity >= asset.quantity) {
+            // Remove entire position if requested quantity >= current quantity
+            success = GuestPortfolioService.removeAssetFromGuestPortfolio(guestSessionId, symbol);
+            removedQuantity = asset.quantity;
+            message = success 
+              ? `Removed all ${removedQuantity} shares of ${symbol} from ${portfolioDisplayName} portfolio`
+              : `Failed to remove ${symbol} from ${portfolioDisplayName} portfolio`;
+          } else {
+            // Reduce quantity
+            const newQuantity = asset.quantity - quantity;
+            success = GuestPortfolioService.updateGuestAsset(guestSessionId, symbol, newQuantity, asset.avgCost);
+            removedQuantity = quantity;
+            message = success 
+              ? `Removed ${quantity} shares of ${symbol} (${newQuantity} remaining) from ${portfolioDisplayName} portfolio`
+              : `Failed to remove ${quantity} shares of ${symbol} from ${portfolioDisplayName} portfolio`;
+          }
+        } else {
+          // Complete removal (no quantity specified)
+          success = GuestPortfolioService.removeAssetFromGuestPortfolio(guestSessionId, symbol);
+          removedQuantity = asset.quantity;
+          message = success 
+            ? `Removed all ${removedQuantity} shares of ${symbol} from ${portfolioDisplayName} portfolio`
+            : `Failed to remove ${symbol} from ${portfolioDisplayName} portfolio`;
+        }
         
         return {
           success,
-          message: success 
-            ? `Removed ${symbol} from ${portfolioDisplayName} portfolio`
-            : `${symbol} not found in ${portfolioDisplayName} portfolio`,
+          message,
           data: success ? {
             action: 'remove',
             symbol,
             portfolio: portfolioDisplayName,
             changes: [{
               symbol,
-              operation: 'removed'
+              operation: 'removed',
+              quantity: removedQuantity,
+              previousValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
+              newValue: quantity && quantity < asset.quantity ? 
+                (asset.avgCost ? (asset.quantity - quantity) * asset.avgCost : 0) : 0
             }]
           } : undefined,
           executionTimeMs: 0
@@ -247,20 +290,62 @@ export class PortfolioCrudHandler {
           };
         }
         
-        const success = await PortfolioService.removeAsset(userId, portfolio.id, symbol);
+        const asset = portfolio.assets.find(a => a.symbol.toUpperCase() === symbol.toUpperCase());
+        
+        if (!asset) {
+          return {
+            success: false,
+            message: `${symbol} not found in ${portfolio.name} portfolio`,
+            error: 'Asset not found',
+            executionTimeMs: 0
+          };
+        }
+        
+        let success = false;
+        let message = '';
+        let removedQuantity = 0;
+        
+        if (quantity && quantity > 0) {
+          // Partial quantity removal
+          if (quantity >= asset.quantity) {
+            // Remove entire position if requested quantity >= current quantity
+            success = await PortfolioService.removeAsset(userId, portfolio.id, symbol);
+            removedQuantity = asset.quantity;
+            message = success 
+              ? `Removed all ${removedQuantity} shares of ${symbol} from ${portfolio.name} portfolio`
+              : `Failed to remove ${symbol} from ${portfolio.name} portfolio`;
+          } else {
+            // Reduce quantity
+            const newQuantity = asset.quantity - quantity;
+            success = await PortfolioService.updateAsset(userId, portfolio.id, symbol, newQuantity, asset.avgCost);
+            removedQuantity = quantity;
+            message = success 
+              ? `Removed ${quantity} shares of ${symbol} (${newQuantity} remaining) from ${portfolio.name} portfolio`
+              : `Failed to remove ${quantity} shares of ${symbol} from ${portfolio.name} portfolio`;
+          }
+        } else {
+          // Complete removal (no quantity specified)
+          success = await PortfolioService.removeAsset(userId, portfolio.id, symbol);
+          removedQuantity = asset.quantity;
+          message = success 
+            ? `Removed all ${removedQuantity} shares of ${symbol} from ${portfolio.name} portfolio`
+            : `Failed to remove ${symbol} from ${portfolio.name} portfolio`;
+        }
         
         return {
           success,
-          message: success 
-            ? `Removed ${symbol} from ${portfolio.name} portfolio`
-            : `${symbol} not found in ${portfolio.name} portfolio`,
+          message,
           data: success ? {
             action: 'remove',
             symbol,
             portfolio: portfolio.name,
             changes: [{
               symbol,
-              operation: 'removed'
+              operation: 'removed',
+              quantity: removedQuantity,
+              previousValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
+              newValue: quantity && quantity < asset.quantity ? 
+                (asset.avgCost ? (asset.quantity - quantity) * asset.avgCost : 0) : 0
             }]
           } : undefined,
           executionTimeMs: 0

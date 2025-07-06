@@ -237,7 +237,7 @@ async function testRegexpPatterns(): Promise<void> {
   for (const test of patternTests) {
     const result = QueryTriage.analyzeQuery(test.query);
     let passed = true;
-    let errors: string[] = [];
+    const errors: string[] = [];
     
     if (result.regexpMatch?.action !== test.expectedAction) {
       passed = false;

@@ -45,7 +45,11 @@ export class QueryTriage {
     
     // REMOVE/SELL patterns
     remove: [
-      // "delete NFLX from my portfolio"
+      // "delete 100 shares of AAPL" - partial quantity removal
+      /(?:delete|remove|sell)\s+(\d+)\s+(?:shares?\s+of\s+)?([A-Z]{1,5})/i,
+      // "sell 50 AAPL shares"
+      /(?:sell|remove|delete)\s+(\d+)\s+([A-Z]{1,5})\s+(?:shares?|stocks?)/i,
+      // "delete NFLX from my portfolio" - complete removal
       /(?:delete|remove|sell)\s+([A-Z]{1,5})\s+from\s+(?:my\s+)?portfolio/i,
       // "remove all my TSLA holdings" - must be a valid stock symbol, not common words
       /(?:remove|sell|delete)\s+(?:all\s+)?(?:my\s+)?([A-Z]{3,5})\s+(?:holdings?|shares?|stocks?|positions?)/i,
@@ -228,8 +232,22 @@ export class QueryTriage {
           break;
           
         case 'remove':
-          symbol = match[1]?.toUpperCase() || '';
-          confidence = 0.9;
+          // Handle different remove pattern variations
+          if (match[1] && /^\d+$/.test(match[1]) && match[2]) {
+            // Pattern: "delete 100 shares of AAPL" or "sell 50 AAPL shares"
+            quantity = parseInt(match[1]);
+            symbol = match[2].toUpperCase();
+            confidence = 0.9;
+          } else if (match[2] && /^[A-Z]{1,5}$/i.test(match[2])) {
+            // Pattern: "sell 100 AAPL shares" (quantity first, symbol second)
+            quantity = parseInt(match[1]);
+            symbol = match[2].toUpperCase();
+            confidence = 0.9;
+          } else {
+            // Pattern: "delete AAPL from portfolio" or "sell all AAPL"
+            symbol = match[1]?.toUpperCase() || match[2]?.toUpperCase() || '';
+            confidence = 0.9;
+          }
           break;
           
         case 'update':

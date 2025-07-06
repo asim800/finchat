@@ -3,9 +3,9 @@
 // Get available LLM providers endpoint
 // ============================================================================
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Check what providers are available based on environment variables
     const providers: string[] = [];

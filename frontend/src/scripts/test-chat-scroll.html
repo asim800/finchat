@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Scroll Test</title>
+    <style>
+        .chat-container {
+            height: 400px;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+            padding: 10px;
+            margin: 20px;
+        }
+        
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        
+        .user {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .assistant {
+            background: #f1f3f4;
+            color: black;
+        }
+        
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat Auto-Scroll Test</h1>
+    <p>This simulates the chat scrolling behavior we implemented:</p>
+    
+    <div class="chat-container" id="chatContainer">
+        <div class="message assistant">Welcome! This is a test of the chat auto-scroll functionality.</div>
+    </div>
+    
+    <div>
+        <button onclick="addUserMessage()">Add User Message</button>
+        <button onclick="addAssistantMessage()">Add Assistant Message</button>
+        <button onclick="addMultipleMessages()">Add Multiple Messages</button>
+        <button onclick="scrollToTop()">Scroll to Top (test manual scroll)</button>
+    </div>
+    
+    <p><strong>Expected behavior:</strong></p>
+    <ul>
+        <li>New messages should auto-scroll to bottom</li>
+        <li>If you manually scroll up and then add a message, it should NOT auto-scroll</li>
+        <li>If you scroll back near the bottom and add a message, it SHOULD auto-scroll</li>
+    </ul>
+    
+    <script>
+        let messageCount = 1;
+        let shouldAutoScroll = true;
+        
+        const container = document.getElementById('chatContainer');
+        
+        // Track if user is near bottom (similar to our React implementation)
+        container.addEventListener('scroll', () => {
+            const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+            shouldAutoScroll = isNearBottom;
+            console.log('Scroll detected. Near bottom:', isNearBottom, 'Auto-scroll enabled:', shouldAutoScroll);
+        });
+        
+        function scrollToBottom() {
+            if (shouldAutoScroll) {
+                container.scrollTop = container.scrollHeight;
+                console.log('Auto-scrolled to bottom');
+            } else {
+                console.log('Auto-scroll disabled (user scrolled up)');
+            }
+        }
+        
+        function addMessage(role, content) {
+            const message = document.createElement('div');
+            message.className = `message ${role}`;
+            message.textContent = `${role === 'user' ? 'User' : 'Assistant'}: ${content}`;
+            container.appendChild(message);
+            
+            // Enable auto-scroll when adding new messages (like when user sends)
+            if (role === 'user') {
+                shouldAutoScroll = true;
+            }
+            
+            // Scroll to bottom with a small delay (like our React implementation)
+            requestAnimationFrame(() => {
+                scrollToBottom();
+            });
+        }
+        
+        function addUserMessage() {
+            addMessage('user', `This is user message #${messageCount++}`);
+        }
+        
+        function addAssistantMessage() {
+            setTimeout(() => {
+                addMessage('assistant', `This is assistant response #${messageCount++}. Here's some longer text to demonstrate how the scrolling works with longer messages that might wrap to multiple lines and take up more space in the chat container.`);
+            }, 500); // Simulate response delay
+        }
+        
+        function addMultipleMessages() {
+            addUserMessage();
+            setTimeout(() => addAssistantMessage(), 1000);
+            setTimeout(() => addAssistantMessage(), 2000);
+        }
+        
+        function scrollToTop() {
+            container.scrollTop = 0;
+            shouldAutoScroll = false;
+            console.log('Manually scrolled to top. Auto-scroll disabled.');
+        }
+    </script>
+</body>
+</html>

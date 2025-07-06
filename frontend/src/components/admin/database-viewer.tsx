@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface DatabaseViewerProps {
   // No props needed currently
 }

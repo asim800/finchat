@@ -8,7 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import { ChatInterface } from './chat-interface';
 import { PortfolioChartPanel } from '@/components/portfolio/portfolio-chart-panel';
-import { Button } from '@/components/ui/button';
+// import { Button } from '@/components/ui/button';
 
 interface ChartData {
   type: 'pie' | 'bar';
@@ -26,18 +26,18 @@ export const ResponsiveChatLayout: React.FC<ResponsiveChatLayoutProps> = ({
   userId 
 }) => {
   const [currentChartData, setCurrentChartData] = useState<ChartData | null>(null);
-  const [isChartVisible, setIsChartVisible] = useState(false);
+  // const [isChartVisible, setIsChartVisible] = useState(false);
 
   const handleChartUpdate = useCallback((chartData: ChartData | null) => {
     setCurrentChartData(chartData);
     if (chartData) {
-      setIsChartVisible(true);
+      // setIsChartVisible(true);
     }
   }, []);
 
-  const toggleChart = () => {
-    setIsChartVisible(!isChartVisible);
-  };
+  // const toggleChart = () => {
+  //   setIsChartVisible(!isChartVisible);
+  // };
 
   return (
     <div className="h-full flex flex-col min-h-0">

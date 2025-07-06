@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface AdminStatsProps {
   // No props needed currently
 }

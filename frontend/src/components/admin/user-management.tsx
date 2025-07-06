@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,7 +53,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ adminUser }) => 
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -76,11 +76,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ adminUser }) => 
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, selectedRole]);
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, searchTerm, selectedRole]);
+  }, [fetchUsers, currentPage, searchTerm, selectedRole]);
 
   const handleDeleteUser = async (userId: string, userEmail: string) => {
     if (!confirm(`Are you sure you want to delete user ${userEmail}? This action cannot be undone.`)) {

@@ -33,7 +33,13 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     // Try to get authenticated user
     const user = await getUserFromRequest(request);
     
-    let whereCondition: any = {
+    const whereCondition: {
+      sessionId: string;
+      id: {
+        lt: string;
+      };
+      userId?: string;
+    } = {
       sessionId,
       id: {
         lt: beforeMessageId // Load messages before the given message ID

@@ -4,7 +4,7 @@
 // ============================================================================
 
 import React from 'react';
-import { LLMProvider, getProviderConfig } from '@/lib/llm-config';
+import { getProviderConfig } from '@/lib/llm-config';
 
 interface ChartData {
   type: 'pie' | 'bar';

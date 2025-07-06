@@ -5,14 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { llmService, LLMProvider } from '@/lib/llm-service';
-import { FINANCIAL_SYSTEM_PROMPT, generateFinancialPrompt } from '@/lib/financial-prompts';
+// import { FINANCIAL_SYSTEM_PROMPT, generateFinancialPrompt } from '@/lib/financial-prompts';
 import { getUserFromRequest } from '@/lib/auth';
 import { ChatService } from '@/lib/chat-service';
 import { financeMCPClient } from '@/lib/mcp-client';
 import { unifiedAnalysisService } from '@/lib/unified-analysis-service';
 import { backendConfig } from '@/lib/backend-config';
 import { fastAPIClient } from '@/lib/fastapi-client';
-import { PortfolioService } from '@/lib/portfolio-service';
+import { PortfolioService, Portfolio } from '@/lib/portfolio-service';
 import { GuestPortfolioService } from '@/lib/guest-portfolio';
 import { ChatTriageProcessor } from '@/lib/chat-triage-processor';
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's portfolios for context
-    let userPortfolios: any[] = [];
+    let userPortfolios: Portfolio[] = [];
     if (user?.id && !isGuestMode) {
       try {
         userPortfolios = await PortfolioService.getUserPortfolios(user.id);
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
           try {
             // Get FastAPI total value for risk analysis accuracy
             const riskAnalysis = await fastAPIClient.calculatePortfolioRisk(user.id, portfolio.id);
-            portfolio.marketTotalValue = riskAnalysis.totalValue;
+            (portfolio as any).marketTotalValue = riskAnalysis.totalValue;
             // Successfully enriched portfolio with market value
           } catch (error) {
             console.warn(`Could not get FastAPI total value for portfolio ${portfolio.id}:`, error);
@@ -322,6 +322,7 @@ async function getRealPortfolioData(
 }
 
 // MCP Tool Analysis Function with graceful fallback
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function analyzeMCPToolNeeds(
   message: string, 
   userId?: string, 
