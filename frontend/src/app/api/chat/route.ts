@@ -14,6 +14,7 @@ import { backendConfig } from '@/lib/backend-config';
 import { fastAPIClient } from '@/lib/fastapi-client';
 import { PortfolioService } from '@/lib/portfolio-service';
 import { GuestPortfolioService } from '@/lib/guest-portfolio';
+import { ChatTriageProcessor } from '@/lib/chat-triage-processor';
 
 
 
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user's portfolios for portfolio selection
+    // Get user's portfolios for context
     let userPortfolios: any[] = [];
     if (user?.id && !isGuestMode) {
       try {
@@ -96,41 +97,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate contextual prompt with portfolio selection
-    const promptResult = generateFinancialPrompt(message, {
-      isGuestMode,
-      portfolioData: {
-        ...portfolioData,
-        portfolios: userPortfolios
-      },
-      userPreferences,
-    });
-
-    let financialPrompt = promptResult.prompt;
-    const portfolioSelection = promptResult.portfolioSelection;
-    
-    // Check if message requires MCP tools, passing selected portfolio context
-    const toolAnalysis = await analyzeMCPToolNeeds(
-      message, 
-      user?.id, 
-      isGuestMode, 
-      portfolioSelection?.portfolioId || undefined
-    );
-
-    // Add MCP tool results or fallback message to prompt
-    if (toolAnalysis.toolResults) {
-      financialPrompt += `\n\nRelevant Analysis Results:\n${toolAnalysis.toolResults}`;
-    } else if (toolAnalysis.fallbackMessage) {
-      financialPrompt += `\n\nNote: ${toolAnalysis.fallbackMessage}`;
-    }
-
-    // Inform LLM about MCP status for better response handling
-    if (toolAnalysis.mcpStatus === 'partial') {
-      financialPrompt += `\n\nNote: Some advanced analysis tools are temporarily unavailable. Please provide general financial guidance where specific calculations are missing.`;
-    } else if (toolAnalysis.mcpStatus === 'failed') {
-      financialPrompt += `\n\nNote: Advanced analysis tools are currently unavailable. Please provide helpful general financial guidance and mention that detailed analysis will be available later.`;
-    }
-
     // Save user message to session
     if (chatSession) {
       try {
@@ -145,26 +111,33 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate response using selected LLM
-    const response = await llmService.generateResponse(
-      [{ role: 'user', content: financialPrompt }],
-      {
-        provider: selectedProvider,
-        systemPrompt: FINANCIAL_SYSTEM_PROMPT,
-        temperature: 0.7,
-        maxTokens: 1000,
-      }
-    );
+    // Use the enhanced triage processor for smart routing
+    const triageResult = await ChatTriageProcessor.processQuery(message, {
+      userId: user?.id,
+      sessionId: sessionId,
+      guestSessionId,
+      isGuestMode,
+      portfolioData: {
+        ...portfolioData,
+        portfolios: userPortfolios
+      },
+      userPreferences,
+      provider: selectedProvider
+    });
 
-    // Check if response suggests creating charts/visualizations
-    const shouldGenerateChart = await checkForChartGeneration(
-      message, 
-      response.content, 
-      user?.id, 
-      guestSessionId, 
-      chatSession,
-      isGuestMode
-    );
+    // Handle chart generation if needed
+    let shouldGenerateChart = null;
+    if (triageResult.processingType === 'llm' || 
+        (triageResult.processingType === 'hybrid' && !triageResult.metadata?.regexpMatch)) {
+      shouldGenerateChart = await checkForChartGeneration(
+        message, 
+        triageResult.content, 
+        user?.id, 
+        guestSessionId, 
+        chatSession,
+        isGuestMode
+      );
+    }
 
     // Save assistant message to session
     if (chatSession) {
@@ -172,9 +145,9 @@ export async function POST(request: NextRequest) {
         await ChatService.saveMessage(
           chatSession.id,
           'assistant',
-          response.content,
-          response.provider,
-          shouldGenerateChart && shouldGenerateChart !== null ? { chartData: shouldGenerateChart } : undefined
+          triageResult.content,
+          triageResult.metadata?.llmProvider || 'regexp',
+          shouldGenerateChart ? { chartData: shouldGenerateChart } : undefined
         );
       } catch (saveError) {
         console.error('Failed to save assistant message:', saveError);
@@ -182,13 +155,21 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      content: response.content,
-      provider: response.provider,
-      usage: response.usage,
+      content: triageResult.content,
+      provider: triageResult.metadata?.llmProvider || 'regexp',
+      processingType: triageResult.processingType,
+      confidence: triageResult.confidence,
+      executionTimeMs: triageResult.executionTimeMs,
+      usage: triageResult.metadata?.llmTokens ? { tokens: triageResult.metadata.llmTokens } : undefined,
       chartData: shouldGenerateChart,
       isGuestMode,
       sessionId: chatSession?.id,
-      portfolioFeedback: portfolioSelection?.feedbackMessage,
+      metadata: {
+        portfolioModified: triageResult.metadata?.portfolioModified || false,
+        assetsAffected: triageResult.metadata?.assetsAffected || [],
+        dbOperations: triageResult.metadata?.dbOperations || 0,
+        cacheHit: triageResult.metadata?.cacheHit || false
+      }
     });
 
   } catch (error) {

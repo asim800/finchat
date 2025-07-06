@@ -3,6 +3,8 @@
 // Specialized prompts for financial AI assistant
 // ============================================================================
 
+import { formatCurrency } from './number-utils';
+
 export const FINANCIAL_SYSTEM_PROMPT = `You are an expert AI financial assistant with access to advanced portfolio analysis tools. Your role is to provide helpful, accurate, and personalized financial advice using both your knowledge and real-time portfolio calculations.
 
 Guidelines:
@@ -177,14 +179,14 @@ export const generateFinancialPrompt = (
   const selectedPortfolio = portfolioSelection?.selectedPortfolio || context?.portfolioData?.selectedPortfolio;
   if (selectedPortfolio) {
     // Use FastAPI market value if available, otherwise fall back to cost basis
-    const totalValue = selectedPortfolio.marketTotalValue || selectedPortfolio.totalValue;
-    const valueLabel = selectedPortfolio.marketTotalValue ? 'Total Value (current market)' : 'Total Value (cost basis)';
+    const totalValue = (selectedPortfolio as any).marketTotalValue || selectedPortfolio.totalValue;
+    const valueLabel = (selectedPortfolio as any).marketTotalValue ? 'Total Value (current market)' : 'Total Value (cost basis)';
     
     prompt += `\n\nSelected Portfolio Context:
 - Portfolio Name: ${selectedPortfolio.name}
 - Portfolio ID: ${selectedPortfolio.id}
 - Holdings: ${selectedPortfolio.assets?.length || 0} positions
-- ${valueLabel}: $${totalValue?.toLocaleString() || 'Unknown'}
+- ${valueLabel}: ${totalValue ? formatCurrency(totalValue) : 'Unknown'}
 - Top Holdings: ${selectedPortfolio.assets?.slice(0, 3).map((h) => h.symbol).join(', ') || 'None'}`;
 
     if (selectedPortfolio.description) {
@@ -192,12 +194,12 @@ export const generateFinancialPrompt = (
     }
   } else if (context?.portfolioData) {
     // Fallback to legacy portfolio data structure
-    const totalValue = context.portfolioData.marketTotalValue || context.portfolioData.totalValue;
-    const valueLabel = context.portfolioData.marketTotalValue ? 'Total Value (current market)' : 'Total Value (cost basis)';
+    const totalValue = (context.portfolioData as any).marketTotalValue || context.portfolioData.totalValue;
+    const valueLabel = (context.portfolioData as any).marketTotalValue ? 'Total Value (current market)' : 'Total Value (cost basis)';
     
     prompt += `\n\nUser's Portfolio Context:
 - Total Holdings: ${context.portfolioData.holdings?.length || 0} positions
-- ${valueLabel}: $${totalValue?.toLocaleString() || 'Unknown'}
+- ${valueLabel}: ${totalValue ? formatCurrency(totalValue) : 'Unknown'}
 - Top Holdings: ${context.portfolioData.holdings?.slice(0, 3).map((h) => h.symbol).join(', ') || 'None'}`;
   }
 

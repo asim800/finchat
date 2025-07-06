@@ -188,8 +188,49 @@ export class GuestPortfolioService {
     };
   }
 
+  // Update guest asset quantity and/or price
+  static updateGuestAsset(sessionId: string, symbol: string, newQuantity?: number, newAvgPrice?: number): boolean {
+    try {
+      const portfolio = this.getGuestPortfolio(sessionId);
+      
+      const assetIndex = portfolio.assets.findIndex(
+        asset => asset.symbol === symbol.toUpperCase()
+      );
+
+      if (assetIndex >= 0) {
+        const asset = portfolio.assets[assetIndex];
+        
+        // Update quantity if provided
+        if (newQuantity !== undefined) {
+          asset.quantity = newQuantity;
+        }
+        
+        // Update average cost if provided
+        if (newAvgPrice !== undefined) {
+          asset.avgCost = newAvgPrice;
+        }
+        
+        asset.addedAt = new Date(); // Update timestamp
+        
+        // Recalculate totals
+        portfolio.lastUpdated = new Date();
+        portfolio.totalValue = portfolio.assets.reduce((sum, asset) => {
+          return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
+        }, 0);
+
+        guestPortfolios.set(sessionId, portfolio);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Error updating guest asset:', error);
+      return false;
+    }
+  }
+
   // Remove asset from guest portfolio
-  static removeAssetFromGuest(sessionId: string, symbol: string): boolean {
+  static removeAssetFromGuestPortfolio(sessionId: string, symbol: string): boolean {
     try {
       const portfolio = this.getGuestPortfolio(sessionId);
       
