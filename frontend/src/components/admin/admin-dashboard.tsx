@@ -45,10 +45,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="database">Database Viewer</TabsTrigger>
+          <TabsTrigger value="financial-terms">Financial Terms</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -70,6 +71,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Database Viewer</h2>
             <DatabaseViewer />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="financial-terms" className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Financial Terms Management</h2>
+            <Card>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Manage Financial Terms</h3>
+                    <p className="text-gray-600 mb-4">
+                      Create, update, and manage financial terms and definitions used throughout the application.
+                    </p>
+                    <a 
+                      href="/admin/financial-terms" 
+                      className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Manage Financial Terms
+                    </a>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 

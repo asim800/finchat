@@ -47,9 +47,9 @@ export default async function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       {/* Admin Header */}
-      <div className="bg-red-600 text-white p-4">
+      <div className="bg-red-600 text-white p-4 -mt-4 -mx-4 mb-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
@@ -72,7 +72,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Admin Content */}
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto px-6">
         <AdminDashboard user={user} />
       </div>
     </div>

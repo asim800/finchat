@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, MenuIcon, XIcon, ShieldIcon } from 'lucide-react';
+import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, MenuIcon, XIcon, ShieldIcon, BookOpenIcon } from 'lucide-react';
 
 interface User {
   id: string;
@@ -35,7 +35,8 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
   user
 }) => {
   const pathname = usePathname();
-  const isPortfolioPage = pathname?.includes('/portfolio');
+  const isMyPortfolioPage = pathname?.includes('/myportfolio');
+  const isReferencePortfolioPage = pathname?.includes('/dashboard/portfolio') && !pathname?.includes('/myportfolio');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -56,13 +57,22 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
             </span>
             
             <div className="flex items-center space-x-3 sm:space-x-2">
-              <Link href="/dashboard/portfolio">
+              <Link href="/dashboard/myportfolio">
                 <Button 
-                  variant={isPortfolioPage ? "default" : "outline"} 
+                  variant={isMyPortfolioPage ? "default" : "outline"} 
                   size="sm"
                   className="text-sm font-medium"
                 >
-                  Portfolio
+                  My Portfolio
+                </Button>
+              </Link>
+              <Link href="/dashboard/portfolio">
+                <Button 
+                  variant={isReferencePortfolioPage ? "default" : "outline"} 
+                  size="sm"
+                  className="text-sm font-medium"
+                >
+                  Templates
                 </Button>
               </Link>
               <Link href="/dashboard/chat">
@@ -74,15 +84,26 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
                   Chat
                 </Button>
               </Link>
-              <Link href="/learning">
-                <Button 
-                  variant={pathname?.includes('/learning') ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  Learning
-                </Button>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant={pathname?.includes('/learning') ? "default" : "outline"} 
+                    size="sm"
+                    className="text-sm font-medium"
+                  >
+                    Learning
+                    <ChevronDownIcon className="ml-1 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/learning/financial-terms" className="flex items-center">
+                      <BookOpenIcon className="mr-2 h-4 w-4" />
+                      Financial Terms
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Link href="/contact">
                 <Button 
                   variant={pathname?.includes('/contact') ? "default" : "outline"} 
@@ -170,13 +191,22 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
         {isMobileMenuOpen && (
           <div className="md:hidden border-t bg-white py-4">
             <div className="flex flex-col space-y-3">
-              <Link href="/dashboard/portfolio" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/dashboard/myportfolio" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button 
-                  variant={isPortfolioPage ? "default" : "ghost"} 
+                  variant={isMyPortfolioPage ? "default" : "ghost"} 
                   size="sm"
                   className="w-full justify-start text-sm font-medium"
                 >
-                  Portfolio
+                  My Portfolio
+                </Button>
+              </Link>
+              <Link href="/dashboard/portfolio" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button 
+                  variant={isReferencePortfolioPage ? "default" : "ghost"} 
+                  size="sm"
+                  className="w-full justify-start text-sm font-medium"
+                >
+                  Portfolio Templates
                 </Button>
               </Link>
               <Link href="/dashboard/chat" onClick={() => setIsMobileMenuOpen(false)}>
@@ -188,13 +218,14 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
                   Chat
                 </Button>
               </Link>
-              <Link href="/learning" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/learning/financial-terms" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button 
                   variant={pathname?.includes('/learning') ? "default" : "ghost"} 
                   size="sm"
                   className="w-full justify-start text-sm font-medium"
                 >
-                  Learning
+                  <BookOpenIcon className="mr-2 h-4 w-4" />
+                  Financial Terms
                 </Button>
               </Link>
               <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)}>

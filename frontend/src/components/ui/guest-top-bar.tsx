@@ -10,7 +10,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { MenuIcon, XIcon } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MenuIcon, XIcon, ChevronDownIcon, BookOpenIcon } from 'lucide-react';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface GuestTopBarProps {}
@@ -38,13 +44,22 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="flex items-center space-x-3 sm:space-x-2">
-              <Link href="/dashboard/portfolio">
+              <Link href="/dashboard/myportfolio">
                 <Button 
                   variant={isPortfolioPage ? "default" : "outline"} 
                   size="sm"
                   className="text-sm font-medium"
                 >
-                  Portfolio
+                  My Portfolio
+                </Button>
+              </Link>
+              <Link href="/dashboard/portfolio">
+                <Button 
+                  variant={pathname?.includes('/dashboard/portfolio') && !pathname?.includes('/myportfolio') ? "default" : "outline"} 
+                  size="sm"
+                  className="text-sm font-medium"
+                >
+                  Templates
                 </Button>
               </Link>
               <Link href="/dashboard/chat">
@@ -56,15 +71,26 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
                   Chat
                 </Button>
               </Link>
-              <Link href="/learning">
-                <Button 
-                  variant={pathname?.includes('/learning') ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  Learning
-                </Button>
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant={pathname?.includes('/learning') ? "default" : "outline"} 
+                    size="sm"
+                    className="text-sm font-medium"
+                  >
+                    Learning
+                    <ChevronDownIcon className="ml-1 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/learning/financial-terms" className="flex items-center">
+                      <BookOpenIcon className="mr-2 h-4 w-4" />
+                      Financial Terms
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Link href="/contact">
                 <Button 
                   variant={pathname?.includes('/contact') ? "default" : "outline"} 
@@ -112,13 +138,22 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t bg-white py-4">
             <div className="flex flex-col space-y-3">
-              <Link href="/dashboard/portfolio" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/dashboard/myportfolio" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button 
                   variant={isPortfolioPage ? "default" : "ghost"} 
                   size="sm"
                   className="w-full justify-start text-sm font-medium"
                 >
-                  Portfolio
+                  My Portfolio
+                </Button>
+              </Link>
+              <Link href="/dashboard/portfolio" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button 
+                  variant={pathname?.includes('/dashboard/portfolio') && !pathname?.includes('/myportfolio') ? "default" : "ghost"} 
+                  size="sm"
+                  className="w-full justify-start text-sm font-medium"
+                >
+                  Portfolio Templates
                 </Button>
               </Link>
               <Link href="/dashboard/chat" onClick={() => setIsMobileMenuOpen(false)}>
@@ -130,13 +165,14 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
                   Chat
                 </Button>
               </Link>
-              <Link href="/learning" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link href="/learning/financial-terms" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button 
                   variant={pathname?.includes('/learning') ? "default" : "ghost"} 
                   size="sm"
                   className="w-full justify-start text-sm font-medium"
                 >
-                  Learning
+                  <BookOpenIcon className="mr-2 h-4 w-4" />
+                  Financial Terms
                 </Button>
               </Link>
               <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)}>

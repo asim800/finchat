@@ -1,3 +1,11 @@
+// ============================================================================
+// PRISMA SCHEMA - RiskLens Finance Application
+// ============================================================================
+// This schema contains all models organized by domain:
+// - Shared/Market Data: Models used by multiple services (frontend, FastAPI)
+// - Frontend/User Data: Models specific to the web application
+// ============================================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,6 +15,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================================================
+// SHARED/MARKET DATA MODELS
+// ============================================================================
+// These models contain market data and are shared across services
+// (frontend, FastAPI, etc.)
+
+model HistoricalPrice {
+  id        String   @id @default(cuid())
+  symbol    String
+  price     Float
+  date      DateTime
+  source    String?
+  assetType String?
+  createdAt DateTime @default(now())
+
+  @@unique([symbol, date])
+  @@index([symbol, date(sort: Desc)])
+  @@index([date])
+  @@map("historical_prices")
+}
+
+// ============================================================================
+// FRONTEND/USER DATA MODELS
+// ============================================================================
+// These models are specific to the web application frontend
+
+// User Management Models
 model User {
   id                          String        @id @default(cuid())
   email                       String        @unique
@@ -46,6 +81,7 @@ model User {
   @@map("users")
 }
 
+// Portfolio Management Models
 model Portfolio {
   id          String   @id @default(cuid())
   userId      String
@@ -80,21 +116,7 @@ model Asset {
   @@map("assets")
 }
 
-model HistoricalPrice {
-  id        String   @id @default(cuid())
-  symbol    String
-  price     Float
-  date      DateTime
-  source    String?
-  assetType String?
-  createdAt DateTime @default(now())
-
-  @@unique([symbol, date])
-  @@index([symbol, date(sort: Desc)])
-  @@index([date])
-  @@map("historical_prices")
-}
-
+// API Integration Models
 model ApiKey {
   id           String   @id @default(cuid())
   userId       String
@@ -127,6 +149,7 @@ model Account {
   @@map("accounts")
 }
 
+// Chat System Models
 model ChatSession {
   id             String    @id @default(cuid())
   userId         String?
@@ -153,4 +176,18 @@ model Message {
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("messages")
+}
+
+// Learning/Content Management Models
+model FinancialTerm {
+  id          String   @id @default(cuid())
+  term        String   @unique
+  definition  String
+  category    String?  // broad category like "Investment Basics", "Risk Management"
+  keywords    String[] // searchable tags like ["portfolio", "diversification", "beginner"]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("financial_terms")
 }

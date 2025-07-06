@@ -13,6 +13,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
+  role?: string;
 }
 
 interface DashboardLayoutProps {
@@ -45,7 +46,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = async ({ children
             id: true,
             email: true,
             firstName: true,
-            lastName: true
+            lastName: true,
+            role: true
           }
         });
       }
@@ -67,6 +69,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = async ({ children
       <main>
         {children}
       </main>
+
+      {/* Admin floater - only show for admin users */}
+      {user?.role === 'admin' && (
+        <div className="fixed top-20 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium z-50 flex items-center gap-2">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          Admin Mode
+        </div>
+      )}
     </div>
   );
 };
