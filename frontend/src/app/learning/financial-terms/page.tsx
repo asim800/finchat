@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { SearchIcon, PlusIcon, PencilIcon, SettingsIcon } from 'lucide-react';
+import { SearchIcon, PencilIcon, SettingsIcon } from 'lucide-react';
 
 interface FinancialTerm {
   id: string;

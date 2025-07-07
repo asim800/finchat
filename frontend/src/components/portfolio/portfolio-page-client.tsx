@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import { PortfolioTable } from './portfolio-table';
 
 interface PortfolioPageClientProps {
@@ -32,14 +32,14 @@ interface DisplayAsset {
   updatedAt: Date;
 }
 
-export const PortfolioPageClient: React.FC<PortfolioPageClientProps> = ({ 
+const PortfolioPageClientComponent: React.FC<PortfolioPageClientProps> = ({ 
   isGuestMode, 
   userId,
   onAssetsChange: parentOnAssetsChange
 }) => {
   // const [currentAssets, setCurrentAssets] = useState<DisplayAsset[]>([]);
 
-  const handleAssetsChange = (assets: DisplayAsset[]) => {
+  const handleAssetsChange = useCallback((assets: DisplayAsset[]) => {
     // setCurrentAssets(assets);
     
     // Notify parent component of asset changes for CSV functionality
@@ -53,7 +53,7 @@ export const PortfolioPageClient: React.FC<PortfolioPageClientProps> = ({
       }));
       parentOnAssetsChange(exportableAssets);
     }
-  };
+  }, [parentOnAssetsChange]);
 
 
   return (
@@ -66,3 +66,5 @@ export const PortfolioPageClient: React.FC<PortfolioPageClientProps> = ({
     </div>
   );
 };
+
+export const PortfolioPageClient = React.memo(PortfolioPageClientComponent);

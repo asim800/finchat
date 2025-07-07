@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageBubble, Message } from './message-bubble';
@@ -15,6 +15,27 @@ import { useChatAPI } from '@/hooks/use-chat-api';
 import { simulateAIResponse } from '@/lib/chat-simulation';
 import { generateGuestSessionId } from '@/lib/guest-portfolio';
 
+// Throttle utility function
+const throttle = <T extends (...args: any[]) => any>(func: T, delay: number): T => {
+  let timeoutId: NodeJS.Timeout | null = null;
+  let lastExecTime = 0;
+  
+  return ((...args: Parameters<T>) => {
+    const currentTime = Date.now();
+    
+    if (currentTime - lastExecTime > delay) {
+      func(...args);
+      lastExecTime = currentTime;
+    } else {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+        lastExecTime = Date.now();
+      }, delay - (currentTime - lastExecTime));
+    }
+  }) as T;
+};
+
 interface ChatInterfaceProps {
   isGuestMode?: boolean;
   userId?: string;
@@ -22,7 +43,7 @@ interface ChatInterfaceProps {
   hideInlineCharts?: boolean;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = false, userId, onChartUpdate, hideInlineCharts = false }) => {
+const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = false, userId, onChartUpdate, hideInlineCharts = false }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -209,8 +230,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
     }
   }, [currentSessionId, isLoadingMore, hasMoreMessages, messages, loadMoreMessages, isGuestMode, guestSessionId]);
 
-  // Scroll event handler for infinite scroll and auto-scroll detection
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+  // Base scroll handler (not throttled for critical operations)
+  const baseScrollHandler = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
     
     // Trigger load more when user scrolls within 10px of top
@@ -223,6 +244,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
     const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
     shouldAutoScroll.current = isNearBottom;
   }, [handleLoadMore, hasMoreMessages, isLoadingMore, messages.length, isInitiallyLoaded]);
+
+  // Throttled scroll handler to improve performance
+  const handleScroll = useMemo(
+    () => throttle(baseScrollHandler, 100), // 100ms throttle
+    [baseScrollHandler]
+  );
 
 
   const handleSend = async () => {
@@ -507,6 +534,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ isGuestMode = fals
     </div>
   );
 };
+
+export const ChatInterface = React.memo(ChatInterfaceComponent);
 
 
 // // ============================================================================

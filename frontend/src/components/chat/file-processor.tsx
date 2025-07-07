@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { FileUpload } from '@/components/ui/file-upload';
 
@@ -36,7 +36,7 @@ interface FileProcessorProps {
   isGuestMode?: boolean;
 }
 
-export const FileProcessor: React.FC<FileProcessorProps> = ({ 
+const FileProcessorComponent: React.FC<FileProcessorProps> = ({ 
   onDataExtracted, 
   isGuestMode = false 
 }) => {
@@ -44,7 +44,7 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
   const [processing, setProcessing] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = useCallback(async (file: File) => {
     setSelectedFile(file);
     setProcessing(true);
     
@@ -64,7 +64,7 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     } finally {
       setProcessing(false);
     }
-  };
+  }, [onDataExtracted]);
 
   const readFileContent = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -88,53 +88,65 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     }
   };
 
-  const processCsvFile = (content: string) => {
+  const processCsvFile = async (content: string) => {
     const lines = content.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
     
     // Try to detect portfolio data
     if (headers.some(h => ['symbol', 'ticker', 'stock'].includes(h))) {
-      return processPortfolioData(lines, headers);
+      return await processPortfolioDataAsync(lines, headers);
     }
     
     // Try to detect preference data
     if (headers.some(h => ['preference', 'setting', 'goal'].includes(h))) {
-      return processPreferenceData(lines, headers);
+      return await processPreferenceDataAsync(lines, headers);
     }
     
     // Generic CSV processing
-    return processGenericCsv(lines, headers);
+    return await processGenericCsvAsync(lines, headers);
   };
 
-  const processPortfolioData = (lines: string[], headers: string[]) => {
+  // Async version with yielding to prevent blocking
+  const processPortfolioDataAsync = async (lines: string[], headers: string[]) => {
     const portfolio = [];
+    const batchSize = 10; // Process 10 rows at a time
     
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
-      const entry: PortfolioEntry = {
-        symbol: '',
-        quantity: 0,
-        price: 0
-      };
+    for (let i = 1; i < lines.length; i += batchSize) {
+      const endIndex = Math.min(i + batchSize, lines.length);
       
-      headers.forEach((header, index) => {
-        const value = values[index] || '';
+      // Process batch
+      for (let j = i; j < endIndex; j++) {
+        const values = lines[j].split(',').map(v => v.trim());
+        const entry: PortfolioEntry = {
+          symbol: '',
+          quantity: 0,
+          price: 0
+        };
         
-        if (['symbol', 'ticker'].includes(header)) {
-          entry.symbol = value.toUpperCase();
-        } else if (['quantity', 'shares', 'amount'].includes(header)) {
-          entry.quantity = parseFloat(value) || 0;
-        } else if (['price', 'cost', 'value'].includes(header)) {
-          entry.price = parseFloat(value) || 0;
-        } else if (['name', 'company', 'description'].includes(header)) {
-          entry.name = value;
-        } else {
-          entry[header] = value;
+        headers.forEach((header, index) => {
+          const value = values[index] || '';
+          
+          if (['symbol', 'ticker'].includes(header)) {
+            entry.symbol = value.toUpperCase();
+          } else if (['quantity', 'shares', 'amount'].includes(header)) {
+            entry.quantity = parseFloat(value) || 0;
+          } else if (['price', 'cost', 'value'].includes(header)) {
+            entry.price = parseFloat(value) || 0;
+          } else if (['name', 'company', 'description'].includes(header)) {
+            entry.name = value;
+          } else {
+            entry[header] = value;
+          }
+        });
+        
+        if (entry.symbol) {
+          portfolio.push(entry);
         }
-      });
+      }
       
-      if (entry.symbol) {
-        portfolio.push(entry);
+      // Yield control back to event loop every batch
+      if (i + batchSize < lines.length) {
+        await new Promise(resolve => setTimeout(resolve, 0));
       }
     }
     
@@ -150,16 +162,27 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     };
   };
 
-  const processPreferenceData = (lines: string[], headers: string[]) => {
+  // Removed sync version - async version handles all cases
+
+  const processPreferenceDataAsync = async (lines: string[], headers: string[]) => {
     const preferences: Record<string, string> = {};
+    const batchSize = 20;
     
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
-      headers.forEach((header, index) => {
-        if (values[index]) {
-          preferences[header] = values[index];
-        }
-      });
+    for (let i = 1; i < lines.length; i += batchSize) {
+      const endIndex = Math.min(i + batchSize, lines.length);
+      
+      for (let j = i; j < endIndex; j++) {
+        const values = lines[j].split(',').map(v => v.trim());
+        headers.forEach((header, index) => {
+          if (values[index]) {
+            preferences[header] = values[index];
+          }
+        });
+      }
+      
+      if (i + batchSize < lines.length) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
     }
     
     return {
@@ -171,18 +194,30 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     };
   };
 
-  const processGenericCsv = (lines: string[], headers: string[]) => {
+  // Removed sync version - async version handles all cases
+
+  const processGenericCsvAsync = async (lines: string[], headers: string[]) => {
     const data = [];
+    const maxRows = Math.min(lines.length, 50); // Limit to 50 rows for demo
+    const batchSize = 10;
     
-    for (let i = 1; i < Math.min(lines.length, 50); i++) { // Limit to 50 rows for demo
-      const values = lines[i].split(',').map(v => v.trim());
-      const entry: Record<string, string> = {};
+    for (let i = 1; i < maxRows; i += batchSize) {
+      const endIndex = Math.min(i + batchSize, maxRows);
       
-      headers.forEach((header, index) => {
-        entry[header] = values[index] || '';
-      });
+      for (let j = i; j < endIndex; j++) {
+        const values = lines[j].split(',').map(v => v.trim());
+        const entry: Record<string, string> = {};
+        
+        headers.forEach((header, index) => {
+          entry[header] = values[index] || '';
+        });
+        
+        data.push(entry);
+      }
       
-      data.push(entry);
+      if (i + batchSize < maxRows) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
     }
     
     return {
@@ -195,6 +230,8 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
       summary: `Processed CSV with ${headers.length} columns and ${lines.length - 1} rows`
     };
   };
+
+  // Removed sync version - async version handles all cases
 
   const processTextFile = (content: string) => {
     // Look for financial keywords
@@ -273,4 +310,6 @@ export const FileProcessor: React.FC<FileProcessorProps> = ({
     </Card>
   );
 };
+
+export const FileProcessor = React.memo(FileProcessorComponent);
 

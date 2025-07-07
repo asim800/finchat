@@ -31,7 +31,7 @@ interface MessageBubbleProps {
   message: Message;
 }
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
+const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({ message }) => {
   const isUser = message.role === 'user';
   
   const getProviderBadge = (provider?: string) => {
@@ -94,6 +94,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
     </div>
   );
 };
+
+export const MessageBubble = React.memo(MessageBubbleComponent);
 
 
 

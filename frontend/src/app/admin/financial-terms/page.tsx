@@ -5,13 +5,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { PlusIcon, PencilIcon, TrashIcon, SearchIcon } from 'lucide-react';
@@ -35,13 +35,58 @@ interface TermFormData {
   isActive: boolean;
 }
 
-export default function FinancialTermsAdminPage() {
+// Memoized Term Card Component
+const TermCard = React.memo<{
+  term: FinancialTerm;
+  onEdit: (term: FinancialTerm) => void;
+  onDelete: (id: string) => void;
+}>(function TermCard({ term, onEdit, onDelete }) {
+  return (
+  <Card key={term.id}>
+    <CardHeader>
+      <div className="flex justify-between items-start">
+        <div>
+          <CardTitle className="text-lg">{term.term}</CardTitle>
+          <CardDescription className="flex items-center gap-2 mt-1">
+            {term.category && <Badge variant="outline">{term.category}</Badge>}
+            {!term.isActive && <Badge variant="destructive">Inactive</Badge>}
+          </CardDescription>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => onEdit(term)}>
+            <PencilIcon className="w-4 h-4" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => onDelete(term.id)}>
+            <TrashIcon className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </CardHeader>
+    <CardContent>
+      <p className="text-gray-700 mb-3">{term.definition}</p>
+      {term.keywords.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {term.keywords.map(keyword => (
+            <Badge key={keyword} variant="secondary" className="text-xs">
+              {keyword}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+  );
+});
+
+const FinancialTermsAdminComponent = () => {
   const [terms, setTerms] = useState<FinancialTerm[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTerm, setEditingTerm] = useState<FinancialTerm | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [formData, setFormData] = useState<TermFormData>({
     term: '',
     definition: '',
@@ -69,7 +114,7 @@ export default function FinancialTermsAdminPage() {
 
   useEffect(() => {
     fetchTerms();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // Check for edit parameter in URL after terms are loaded
@@ -87,7 +132,24 @@ export default function FinancialTermsAdminPage() {
     }
   }, [terms, editingTerm]);
 
-  const fetchTerms = async () => {
+  // Debounce search input
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchTerm]);
+
+  const fetchTerms = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/financial-terms');
       if (response.ok) {
@@ -99,9 +161,21 @@ export default function FinancialTermsAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const resetForm = useCallback(() => {
+    setEditingTerm(null);
+    setFormData({
+      term: '',
+      definition: '',
+      category: '',
+      keywords: [],
+      isActive: true
+    });
+    setKeywordInput('');
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
@@ -130,9 +204,9 @@ export default function FinancialTermsAdminPage() {
       console.error('Error saving term:', error);
       alert('An error occurred while saving the term');
     }
-  };
+  }, [editingTerm, formData, fetchTerms, resetForm]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm('Are you sure you want to delete this term?')) return;
     
     try {
@@ -150,9 +224,9 @@ export default function FinancialTermsAdminPage() {
       console.error('Error deleting term:', error);
       alert('An error occurred while deleting the term');
     }
-  };
+  }, []);
 
-  const handleEdit = (term: FinancialTerm) => {
+  const handleEdit = useCallback((term: FinancialTerm) => {
     setEditingTerm(term);
     setFormData({
       term: term.term,
@@ -162,21 +236,9 @@ export default function FinancialTermsAdminPage() {
       isActive: term.isActive
     });
     setIsDialogOpen(true);
-  };
+  }, []);
 
-  const resetForm = () => {
-    setEditingTerm(null);
-    setFormData({
-      term: '',
-      definition: '',
-      category: '',
-      keywords: [],
-      isActive: true
-    });
-    setKeywordInput('');
-  };
-
-  const addKeyword = () => {
+  const addKeyword = useCallback(() => {
     if (keywordInput.trim() && !formData.keywords.includes(keywordInput.trim())) {
       setFormData(prev => ({
         ...prev,
@@ -184,21 +246,49 @@ export default function FinancialTermsAdminPage() {
       }));
       setKeywordInput('');
     }
-  };
+  }, [keywordInput, formData.keywords]);
 
-  const removeKeyword = (keyword: string) => {
+  const removeKeyword = useCallback((keyword: string) => {
     setFormData(prev => ({
       ...prev,
       keywords: prev.keywords.filter(k => k !== keyword)
     }));
-  };
+  }, []);
 
-  const filteredTerms = terms.filter(term => {
-    const matchesSearch = term.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         term.definition.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || term.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Form input handlers
+  const handleTermChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, term: e.target.value }));
+  }, []);
+
+  const handleDefinitionChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, definition: e.target.value }));
+  }, []);
+
+  const handleCategoryChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, category: value }));
+  }, []);
+
+  const handleActiveChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, isActive: e.target.checked }));
+  }, []);
+
+  const handleKeywordInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setKeywordInput(e.target.value);
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  const filteredTerms = useMemo(() => {
+    return terms.filter(term => {
+      const matchesSearch = debouncedSearchTerm === '' || 
+                           term.term.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           term.definition.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || term.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [terms, debouncedSearchTerm, selectedCategory]);
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
@@ -223,6 +313,12 @@ export default function FinancialTermsAdminPage() {
               <DialogTitle>
                 {editingTerm ? 'Edit Term' : 'Add New Term'}
               </DialogTitle>
+              <DialogDescription>
+                {editingTerm 
+                  ? 'Update the financial term definition, category, and keywords.'
+                  : 'Create a new financial term with definition, category, and keywords for the glossary.'
+                }
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -231,13 +327,13 @@ export default function FinancialTermsAdminPage() {
                   <Input
                     id="term"
                     value={formData.term}
-                    onChange={(e) => setFormData(prev => ({ ...prev, term: e.target.value }))}
+                    onChange={handleTermChange}
                     required
                   />
                 </div>
                 <div>
                   <Label htmlFor="category">Category</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                  <Select value={formData.category} onValueChange={handleCategoryChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -255,7 +351,7 @@ export default function FinancialTermsAdminPage() {
                 <Textarea
                   id="definition"
                   value={formData.definition}
-                  onChange={(e) => setFormData(prev => ({ ...prev, definition: e.target.value }))}
+                  onChange={handleDefinitionChange}
                   rows={4}
                   required
                 />
@@ -266,7 +362,7 @@ export default function FinancialTermsAdminPage() {
                 <div className="flex gap-2 mb-2">
                   <Input
                     value={keywordInput}
-                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onChange={handleKeywordInputChange}
                     placeholder="Add keyword"
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
                   />
@@ -286,7 +382,7 @@ export default function FinancialTermsAdminPage() {
                   type="checkbox"
                   id="isActive"
                   checked={formData.isActive}
-                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                  onChange={handleActiveChange}
                   className="rounded border-gray-300"
                 />
                 <Label htmlFor="isActive">Active</Label>
@@ -312,7 +408,7 @@ export default function FinancialTermsAdminPage() {
             <Input
               placeholder="Search terms..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10"
             />
           </div>
@@ -332,39 +428,12 @@ export default function FinancialTermsAdminPage() {
 
       <div className="grid gap-4">
         {filteredTerms.map(term => (
-          <Card key={term.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">{term.term}</CardTitle>
-                  <CardDescription className="flex items-center gap-2 mt-1">
-                    {term.category && <Badge variant="outline">{term.category}</Badge>}
-                    {!term.isActive && <Badge variant="destructive">Inactive</Badge>}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(term)}>
-                    <PencilIcon className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDelete(term.id)}>
-                    <TrashIcon className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 mb-3">{term.definition}</p>
-              {term.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {term.keywords.map(keyword => (
-                    <Badge key={keyword} variant="secondary" className="text-xs">
-                      {keyword}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TermCard 
+            key={term.id}
+            term={term}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         ))}
       </div>
       
@@ -375,4 +444,6 @@ export default function FinancialTermsAdminPage() {
       )}
     </div>
   );
-}
+};
+
+export default React.memo(FinancialTermsAdminComponent);

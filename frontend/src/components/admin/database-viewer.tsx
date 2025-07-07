@@ -100,7 +100,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tableData.map((row, index) => (
+            {tableData.slice(0, 50).map((row, index) => ( // Limit to 50 rows for performance
               <TableRow key={index}>
                 {columns.map((column) => (
                   <TableCell key={column} className="max-w-xs">

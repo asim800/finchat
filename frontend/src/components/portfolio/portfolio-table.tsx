@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -69,7 +69,7 @@ interface ApiAsset {
   strikePrice?: number | null;
 }
 
-export const PortfolioTable: React.FC<PortfolioTableProps> = ({ 
+const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({ 
   isGuestMode = false, 
   userId, 
   portfolioId,
@@ -109,7 +109,7 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     }
   }, [isGuestMode, userId, portfolioId, guestSessionId, initialAssets]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadPortfolio = async () => {
+  const loadPortfolio = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -170,10 +170,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [isGuestMode, userId, portfolioId, guestSessionId, updateAssets]);
 
   // Add new asset
-  const handleAddAsset = async () => {
+  const handleAddAsset = useCallback(async () => {
     if (!newAsset.symbol || newAsset.quantity <= 0) {
       setError('Please enter a valid symbol and quantity greater than 0');
       return;
@@ -301,10 +301,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [isGuestMode, userId, portfolioId, guestSessionId, newAsset, loadPortfolio]);
 
   // Start editing an asset
-  const startEdit = (asset: DisplayAsset) => {
+  const startEdit = useCallback((asset: DisplayAsset) => {
     setEditingId(asset.id);
     setEditValues({
       symbol: asset.symbol,
@@ -315,10 +315,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
       expirationDate: asset.expirationDate,
       strikePrice: asset.strikePrice
     });
-  };
+  }, []);
 
   // Save edit
-  const saveEdit = async () => {
+  const saveEdit = useCallback(async () => {
     if (!editingId || !editValues.quantity || editValues.quantity <= 0) {
       setError('Please enter a valid quantity greater than 0');
       return;
@@ -387,10 +387,10 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [editingId, editValues, isGuestMode, userId, portfolioId, guestSessionId, assets, loadPortfolio]);
 
   // Delete asset
-  const deleteAsset = async (asset: DisplayAsset) => {
+  const deleteAsset = useCallback(async (asset: DisplayAsset) => {
     if (!confirm(`Are you sure you want to delete ${asset.symbol} from your portfolio?`)) {
       return;
     }
@@ -437,9 +437,9 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [isGuestMode, userId, portfolioId, guestSessionId, loadPortfolio]);
 
-  // Calculate portfolio totals
+  // Calculate portfolio totals (simple calculations, no memoization needed)
   const totalPortfolioValue = assets.reduce((sum, asset) => sum + (asset.price ? asset.quantity * asset.price : 0), 0);
   const totalCost = assets.reduce((sum, asset) => sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0), 0);
   const totalAssets = assets.length;
@@ -880,3 +880,5 @@ export const PortfolioTable: React.FC<PortfolioTableProps> = ({
     </div>
   );
 };
+
+export const PortfolioTable = React.memo(PortfolioTableComponent);
