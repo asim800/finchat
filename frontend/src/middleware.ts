@@ -7,9 +7,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define different route categories
-const protectedRoutes = ['/dashboard/portfolio', '/api-keys', '/accounts'];
+const protectedRoutes = ['/dashboard/myportfolio', '/api-keys', '/accounts'];
 const authRoutes = ['/login', '/register'];
-const guestAllowedRoutes = ['/dashboard/chat', '/demo']; // Chat available for guests with limited features
+const guestAllowedRoutes = ['/dashboard/chat', '/dashboard/portfolio', '/demo']; // Chat and reference portfolios available for guests
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -28,6 +28,7 @@ export function middleware(request: NextRequest) {
   if (!isAuthenticated && protectedRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
+  
   
   // For guest-allowed routes, set appropriate mode headers
   if (guestAllowedRoutes.some(route => pathname.startsWith(route))) {

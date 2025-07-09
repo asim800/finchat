@@ -14,6 +14,7 @@ import { FileProcessor } from './file-processor';
 import { useChatAPI } from '@/hooks/use-chat-api';
 import { simulateAIResponse } from '@/lib/chat-simulation';
 import { generateGuestSessionId } from '@/lib/guest-portfolio';
+import { conversationAnalytics, trackChatMessage, trackChatResponse } from '@/lib/conversation-analytics';
 
 // Throttle utility function
 const throttle = <T extends (...args: any[]) => any>(func: T, delay: number): T => {
@@ -142,14 +143,25 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
   const scrollToBottom = () => {
     // Use both scrollIntoView and manual scroll for better reliability
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      try {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      } catch (error) {
+        console.warn('Error scrolling to bottom with scrollIntoView:', error);
+      }
     }
     
     // Fallback: manually scroll the container to bottom
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
       setTimeout(() => {
-        container.scrollTop = container.scrollHeight;
+        try {
+          // Safety check before accessing scrollHeight
+          if (container && typeof container.scrollHeight === 'number') {
+            container.scrollTop = container.scrollHeight;
+          }
+        } catch (error) {
+          console.warn('Error scrolling to bottom manually:', error);
+        }
       }, 100);
     }
   };
@@ -163,18 +175,22 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
     if (messages.length > lastMessageCount.current) {
       const container = messagesContainerRef.current;
       
-      if (container) {
-        const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-        
-        // Auto-scroll if:
-        // 1. User was near the bottom (within 100px)
-        // 2. It's the initial load
-        // 3. This is a new response to user's message (shouldAutoScroll is true)
-        if (wasAtBottom || !isInitiallyLoaded || shouldAutoScroll.current) {
-          // Use requestAnimationFrame for smoother scrolling
-          requestAnimationFrame(() => {
-            scrollToBottom();
-          });
+      if (container && typeof container.scrollHeight === 'number' && typeof container.scrollTop === 'number' && typeof container.clientHeight === 'number') {
+        try {
+          const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+          
+          // Auto-scroll if:
+          // 1. User was near the bottom (within 100px)
+          // 2. It's the initial load
+          // 3. This is a new response to user's message (shouldAutoScroll is true)
+          if (wasAtBottom || !isInitiallyLoaded || shouldAutoScroll.current) {
+            // Use requestAnimationFrame for smoother scrolling
+            requestAnimationFrame(() => {
+              scrollToBottom();
+            });
+          }
+        } catch (error) {
+          console.warn('Error in auto-scroll effect:', error);
         }
       }
     }
@@ -210,9 +226,13 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
 
         // Restore scroll position (maintain user's position)
         setTimeout(() => {
-          if (container) {
-            const newScrollHeight = container.scrollHeight;
-            container.scrollTop = scrollTop + (newScrollHeight - scrollHeight);
+          if (container && typeof container.scrollHeight === 'number' && typeof container.scrollTop === 'number') {
+            try {
+              const newScrollHeight = container.scrollHeight;
+              container.scrollTop = scrollTop + (newScrollHeight - scrollHeight);
+            } catch (error) {
+              console.warn('Error restoring scroll position:', error);
+            }
           }
         }, 0);
 
@@ -233,6 +253,11 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
   // Base scroll handler (not throttled for critical operations)
   const baseScrollHandler = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
+    
+    // Safety check: ensure container exists and has required properties
+    if (!container || typeof container.scrollTop !== 'number' || typeof container.scrollHeight !== 'number' || typeof container.clientHeight !== 'number') {
+      return;
+    }
     
     // Trigger load more when user scrolls within 10px of top
     // Only trigger after initial load is complete to prevent auto-loading on page load
@@ -255,6 +280,19 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
 
+    // Generate unique request ID for this conversation
+    const requestId = conversationAnalytics.generateRequestId();
+    const sessionId = currentSessionId || guestSessionId;
+
+    // Track the start of this conversation thread
+    trackChatMessage(
+      requestId,
+      sessionId,
+      inputValue.trim(),
+      userId,
+      isGuestMode ? guestSessionId : undefined
+    );
+
     // Enable auto-scroll when user sends a message
     shouldAutoScroll.current = true;
 
@@ -276,11 +314,15 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
         portfolioData: uploadedData || undefined,
         sessionId: currentSessionId || undefined,
         guestSessionId: isGuestMode ? guestSessionId : undefined,
+        requestId, // Pass the request ID for tracking
       });
 
       if (response) {
         console.log(`✅ Response from: ${response.provider}`); // Debug log
         setMessages(prev => [...prev, response]);
+        
+        // Track successful chat response
+        trackChatResponse(requestId, response.content, true);
         
         // Update chart panel if chart data is available
         if (response.chartData && onChartUpdate) {
@@ -297,6 +339,20 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
       
     } catch (apiError) {
       console.log('API failed, falling back to simulation:', apiError);
+      
+      // Track API error
+      conversationAnalytics.logEvent({
+        id: conversationAnalytics.generateRequestId(),
+        requestId,
+        sessionId,
+        userId,
+        guestSessionId: isGuestMode ? guestSessionId : undefined,
+        timestamp: new Date(),
+        eventType: 'error_occurred',
+        severity: 'warning',
+        error: apiError instanceof Error ? apiError.message : 'API call failed',
+        metadata: { fallbackToSimulation: true }
+      });
       
       // Fallback to simulation
       try {
@@ -327,6 +383,9 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
 
         setMessages(prev => [...prev, assistantMessage]);
         
+        // Track simulation response
+        trackChatResponse(requestId, simulationResponse.content, true);
+        
         // Update chart panel if chart data is available from simulation
         if (simulationResponse.chartData && onChartUpdate) {
           onChartUpdate(simulationResponse.chartData);
@@ -343,6 +402,9 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
           provider: 'simulation',
         };
         setMessages(prev => [...prev, errorMessage]);
+        
+        // Track complete failure
+        trackChatResponse(requestId, 'Error: System failure', false);
       }
     }
   };

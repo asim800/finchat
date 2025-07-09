@@ -80,7 +80,7 @@ export default async function HomePage() {
                     Open Chat
                   </Button>
                 </Link>
-                <Link href="/dashboard/portfolio">
+                <Link href="/dashboard/myportfolio">
                   <Button size="lg" className="text-base font-semibold px-8">
                     Portfolio
                   </Button>

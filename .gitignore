@@ -54,6 +54,10 @@ __pycache__/
 .venv/
 *.egg-info/
 
+todo.md
+tasks.md
+pythonscripts/*
+
 # Note: Python services now in separate repositories
 # MCP server: ./mcp-server/ (still in this repo)
 # FastAPI service: separate fastapi-portfolio-service repository

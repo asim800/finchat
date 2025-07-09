@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -22,8 +22,9 @@ export async function GET(
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
+    const { id } = await params;
     const term = await prisma.financialTerm.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!term) {
@@ -39,7 +40,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -59,8 +60,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Term and definition are required' }, { status: 400 });
     }
 
+    const { id } = await params;
     const existingTerm = await prisma.financialTerm.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingTerm) {
@@ -79,7 +81,7 @@ export async function PUT(
     }
 
     const updatedTerm = await prisma.financialTerm.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         term,
         definition,
@@ -98,7 +100,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromRequest(request);
@@ -111,8 +113,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
+    const { id } = await params;
     const existingTerm = await prisma.financialTerm.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!existingTerm) {
@@ -120,7 +123,7 @@ export async function DELETE(
     }
 
     await prisma.financialTerm.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ message: 'Term deleted successfully' });

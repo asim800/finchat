@@ -170,7 +170,7 @@ class FinanceAnalyzer(BaseAnalyzer):
                 p.name as portfolio_name,
                 a.symbol,
                 a.quantity,
-                a."avgPrice" as avg_price,
+                a."avgCost" as avg_cost,
                 a."assetType" as asset_type
             FROM portfolios p
             JOIN assets a ON p.id = a."portfolioId"
@@ -198,7 +198,7 @@ class FinanceAnalyzer(BaseAnalyzer):
                     portfolios[portfolio_id]["assets"].append({
                         "symbol": row.symbol,
                         "quantity": float(row.quantity),
-                        "avg_price": float(row.avg_price) if row.avg_price else None,
+                        "avg_cost": float(row.avg_cost) if row.avg_cost else None,
                         "asset_type": row.asset_type
                     })
                 

@@ -42,6 +42,7 @@ interface ChatOptions {
   userPreferences?: UserPreferences;
   sessionId?: string;
   guestSessionId?: string;
+  requestId?: string;
 }
 
 export const useChatAPI = () => {
@@ -186,6 +187,7 @@ export const useChatAPI = () => {
           userPreferences: options.userPreferences,
           sessionId: options.sessionId,
           guestSessionId: options.guestSessionId,
+          requestId: options.requestId,
         }),
       });
 

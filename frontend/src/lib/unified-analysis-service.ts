@@ -4,7 +4,7 @@
 // ============================================================================
 
 import { financeMCPClient, formatRiskAnalysis as mcpFormatRisk, formatSharpeAnalysis as mcpFormatSharpe } from './mcp-client';
-import { fastAPIClient, formatRiskAnalysis as fastapiFormatRisk, formatSharpeAnalysis as fastapiFormatSharpe } from './fastapi-client';
+import { fastAPIClient, formatRiskAnalysis as fastapiFormatRisk, formatSharpeAnalysis as fastapiFormatSharpe, formatPortfolioOptimization, formatMonteCarloSimulation, formatSentimentAnalysis } from './fastapi-client';
 import { backendConfig, logBackendSelection, type BackendType } from './backend-config';
 
 export interface AnalysisResult {
@@ -222,6 +222,100 @@ class UnifiedAnalysisService {
           return formatted + '\n';
         }
         return 'No market data available';
+      }
+    );
+  }
+
+  /**
+   * Optimize portfolio allocation using configured backend
+   */
+  async optimizePortfolio(
+    userId: string, 
+    portfolioId?: string,
+    objective: string = "max_sharpe",
+    riskTolerance: number = 0.5
+  ): Promise<AnalysisResult> {
+    console.log('🎯 UnifiedAnalysisService optimizePortfolio called with:', { userId, portfolioId, objective, riskTolerance });
+    return await this.executeWithFallback(
+      'portfolio optimization',
+      () => {
+        const primary = backendConfig.getPrimaryBackend();
+        if (primary.type === 'fastapi') {
+          return fastAPIClient.optimizePortfolio(userId, portfolioId, objective, riskTolerance);
+        } else {
+          // MCP doesn't have optimization yet, use FastAPI as fallback
+          throw new Error('MCP backend does not support portfolio optimization yet');
+        }
+      },
+      () => {
+        // Always use FastAPI for optimization
+        return fastAPIClient.optimizePortfolio(userId, portfolioId, objective, riskTolerance);
+      },
+      (data) => {
+        return formatPortfolioOptimization(data as any);
+      }
+    );
+  }
+
+  /**
+   * Run Monte Carlo simulation using configured backend
+   */
+  async runMonteCarloSimulation(
+    userId: string,
+    portfolioId?: string,
+    timeHorizonYears: number = 10,
+    simulations: number = 10000,
+    initialInvestment: number = 100000
+  ): Promise<AnalysisResult> {
+    console.log('🎲 UnifiedAnalysisService runMonteCarloSimulation called with:', { userId, portfolioId, timeHorizonYears, simulations });
+    return await this.executeWithFallback(
+      'Monte Carlo simulation',
+      () => {
+        const primary = backendConfig.getPrimaryBackend();
+        if (primary.type === 'fastapi') {
+          return fastAPIClient.runMonteCarloSimulation(userId, portfolioId, timeHorizonYears, simulations, initialInvestment);
+        } else {
+          // MCP doesn't have Monte Carlo yet, use FastAPI as fallback
+          throw new Error('MCP backend does not support Monte Carlo simulation yet');
+        }
+      },
+      () => {
+        // Always use FastAPI for Monte Carlo
+        return fastAPIClient.runMonteCarloSimulation(userId, portfolioId, timeHorizonYears, simulations, initialInvestment);
+      },
+      (data) => {
+        return formatMonteCarloSimulation(data as any);
+      }
+    );
+  }
+
+  /**
+   * Analyze market sentiment using configured backend
+   */
+  async analyzeMarketSentiment(
+    userId: string,
+    portfolioId?: string,
+    timeRange: string = '24h',
+    newsSources: string[] = ['general']
+  ): Promise<AnalysisResult> {
+    console.log('📰 UnifiedAnalysisService analyzeMarketSentiment called with:', { userId, portfolioId, timeRange, newsSources });
+    return await this.executeWithFallback(
+      'market sentiment analysis',
+      () => {
+        const primary = backendConfig.getPrimaryBackend();
+        if (primary.type === 'fastapi') {
+          return fastAPIClient.analyzeMarketSentiment(userId, portfolioId, timeRange, newsSources);
+        } else {
+          // MCP doesn't have sentiment analysis yet, use FastAPI as fallback
+          throw new Error('MCP backend does not support sentiment analysis yet');
+        }
+      },
+      () => {
+        // Always use FastAPI for sentiment analysis
+        return fastAPIClient.analyzeMarketSentiment(userId, portfolioId, timeRange, newsSources);
+      },
+      (data) => {
+        return formatSentimentAnalysis(data as any);
       }
     );
   }

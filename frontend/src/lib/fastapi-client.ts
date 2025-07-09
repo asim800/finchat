@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { PortfolioService } from './portfolio-service';
+import { conversationAnalytics } from './conversation-analytics';
 
 export interface PortfolioRiskAnalysis {
   totalValue: number;
@@ -34,6 +35,74 @@ export interface MarketDataSummary {
   analysis_date: string;
 }
 
+export interface OptimizedAllocation {
+  symbol: string;
+  current_weight: number;
+  optimized_weight: number;
+  recommended_action: string;
+  shares_to_trade: number;
+  value_to_trade: number;
+}
+
+export interface PortfolioOptimizationResponse {
+  current_portfolio: { [symbol: string]: number };
+  optimized_portfolio: { [symbol: string]: number };
+  allocations: OptimizedAllocation[];
+  expected_return: number;
+  expected_volatility: number;
+  sharpe_ratio: number;
+  improvement_metrics: {
+    return_improvement: number;
+    volatility_change: number;
+    sharpe_improvement: number;
+  };
+  rebalancing_cost_estimate: number;
+  implementation_notes: string[];
+}
+
+export interface MonteCarloResponse {
+  simulations_run: number;
+  time_horizon_years: number;
+  percentile_outcomes: {
+    "5th": number;
+    "25th": number;
+    "50th": number;
+    "75th": number;
+    "95th": number;
+  };
+  probability_of_loss: number;
+  expected_final_value: number;
+  worst_case_scenario: number;
+  best_case_scenario: number;
+  chart_data: {
+    simulation_results: number[];
+    percentile_bands: number[];
+  };
+}
+
+export interface StockSentiment {
+  symbol: string;
+  sentiment_score: number;
+  confidence: number;
+  news_count: number;
+  key_themes: string[];
+  sentiment_label: string;
+}
+
+export interface MarketSentimentResponse {
+  overall_sentiment: number;
+  overall_confidence: number;
+  sentiment_distribution: {
+    positive: number;
+    negative: number;
+    neutral: number;
+  };
+  stock_sentiments: StockSentiment[];
+  market_fear_greed_index: number | null;
+  analysis_timestamp: string;
+  recommendations: string[];
+}
+
 class FastAPIClient {
   private baseUrl: string;
   private timeout: number;
@@ -52,7 +121,8 @@ class FastAPIClient {
   /**
    * Make HTTP request to FastAPI service with timeout and error handling
    */
-  private async makeRequest<T>(endpoint: string, data: unknown): Promise<T> {
+  private async makeRequest<T>(endpoint: string, data: unknown, requestId?: string): Promise<T> {
+    const startTime = Date.now();
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -67,25 +137,67 @@ class FastAPIClient {
       });
 
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+        const error = errorData.detail || `HTTP ${response.status}: ${response.statusText}`;
+        
+        // Track failed request
+        if (requestId) {
+          conversationAnalytics.trackFastAPICall(
+            requestId,
+            endpoint,
+            'POST',
+            duration,
+            response.status,
+            error
+          );
+        }
+        
+        throw new Error(error);
+      }
+
+      // Track successful request
+      if (requestId) {
+        conversationAnalytics.trackFastAPICall(
+          requestId,
+          endpoint,
+          'POST',
+          duration,
+          response.status
+        );
       }
 
       return await response.json();
     } catch (error) {
       clearTimeout(timeoutId);
+      const duration = Date.now() - startTime;
       
+      let errorMessage = 'Unknown error';
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error('Request timed out');
+          errorMessage = 'Request timed out';
         } else if (error.message.includes('fetch')) {
-          throw new Error('FastAPI service unavailable');
+          errorMessage = 'FastAPI service unavailable';
+        } else {
+          errorMessage = error.message;
         }
       }
       
-      throw error;
+      // Track failed request
+      if (requestId) {
+        conversationAnalytics.trackFastAPICall(
+          requestId,
+          endpoint,
+          'POST',
+          duration,
+          0, // Unknown status for network errors
+          errorMessage
+        );
+      }
+      
+      throw new Error(errorMessage);
     }
   }
 
@@ -212,6 +324,94 @@ class FastAPIClient {
       period: period
     });
   }
+
+  /**
+   * Optimize portfolio allocation using Modern Portfolio Theory
+   */
+  async optimizePortfolio(
+    userId: string, 
+    portfolioId?: string,
+    objective: string = "max_sharpe",
+    riskTolerance: number = 0.5
+  ): Promise<PortfolioOptimizationResponse> {
+    // Fetch user's actual portfolio from database
+    const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
+    
+    // Check if portfolio is empty
+    if (!userAssets || userAssets.length === 0) {
+      throw new Error('Portfolio is empty - please add some assets to optimize allocation');
+    }
+
+    // Check minimum assets for optimization
+    if (userAssets.length < 2) {
+      throw new Error('Need at least 2 assets for portfolio optimization');
+    }
+
+    const requestData = {
+      assets: userAssets,
+      objective,
+      risk_tolerance: riskTolerance,
+      constraints: null
+    };
+    
+    return await this.makeRequest<PortfolioOptimizationResponse>('/portfolio/optimize', requestData);
+  }
+
+  /**
+   * Run Monte Carlo simulation for portfolio projections
+   */
+  async runMonteCarloSimulation(
+    userId: string,
+    portfolioId?: string,
+    timeHorizonYears: number = 10,
+    simulations: number = 10000,
+    initialInvestment: number = 100000
+  ): Promise<MonteCarloResponse> {
+    // Fetch user's actual portfolio from database
+    const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
+    
+    // Check if portfolio is empty
+    if (!userAssets || userAssets.length === 0) {
+      throw new Error('Portfolio is empty - please add some assets to run Monte Carlo simulation');
+    }
+
+    const requestData = {
+      assets: userAssets,
+      time_horizon_years: timeHorizonYears,
+      simulations,
+      initial_investment: initialInvestment
+    };
+    
+    return await this.makeRequest<MonteCarloResponse>('/portfolio/monte-carlo', requestData);
+  }
+
+  /**
+   * Analyze market sentiment for user's portfolio symbols
+   */
+  async analyzeMarketSentiment(
+    userId: string,
+    portfolioId?: string,
+    timeRange: string = '24h',
+    newsSources: string[] = ['general']
+  ): Promise<MarketSentimentResponse> {
+    // Fetch user's actual portfolio symbols from database
+    const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
+    
+    // Check if portfolio is empty
+    if (!userAssets || userAssets.length === 0) {
+      throw new Error('Portfolio is empty - please add some assets to analyze sentiment');
+    }
+
+    const symbols = userAssets.map(asset => asset.symbol);
+    
+    const requestData = {
+      symbols,
+      news_sources: newsSources,
+      time_range: timeRange
+    };
+    
+    return await this.makeRequest<MarketSentimentResponse>('/market/sentiment', requestData);
+  }
 }
 
 // Export singleton instance
@@ -246,5 +446,136 @@ export const formatSharpeAnalysis = (analysis: SharpeRatioAnalysis): string => {
     `• 0-0.5: Fair performance\n` +
     `• < 0: Poor performance (losing money vs risk-free rate)\n`;
 
+  return formatted;
+};
+
+export const formatPortfolioOptimization = (optimization: PortfolioOptimizationResponse): string => {
+  const { improvement_metrics, expected_return, expected_volatility, sharpe_ratio } = optimization;
+  
+  let formatted = `🎯 **Portfolio Optimization Results** (${new Date().toLocaleDateString()})\n\n`;
+  
+  // Performance improvements
+  formatted += `📈 **Performance Improvements**\n`;
+  formatted += `• Expected Return: ${expected_return}% annually\n`;
+  formatted += `• Expected Volatility: ${expected_volatility}% annually\n`;
+  formatted += `• Sharpe Ratio: ${sharpe_ratio}\n`;
+  if (improvement_metrics.return_improvement !== 0) {
+    formatted += `• Return Improvement: ${improvement_metrics.return_improvement > 0 ? '+' : ''}${improvement_metrics.return_improvement}%\n`;
+  }
+  if (improvement_metrics.sharpe_improvement !== 0) {
+    formatted += `• Sharpe Improvement: ${improvement_metrics.sharpe_improvement > 0 ? '+' : ''}${improvement_metrics.sharpe_improvement}\n`;
+  }
+  formatted += '\n';
+  
+  // Allocation recommendations
+  formatted += `🔄 **Rebalancing Recommendations**\n`;
+  optimization.allocations.forEach(allocation => {
+    if (allocation.recommended_action !== 'hold') {
+      const action = allocation.recommended_action === 'buy' ? '🟢 BUY' : '🔴 SELL';
+      formatted += `• ${action} ${allocation.symbol}: ${Math.abs(allocation.shares_to_trade)} shares (${allocation.current_weight}% → ${allocation.optimized_weight}%)\n`;
+    }
+  });
+  
+  // Cost estimate
+  if (optimization.rebalancing_cost_estimate > 0) {
+    formatted += `\n💰 **Estimated Trading Costs: $${optimization.rebalancing_cost_estimate}**\n`;
+  }
+  
+  // Implementation notes
+  if (optimization.implementation_notes.length > 0) {
+    formatted += '\n💡 **Implementation Notes:**\n';
+    optimization.implementation_notes.forEach(note => {
+      formatted += `• ${note}\n`;
+    });
+  }
+  
+  return formatted;
+};
+
+export const formatMonteCarloSimulation = (simulation: MonteCarloResponse): string => {
+  const { percentile_outcomes, probability_of_loss, expected_final_value, time_horizon_years } = simulation;
+  
+  let formatted = `🎲 **Monte Carlo Simulation Results** (${new Date().toLocaleDateString()})\n\n`;
+  
+  // Simulation details
+  formatted += `📊 **Simulation Parameters**\n`;
+  formatted += `• Simulations Run: ${simulation.simulations_run.toLocaleString()}\n`;
+  formatted += `• Time Horizon: ${time_horizon_years} years\n`;
+  formatted += `• Expected Final Value: $${expected_final_value.toLocaleString()}\n\n`;
+  
+  // Outcome percentiles
+  formatted += `📈 **Projected Outcomes**\n`;
+  formatted += `• 95th Percentile (Best 5%): $${percentile_outcomes['95th'].toLocaleString()}\n`;
+  formatted += `• 75th Percentile: $${percentile_outcomes['75th'].toLocaleString()}\n`;
+  formatted += `• 50th Percentile (Median): $${percentile_outcomes['50th'].toLocaleString()}\n`;
+  formatted += `• 25th Percentile: $${percentile_outcomes['25th'].toLocaleString()}\n`;
+  formatted += `• 5th Percentile (Worst 5%): $${percentile_outcomes['5th'].toLocaleString()}\n\n`;
+  
+  // Risk assessment
+  const lossPercentage = (probability_of_loss * 100).toFixed(1);
+  const riskLevel = probability_of_loss < 0.1 ? '🟢 Low' : 
+                   probability_of_loss < 0.25 ? '🟡 Medium' : '🔴 High';
+  
+  formatted += `⚠️ **Risk Assessment**\n`;
+  formatted += `• Probability of Loss: ${lossPercentage}% (${riskLevel} Risk)\n`;
+  formatted += `• Worst Case Scenario: $${simulation.worst_case_scenario.toLocaleString()}\n`;
+  formatted += `• Best Case Scenario: $${simulation.best_case_scenario.toLocaleString()}\n\n`;
+  
+  formatted += `💡 **Interpretation:**\n`;
+  formatted += `• There's a ${lossPercentage}% chance of losing money over ${time_horizon_years} years\n`;
+  formatted += `• 50% of outcomes fall between $${percentile_outcomes['25th'].toLocaleString()} and $${percentile_outcomes['75th'].toLocaleString()}\n`;
+  
+  return formatted;
+};
+
+export const formatSentimentAnalysis = (sentiment: MarketSentimentResponse): string => {
+  const { overall_sentiment, overall_confidence, sentiment_distribution, stock_sentiments, market_fear_greed_index, recommendations } = sentiment;
+  
+  let formatted = `📰 **Market Sentiment Analysis** (${new Date().toLocaleDateString()})\n\n`;
+  
+  // Overall sentiment
+  const sentimentEmoji = overall_sentiment > 0.3 ? '🟢' : overall_sentiment > 0.1 ? '🟡' : overall_sentiment > -0.1 ? '⚪' : overall_sentiment > -0.3 ? '🟠' : '🔴';
+  const sentimentLabel = overall_sentiment > 0.3 ? 'Very Positive' : overall_sentiment > 0.1 ? 'Positive' : overall_sentiment > -0.1 ? 'Neutral' : overall_sentiment > -0.3 ? 'Negative' : 'Very Negative';
+  
+  formatted += `📊 **Overall Market Sentiment**\n`;
+  formatted += `• Sentiment Score: ${overall_sentiment.toFixed(3)} ${sentimentEmoji} (${sentimentLabel})\n`;
+  formatted += `• Confidence Level: ${(overall_confidence * 100).toFixed(1)}%\n`;
+  
+  if (market_fear_greed_index !== null) {
+    const fearGreedEmoji = market_fear_greed_index > 75 ? '🔥' : market_fear_greed_index > 50 ? '🟢' : market_fear_greed_index > 25 ? '🟡' : '😨';
+    const fearGreedLabel = market_fear_greed_index > 75 ? 'Extreme Greed' : market_fear_greed_index > 50 ? 'Greed' : market_fear_greed_index > 25 ? 'Fear' : 'Extreme Fear';
+    formatted += `• Fear & Greed Index: ${market_fear_greed_index}/100 ${fearGreedEmoji} (${fearGreedLabel})\n`;
+  }
+  
+  formatted += `\n`;
+  
+  // Sentiment distribution
+  const total = sentiment_distribution.positive + sentiment_distribution.negative + sentiment_distribution.neutral;
+  formatted += `📈 **Sentiment Distribution**\n`;
+  formatted += `• Positive: ${sentiment_distribution.positive}/${total} (${((sentiment_distribution.positive / total) * 100).toFixed(1)}%)\n`;
+  formatted += `• Neutral: ${sentiment_distribution.neutral}/${total} (${((sentiment_distribution.neutral / total) * 100).toFixed(1)}%)\n`;
+  formatted += `• Negative: ${sentiment_distribution.negative}/${total} (${((sentiment_distribution.negative / total) * 100).toFixed(1)}%)\n\n`;
+  
+  // Individual stock sentiments
+  formatted += `💹 **Individual Stock Sentiments**\n`;
+  stock_sentiments.forEach(stock => {
+    const stockEmoji = stock.sentiment_score > 0.1 ? '🟢' : stock.sentiment_score > -0.1 ? '🟡' : '🔴';
+    formatted += `• ${stock.symbol}: ${stock.sentiment_score.toFixed(3)} ${stockEmoji} (${stock.sentiment_label})\n`;
+    formatted += `  Confidence: ${(stock.confidence * 100).toFixed(1)}% | News: ${stock.news_count} articles\n`;
+    if (stock.key_themes.length > 0) {
+      formatted += `  Themes: ${stock.key_themes.join(', ')}\n`;
+    }
+  });
+  
+  // Recommendations
+  if (recommendations.length > 0) {
+    formatted += `\n💡 **Recommendations**\n`;
+    recommendations.forEach(rec => {
+      formatted += `• ${rec}\n`;
+    });
+  }
+  
+  formatted += `\n📅 Analysis timestamp: ${new Date(sentiment.analysis_timestamp).toLocaleString()}`;
+  
   return formatted;
 };

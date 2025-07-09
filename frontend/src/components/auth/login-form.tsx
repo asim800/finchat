@@ -52,7 +52,7 @@ export const LoginForm: React.FC = () => {
       }
 
       // Login successful, force a full page reload to pick up auth cookie
-      window.location.href = '/dashboard/portfolio';
+      window.location.href = '/dashboard/myportfolio';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

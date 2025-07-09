@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   try {
     
     const body = await request.json();
-    const { message, provider, portfolioData, userPreferences, sessionId, guestSessionId } = body;
+    const { message, provider, portfolioData, userPreferences, sessionId, guestSessionId, requestId } = body;
 
 
     if (!message || typeof message !== 'string') {
@@ -354,6 +354,13 @@ async function analyzeMCPToolNeeds(
     'price change', 'market trend'
   ];
 
+  // Keywords that trigger sentiment analysis
+  const sentimentKeywords = [
+    'sentiment', 'market sentiment', 'news sentiment', 'bullish', 'bearish',
+    'market mood', 'investor sentiment', 'fear', 'greed', 'optimism', 'pessimism',
+    'market psychology', 'news analysis', 'social sentiment'
+  ];
+
   let toolResults = '';
   const failedTools: string[] = [];
   let successfulTools = 0;
@@ -363,8 +370,9 @@ async function analyzeMCPToolNeeds(
   const needsRisk = riskKeywords.some(keyword => lowerMessage.includes(keyword));
   const needsSharpe = sharpeKeywords.some(keyword => lowerMessage.includes(keyword));
   const needsMarket = marketKeywords.some(keyword => lowerMessage.includes(keyword));
+  const needsSentiment = sentimentKeywords.some(keyword => lowerMessage.includes(keyword));
 
-  if (!needsRisk && !needsSharpe && !needsMarket) {
+  if (!needsRisk && !needsSharpe && !needsMarket && !needsSentiment) {
     return { mcpStatus: 'success' };
   }
 
@@ -383,7 +391,7 @@ async function analyzeMCPToolNeeds(
       if (!dependencyCheck.available && primaryBackend.type === 'mcp' && !fallbackEnabled) {
         console.warn('⚠️ MCP server dependencies not available:', dependencyCheck.error);
         return {
-          fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket),
+          fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket, needsSentiment),
           mcpStatus: 'failed'
         };
       }
@@ -458,11 +466,34 @@ async function analyzeMCPToolNeeds(
         failedTools.push('Market Data Analysis');
       }
     }
+    
+    if (needsSentiment) {
+      totalAttemptedTools++;
+      try {
+        console.log(`🔧 Executing sentiment analysis tool${portfolioId ? ` for portfolio ${portfolioId}` : ''}...`);
+        const result = await unifiedAnalysisService.analyzeMarketSentiment(userId, portfolioId);
+        
+        if (result.success && result.formattedData) {
+          toolResults += result.formattedData + '\n\n';
+          successfulTools++;
+          
+          if (result.fallbackUsed) {
+            toolResults += `*Note: Analysis completed using ${result.backend.toUpperCase()} backend*\n\n`;
+          }
+        } else {
+          console.error('Sentiment analysis error:', result.error);
+          failedTools.push('Market Sentiment Analysis');
+        }
+      } catch (error) {
+        console.error('Sentiment analysis execution error:', error);
+        failedTools.push('Market Sentiment Analysis');
+      }
+    }
 
   } catch (error) {
     console.error('MCP Tool execution error:', error);
     return {
-      fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket),
+      fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket, needsSentiment),
       mcpStatus: 'failed'
     };
   }
@@ -489,7 +520,8 @@ function createMCPFallbackMessage(
   _lowerMessage: string, 
   needsRisk: boolean, 
   needsSharpe: boolean, 
-  needsMarket: boolean
+  needsMarket: boolean,
+  needsSentiment: boolean
 ): string {
   let fallback = '🤖 **Analysis temporarily unavailable** - I\'ll provide general guidance instead:\n\n';
 
@@ -515,6 +547,15 @@ function createMCPFallbackMessage(
                '• Focus on long-term trends rather than daily fluctuations\n' +
                '• Consider dollar-cost averaging for volatile markets\n' +
                '• Review fundamentals of your holdings regularly\n\n';
+  }
+
+  if (needsSentiment) {
+    fallback += '📰 **Market Sentiment Guidelines:**\n' +
+               '• Monitor financial news and social media for market mood\n' +
+               '• Consider contrarian investing when sentiment is extreme\n' +
+               '• Use sentiment as one factor among many in decision-making\n' +
+               '• Focus on company fundamentals over short-term sentiment\n' +
+               '• Be aware of Fear & Greed Index and similar sentiment indicators\n\n';
   }
 
   fallback += '💡 For detailed analysis, please try again later when our advanced tools are available.';
