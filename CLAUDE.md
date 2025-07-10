@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## standard Workflow
 
 - Always think through the problem, read the codebase for relevant files, and write a plan to tasks.md.
-- Always keep a history of my input prompts and your high level approach in todo.md file.
+- Always keep a history of my input prompts, datetime stamp and your high level approach and append to the todo.md file.
 - You do not need my permissions to update tasks.md and todo.md files.
 - The plan shoudl have a list of todo items that you can check off as you complete them.
 - Explain the functionality and the code you wish to build. Walk me through your thought process. Act like a senior engineer and teach me high level coding constructs so we can learn to work together and create the best code ever.
