@@ -20,20 +20,35 @@ class BackendConfigManager {
 
   constructor() {
     // Get configuration from environment variables
-    const primaryBackend = (process.env.PRIMARY_ANALYSIS_BACKEND || 'mcp') as BackendType;
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isVercel = process.env.VERCEL === '1';
+    
+    // Default to MCP in production/Vercel unless explicitly set
+    const defaultBackend = (isProduction || isVercel) ? 'mcp' : 'mcp';
+    const primaryBackend = (process.env.PRIMARY_ANALYSIS_BACKEND || defaultBackend) as BackendType;
     const fallbackEnabled = process.env.ENABLE_BACKEND_FALLBACK === 'true';
+    const fastApiUrl = process.env.FASTAPI_SERVICE_URL || 'http://localhost:8000';
+    
+    // Log configuration for debugging
+    console.log('🔧 Backend Configuration:', {
+      environment: process.env.NODE_ENV,
+      isVercel,
+      primaryBackend,
+      fallbackEnabled,
+      fastApiUrl: isProduction ? '[REDACTED]' : fastApiUrl
+    });
 
     this.config = {
       primary: {
         type: primaryBackend,
         enabled: true,
-        healthCheckUrl: primaryBackend === 'fastapi' ? 'http://localhost:8000/health' : undefined,
+        healthCheckUrl: primaryBackend === 'fastapi' ? `${fastApiUrl}/health` : undefined,
         fallbackEnabled
       },
       fallback: {
         type: primaryBackend === 'mcp' ? 'fastapi' : 'mcp',
         enabled: fallbackEnabled,
-        healthCheckUrl: primaryBackend === 'mcp' ? 'http://localhost:8000/health' : undefined,
+        healthCheckUrl: primaryBackend === 'mcp' ? `${fastApiUrl}/health` : undefined,
         fallbackEnabled: false
       }
     };

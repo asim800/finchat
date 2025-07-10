@@ -281,7 +281,7 @@ class FastAPIClient {
   /**
    * Calculate comprehensive portfolio risk metrics
    */
-  async calculatePortfolioRisk(userId: string, portfolioId?: string): Promise<PortfolioRiskAnalysis> {
+  async calculatePortfolioRisk(userId: string, portfolioId?: string, requestId?: string): Promise<PortfolioRiskAnalysis> {
     // Fetch user's actual portfolio from database
     const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
     
@@ -295,13 +295,13 @@ class FastAPIClient {
       timeframe: "1y"
     };
     
-    return await this.makeRequest<PortfolioRiskAnalysis>('/portfolio/risk', requestData);
+    return await this.makeRequest<PortfolioRiskAnalysis>('/portfolio/risk', requestData, requestId);
   }
 
   /**
    * Calculate Sharpe ratio for user's portfolios
    */
-  async calculateSharpeRatio(userId: string, portfolioId?: string): Promise<SharpeRatioAnalysis> {
+  async calculateSharpeRatio(userId: string, portfolioId?: string, requestId?: string): Promise<SharpeRatioAnalysis> {
     // Fetch user's actual portfolio from database
     const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
 
@@ -312,17 +312,17 @@ class FastAPIClient {
 
     return await this.makeRequest<SharpeRatioAnalysis>('/portfolio/sharpe', {
       assets: userAssets
-    });
+    }, requestId);
   }
 
   /**
    * Get market data summary for portfolio symbols
    */
-  async getPortfolioMarketData(userId: string, period: string = '1mo', _portfolioId?: string): Promise<MarketDataSummary> {
+  async getPortfolioMarketData(userId: string, period: string = '1mo', _portfolioId?: string, requestId?: string): Promise<MarketDataSummary> {
     return await this.makeRequest<MarketDataSummary>('/portfolio/market-data', {
       user_id: userId,
       period: period
-    });
+    }, requestId);
   }
 
   /**
@@ -332,7 +332,8 @@ class FastAPIClient {
     userId: string, 
     portfolioId?: string,
     objective: string = "max_sharpe",
-    riskTolerance: number = 0.5
+    riskTolerance: number = 0.5,
+    requestId?: string
   ): Promise<PortfolioOptimizationResponse> {
     // Fetch user's actual portfolio from database
     const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
@@ -354,7 +355,7 @@ class FastAPIClient {
       constraints: null
     };
     
-    return await this.makeRequest<PortfolioOptimizationResponse>('/portfolio/optimize', requestData);
+    return await this.makeRequest<PortfolioOptimizationResponse>('/portfolio/optimize', requestData, requestId);
   }
 
   /**
@@ -365,7 +366,8 @@ class FastAPIClient {
     portfolioId?: string,
     timeHorizonYears: number = 10,
     simulations: number = 10000,
-    initialInvestment: number = 100000
+    initialInvestment: number = 100000,
+    requestId?: string
   ): Promise<MonteCarloResponse> {
     // Fetch user's actual portfolio from database
     const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
@@ -382,7 +384,7 @@ class FastAPIClient {
       initial_investment: initialInvestment
     };
     
-    return await this.makeRequest<MonteCarloResponse>('/portfolio/monte-carlo', requestData);
+    return await this.makeRequest<MonteCarloResponse>('/portfolio/monte-carlo', requestData, requestId);
   }
 
   /**
@@ -392,7 +394,8 @@ class FastAPIClient {
     userId: string,
     portfolioId?: string,
     timeRange: string = '24h',
-    newsSources: string[] = ['general']
+    newsSources: string[] = ['general'],
+    requestId?: string
   ): Promise<MarketSentimentResponse> {
     // Fetch user's actual portfolio symbols from database
     const userAssets = await this.fetchUserPortfolio(userId, portfolioId);
@@ -410,7 +413,7 @@ class FastAPIClient {
       time_range: timeRange
     };
     
-    return await this.makeRequest<MarketSentimentResponse>('/market/sentiment', requestData);
+    return await this.makeRequest<MarketSentimentResponse>('/market/sentiment', requestData, requestId);
   }
 }
 

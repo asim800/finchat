@@ -321,6 +321,74 @@ class UnifiedAnalysisService {
   }
 
   /**
+   * Analyze a query and route to appropriate backend service
+   */
+  async analyzeQuery(query: string, userId: string, portfolios: unknown[] = []): Promise<{ content: string; backend: BackendType }> {
+    console.log('🔍 UnifiedAnalysisService analyzeQuery called with:', { query, userId, portfoliosCount: portfolios.length });
+    
+    const lowerQuery = query.toLowerCase();
+    
+    // Determine which analysis type is needed
+    if (lowerQuery.includes('risk') || lowerQuery.includes('volatility') || lowerQuery.includes('var') || lowerQuery.includes('drawdown')) {
+      console.log('📊 Routing to portfolio risk analysis');
+      const result = await this.calculatePortfolioRisk(userId, (portfolios[0] as any)?.id);
+      return {
+        content: result.formattedData || `Portfolio risk analysis completed. Success: ${result.success}`,
+        backend: result.backend
+      };
+    }
+    
+    if (lowerQuery.includes('sharpe') || lowerQuery.includes('risk adjusted') || lowerQuery.includes('risk-adjusted')) {
+      console.log('📈 Routing to Sharpe ratio analysis');
+      const result = await this.calculateSharpeRatio(userId, (portfolios[0] as any)?.id);
+      return {
+        content: result.formattedData || `Sharpe ratio analysis completed. Success: ${result.success}`,
+        backend: result.backend
+      };
+    }
+    
+    if (lowerQuery.includes('optimize') || lowerQuery.includes('optimization') || lowerQuery.includes('allocation')) {
+      console.log('⚖️ Routing to portfolio optimization');
+      const result = await this.optimizePortfolio(userId, (portfolios[0] as any)?.id);
+      return {
+        content: result.formattedData || `Portfolio optimization completed. Success: ${result.success}`,
+        backend: result.backend
+      };
+    }
+    
+    if (lowerQuery.includes('monte carlo') || lowerQuery.includes('simulation') || lowerQuery.includes('scenario')) {
+      console.log('🎲 Routing to Monte Carlo simulation');
+      const result = await this.runMonteCarloSimulation(userId, (portfolios[0] as any)?.id);
+      return {
+        content: result.formattedData || `Monte Carlo simulation completed. Success: ${result.success}`,
+        backend: result.backend
+      };
+    }
+    
+    if (lowerQuery.includes('sentiment') || lowerQuery.includes('news') || lowerQuery.includes('bullish') || lowerQuery.includes('bearish')) {
+      console.log('📰 Routing to market sentiment analysis');
+      const result = await this.analyzeMarketSentiment(userId, (portfolios[0] as any)?.id);
+      return {
+        content: result.formattedData || `Market sentiment analysis completed. Success: ${result.success}`,
+        backend: result.backend
+      };
+    }
+    
+    // Default to portfolio risk analysis for performance-related queries
+    if (lowerQuery.includes('performance') || lowerQuery.includes('analyze') || lowerQuery.includes('portfolio')) {
+      console.log('📊 Routing to portfolio risk analysis (default for performance queries)');
+      const result = await this.calculatePortfolioRisk(userId, (portfolios[0] as any)?.id);
+      return {
+        content: result.formattedData || `Portfolio analysis completed. Success: ${result.success}`,
+        backend: result.backend
+      };
+    }
+    
+    // If no specific analysis type detected, return error
+    throw new Error('Query does not match any supported analysis type');
+  }
+
+  /**
    * Get current backend configuration for debugging
    */
   getBackendInfo() {

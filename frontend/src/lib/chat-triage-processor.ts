@@ -8,6 +8,8 @@ import { PortfolioCrudHandler, CrudResult } from './portfolio-crud-handler';
 import { llmService, LLMProvider, LLMResponse } from './llm-service';
 import { FINANCIAL_SYSTEM_PROMPT, generateFinancialPrompt } from './financial-prompts';
 import { logQueryStart, logTriage, logProcessingStart, logProcessingEnd, logResponse } from './chat-logger';
+import { unifiedAnalysisService } from './unified-analysis-service';
+import { backendConfig } from './backend-config';
 
 export interface TriageProcessorResult {
   success: boolean;
@@ -196,6 +198,43 @@ export class ChatTriageProcessor {
     try {
       console.log(`🤖 [${requestId}] Processing with LLM (${provider})`);
       
+      // Check if this query requires financial analysis backend
+      const needsFinancialAnalysis = this.requiresFinancialAnalysis(query);
+      
+      if (needsFinancialAnalysis && context.userId) {
+        console.log(`💰 [${requestId}] Query requires financial analysis - routing through unified analysis service`);
+        
+        try {
+          // Route through unified analysis service (respects PRIMARY_ANALYSIS_BACKEND)
+          const analysisResult = await unifiedAnalysisService.analyzeQuery(
+            query,
+            context.userId,
+            context.portfolioData?.portfolios || []
+          );
+          
+          logProcessingEnd(requestId, 0);
+          
+          return {
+            success: true,
+            content: analysisResult.content,
+            processingType: 'llm',
+            executionTimeMs: 0, // Will be calculated by caller
+            confidence: triageResult.confidence,
+            metadata: {
+              llmProvider: provider,
+              backendUsed: analysisResult.backend,
+              dbOperations: 0,
+              cacheHit: false,
+              portfolioModified: false,
+              assetsAffected: [],
+            },
+          };
+        } catch (analysisError) {
+          console.warn(`⚠️ [${requestId}] Financial analysis failed, falling back to direct LLM:`, analysisError);
+          // Fall through to direct LLM processing
+        }
+      }
+      
       // Generate financial prompt with context
       const promptResult = generateFinancialPrompt(query, {
         isGuestMode: context.isGuestMode || false,
@@ -203,7 +242,7 @@ export class ChatTriageProcessor {
         userPreferences: context.userPreferences,
       });
       
-      // Call LLM service
+      // Call LLM service directly
       const llmResponse: LLMResponse = await llmService.generateResponse(
         [{ role: 'user', content: promptResult.prompt }],
         {
@@ -411,6 +450,43 @@ If you cannot determine the missing information, respond with {"confidence": 0}`
   // Validate processing context
   private static validateContext(context: ProcessingContext): boolean {
     return !!(context.userId || context.guestSessionId);
+  }
+  
+  // Check if query requires financial analysis backend
+  private static requiresFinancialAnalysis(query: string): boolean {
+    const lowerQuery = query.toLowerCase();
+    
+    // Keywords that trigger financial analysis backend
+    const financialAnalysisKeywords = [
+      // Risk analysis
+      'risk', 'volatility', 'var', 'value at risk', 'drawdown',
+      'portfolio risk', 'analyze my portfolio', 'portfolio analysis',
+      
+      // Sharpe ratio
+      'sharpe', 'sharpe ratio', 'risk adjusted', 'risk-adjusted',
+      'performance ratio', 'return per risk',
+      
+      // Market data
+      'market data', 'current price', 'stock price', 'market performance',
+      'price change', 'market trend',
+      
+      // Sentiment analysis
+      'sentiment', 'market sentiment', 'news sentiment', 'bullish', 'bearish',
+      'market mood', 'investor sentiment', 'fear', 'greed',
+      
+      // Optimization
+      'optimize', 'optimization', 'portfolio optimization', 'allocation',
+      'diversification', 'rebalance', 'rebalancing',
+      
+      // Monte Carlo
+      'monte carlo', 'simulation', 'monte carlo simulation', 'scenario analysis',
+      
+      // Performance metrics
+      'performance', 'returns', 'analyze performance', 'portfolio performance',
+      'calculate returns', 'total return', 'annualized return'
+    ];
+    
+    return financialAnalysisKeywords.some(keyword => lowerQuery.includes(keyword));
   }
   
   // Get processing statistics for monitoring
