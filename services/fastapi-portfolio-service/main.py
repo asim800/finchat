@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict
@@ -12,6 +12,7 @@ import warnings
 import requests
 import re
 from textblob import TextBlob
+import time
 warnings.filterwarnings('ignore')
 
 # Configure logging
@@ -38,6 +39,52 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Request timing and logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    
+    # Extract request ID if provided
+    request_id = None
+    if request.method == "POST":
+        try:
+            body = await request.body()
+            # Simple check for requestId in JSON body without full parsing
+            if b'"requestId"' in body:
+                import json
+                body_data = json.loads(body.decode())
+                request_id = body_data.get('requestId')
+                
+                # Important: Replace the body so downstream handlers can read it
+                async def receive():
+                    return {"type": "http.request", "body": body}
+                request._receive = receive
+        except:
+            pass  # If we can't parse, continue without request ID
+    
+    # Process the request
+    response = await call_next(request)
+    
+    # Calculate duration
+    process_time = time.time() - start_time
+    
+    # Log the request with analytics
+    logger.info(
+        f"📊 FastAPI Request | "
+        f"Method: {request.method} | "
+        f"Path: {request.url.path} | "
+        f"Duration: {process_time:.3f}s | "
+        f"Status: {response.status_code} | "
+        f"RequestID: {request_id or 'none'}"
+    )
+    
+    # Add timing header to response
+    response.headers["X-Process-Time"] = str(process_time)
+    if request_id:
+        response.headers["X-Request-ID"] = request_id
+    
+    return response
+
 # Pydantic models
 class Asset(BaseModel):
     symbol: str
@@ -47,14 +94,17 @@ class Asset(BaseModel):
 
 class PortfolioRequest(BaseModel):
     assets: List[Asset]
+    requestId: Optional[str] = None
 
 class RiskRequest(BaseModel):
     assets: List[Asset]
     timeframe: str = "1y"
+    requestId: Optional[str] = None
 
 class MarketDataRequest(BaseModel):
     symbols: List[str]
     period: str = "1y"
+    requestId: Optional[str] = None
 
 class PortfolioRiskAnalysis(BaseModel):
     totalValue: float
@@ -78,6 +128,7 @@ class OptimizationRequest(BaseModel):
     objective: str = "max_sharpe"  # max_sharpe, min_volatility, max_return
     risk_tolerance: float = 0.5  # 0.0 (conservative) to 1.0 (aggressive)
     constraints: Optional[Dict] = None  # sector limits, individual asset limits, etc.
+    requestId: Optional[str] = None
 
 class OptimizedAllocation(BaseModel):
     symbol: str
@@ -104,6 +155,7 @@ class MonteCarloRequest(BaseModel):
     time_horizon_years: int = 10
     simulations: int = 10000
     initial_investment: float = 100000.0
+    requestId: Optional[str] = None
 
 class MonteCarloResponse(BaseModel):
     simulations_run: int
@@ -120,6 +172,7 @@ class SentimentRequest(BaseModel):
     symbols: List[str]
     news_sources: List[str] = ["general"]  # general, reddit, twitter, news
     time_range: str = "24h"  # 24h, 7d, 30d
+    requestId: Optional[str] = None
 
 class StockSentiment(BaseModel):
     symbol: str
@@ -150,6 +203,8 @@ async def health_check():
 async def analyze_portfolio(request: PortfolioRequest):
     """Analyze portfolio and return comprehensive risk metrics"""
     try:
+        logger.info(f"🔧 Portfolio Analysis | RequestID: {request.requestId or 'none'} | Assets: {len(request.assets if request.assets else [])}")
+        
         if not request.assets:
             raise HTTPException(status_code=400, detail="No assets provided")
         
