@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { useErrorSystem, ErrorContainer } from '@/components/ui/error-display';
 import { useFormValidation } from '@/hooks/use-form-validation';
-import { AssetValidationSchemas, ValidationSchema } from '@/lib/validation';
+import { AssetValidationSchemas, ValidationSchema, QuantityValidationUtils } from '@/lib/validation';
 
 interface NewAsset {
   symbol: string;
@@ -252,7 +252,10 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
                   label="Quantity *"
                   type="number"
                   {...formValidation.getFieldProps('quantity')}
-                  onChange={(e) => formValidation.handleFieldChange('quantity', parseFloat(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const parseResult = QuantityValidationUtils.parseQuantity(e.target.value);
+                    formValidation.handleFieldChange('quantity', parseResult.value);
+                  }}
                   placeholder="100"
                   min="0"
                   step="0.01"
@@ -423,7 +426,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
               
               <div className="flex justify-between">
                 <span className="text-gray-700">Quantity:</span>
-                <span className="font-medium">{asset.quantity}</span>
+                <span className="font-medium">{QuantityValidationUtils.formatQuantity(asset.quantity)}</span>
               </div>
               
               {asset.avgCost && (

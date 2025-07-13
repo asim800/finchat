@@ -3,6 +3,8 @@
 // Real-time form validation system with specific field errors
 // ============================================================================
 
+import { z } from 'zod';
+
 export interface ValidationRule {
   required?: boolean;
   minLength?: number;
@@ -69,6 +71,12 @@ export const AssetValidationSchemas = {
       custom: (value: number) => {
         if (!value || value <= 0) return 'Quantity must be greater than 0';
         if (value > 1000000) return 'Quantity seems unusually large';
+        
+        // Validate decimal precision (max 2 decimal places)
+        if (typeof value === 'number' && !Number.isInteger(value * 100)) {
+          return 'Quantity can have at most 2 decimal places';
+        }
+        
         return null;
       }
     },
@@ -381,6 +389,99 @@ class ValidationSystemClass {
     }
 
     return suggestions;
+  }
+}
+
+// Zod schemas for API validation
+export const LoginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required')
+});
+
+export const RegisterSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
+    .regex(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
+    .regex(/(?=.*\d)/, 'Password must contain at least one number'),
+  firstName: z.string()
+    .min(1, 'First name is required')
+    .max(50, 'First name must be 50 characters or less')
+    .regex(/^[a-zA-Z\s-']+$/, 'First name can only contain letters, spaces, hyphens, and apostrophes'),
+  lastName: z.string()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name must be 50 characters or less')
+    .regex(/^[a-zA-Z\s-']+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes')
+});
+
+export const AssetSchema = z.object({
+  symbol: z.string()
+    .min(1, 'Symbol is required')
+    .max(5, 'Symbol must be 5 characters or less')
+    .regex(/^[A-Z]+$/, 'Symbol must contain only uppercase letters'),
+  quantity: z.number()
+    .min(0.01, 'Quantity must be greater than 0')
+    .max(1000000, 'Quantity seems unusually large')
+    .refine(val => Number.isInteger(val * 100), 'Quantity can have at most 2 decimal places'),
+  avgCost: z.number()
+    .min(0, 'Cost cannot be negative')
+    .max(100000, 'Cost seems unusually high')
+    .optional(),
+  assetType: z.enum(['stock', 'etf', 'bond', 'crypto', 'mutual_fund', 'option', 'other']),
+  purchaseDate: z.string().optional(),
+  optionType: z.enum(['call', 'put']).optional(),
+  strikePrice: z.number().min(0.01).optional(),
+  expirationDate: z.string().optional()
+});
+
+// Quantity-specific utilities
+export class QuantityValidationUtils {
+  /**
+   * Validates that a quantity has at most 2 decimal places
+   */
+  static validatePrecision(value: number): boolean {
+    return Number.isInteger(value * 100);
+  }
+
+  /**
+   * Formats a quantity to ensure exactly 2 decimal places when needed
+   */
+  static formatQuantity(value: number): string {
+    // For whole numbers, don't show decimals
+    if (Number.isInteger(value)) {
+      return value.toString();
+    }
+    // For fractional numbers, show up to 2 decimal places
+    return value.toFixed(2).replace(/\.?0+$/, '');
+  }
+
+  /**
+   * Parses and validates quantity input, ensuring 2 decimal precision
+   */
+  static parseQuantity(input: string | number): { value: number; isValid: boolean; error?: string } {
+    const numValue = typeof input === 'string' ? parseFloat(input) : input;
+    
+    if (isNaN(numValue) || !isFinite(numValue)) {
+      return { value: 0, isValid: false, error: 'Invalid quantity format' };
+    }
+    
+    if (numValue <= 0) {
+      return { value: numValue, isValid: false, error: 'Quantity must be greater than 0' };
+    }
+    
+    if (!this.validatePrecision(numValue)) {
+      return { value: numValue, isValid: false, error: 'Quantity can have at most 2 decimal places' };
+    }
+    
+    return { value: numValue, isValid: true };
+  }
+
+  /**
+   * Rounds a quantity to 2 decimal places if needed
+   */
+  static roundToPrecision(value: number): number {
+    return Math.round(value * 100) / 100;
   }
 }
 

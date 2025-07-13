@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { FileUpload } from '@/components/ui/file-upload';
 import { CsvHelpModal } from './csv-help-modal';
 import { parsePurchaseDate } from '@/lib/tax-utils';
+import { QuantityValidationUtils } from '@/lib/validation';
 
 interface ParsedAsset {
   symbol: string;
@@ -104,7 +105,13 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
 
       // Column 1: Quantity
       if (values[1]) {
-        asset.quantity = parseFloat(values[1]) || 0;
+        const quantityValidation = QuantityValidationUtils.parseQuantity(values[1]);
+        if (quantityValidation.isValid) {
+          asset.quantity = quantityValidation.value;
+        } else {
+          asset.quantity = 0;
+          console.warn(`Invalid quantity in CSV row ${index + 1}: ${quantityValidation.error}`);
+        }
       }
 
       // Column 2: Price

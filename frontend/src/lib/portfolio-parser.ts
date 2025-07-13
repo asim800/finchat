@@ -3,6 +3,8 @@
 // Portfolio parsing utilities for chat input
 // ============================================================================
 
+import { QuantityValidationUtils } from './validation';
+
 export interface ParsedAsset {
   symbol: string;
   quantity: number;
@@ -107,11 +109,15 @@ export function parsePortfolioInput(message: string): PortfolioParseResult {
           continue;
         }
         
-        // Validate quantity
-        if (quantity <= 0 || !isFinite(quantity)) {
-          errors.push(`Invalid quantity for ${symbol}: ${quantity}`);
+        // Validate quantity using precision validation
+        const quantityValidation = QuantityValidationUtils.parseQuantity(quantity);
+        if (!quantityValidation.isValid) {
+          errors.push(`Invalid quantity for ${symbol}: ${quantityValidation.error}`);
           continue;
         }
+        
+        // Use the validated and potentially rounded quantity
+        quantity = quantityValidation.value;
         
         // Check for duplicates
         const existingAsset = assets.find(asset => asset.symbol === symbol);
@@ -143,7 +149,7 @@ export function parsePortfolioInput(message: string): PortfolioParseResult {
     message_text = `Found ${assets.length} asset${assets.length > 1 ? 's' : ''}:\n`;
     assets.forEach(asset => {
       const priceText = asset.avgCost ? ` at $${asset.avgCost.toFixed(2)}` : '';
-      message_text += `• ${asset.symbol}: ${asset.quantity} shares${priceText}\n`;
+      message_text += `• ${asset.symbol}: ${QuantityValidationUtils.formatQuantity(asset.quantity)} shares${priceText}\n`;
     });
     
     if (errors.length > 0) {
@@ -180,7 +186,7 @@ export function formatPortfolioResponse(parseResult: PortfolioParseResult, isGue
     const value = asset.avgCost ? asset.quantity * asset.avgCost : 0;
     const priceText = asset.avgCost ? ` ($${asset.avgCost.toFixed(2)} each)` : '';
     const valueText = value > 0 ? ` = $${value.toLocaleString()}` : '';
-    response += `📈 **${asset.symbol}**: ${asset.quantity} shares${priceText}${valueText}\n`;
+    response += `📈 **${asset.symbol}**: ${QuantityValidationUtils.formatQuantity(asset.quantity)} shares${priceText}${valueText}\n`;
   });
   
   if (totalValue > 0) {

@@ -8,6 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { FileUpload } from '@/components/ui/file-upload';
+import { QuantityValidationUtils } from '@/lib/validation';
 
 interface PortfolioEntry {
   symbol: string;
@@ -125,22 +126,37 @@ const FileProcessorComponent: React.FC<FileProcessorProps> = ({
         
         headers.forEach((header, index) => {
           const value = values[index] || '';
+          const normalizedHeader = header.toLowerCase().replace(/[_\s]/g, '');
           
-          if (['symbol', 'ticker'].includes(header)) {
+          // Symbol mapping
+          if (['symbol', 'ticker', 'stock'].includes(normalizedHeader)) {
             entry.symbol = value.toUpperCase();
-          } else if (['quantity', 'shares', 'amount'].includes(header)) {
-            entry.quantity = parseFloat(value) || 0;
-          } else if (['price', 'cost', 'value'].includes(header)) {
+          } 
+          // Quantity mapping
+          else if (['quantity', 'shares', 'amount', 'numshares', 'sharecount'].includes(normalizedHeader)) {
+            const quantityValidation = QuantityValidationUtils.parseQuantity(value);
+            entry.quantity = quantityValidation.isValid ? quantityValidation.value : 0;
+          } 
+          // Price/Cost mapping - expanded to include common variations
+          else if (['price', 'cost', 'value', 'avgcost', 'averagecost', 'costbasis', 'purchaseprice', 'unitcost', 'pricepershare'].includes(normalizedHeader)) {
             entry.price = parseFloat(value) || 0;
-          } else if (['name', 'company', 'description'].includes(header)) {
+          } 
+          // Company name mapping
+          else if (['name', 'company', 'description', 'companyname'].includes(normalizedHeader)) {
             entry.name = value;
-          } else {
+          } 
+          // Store any other fields as-is
+          else {
             entry[header] = value;
           }
         });
         
         if (entry.symbol) {
           portfolio.push(entry);
+          // Debug logging for value calculation issues
+          if (entry.quantity > 0 && entry.price === 0) {
+            console.warn(`CSV parsing: Found ${entry.symbol} with quantity ${entry.quantity} but price is 0. Headers:`, headers);
+          }
         }
       }
       
@@ -151,6 +167,20 @@ const FileProcessorComponent: React.FC<FileProcessorProps> = ({
     }
     
     const totalValue = portfolio.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+    
+    // Debug logging for value calculation
+    console.log('CSV Portfolio Processing Summary:');
+    console.log(`- Total holdings: ${portfolio.length}`);
+    console.log(`- Holdings with prices: ${portfolio.filter(item => item.price > 0).length}`);
+    console.log(`- Total calculated value: $${totalValue}`);
+    if (totalValue === 0 && portfolio.length > 0) {
+      console.log('- Sample holdings:', portfolio.slice(0, 3).map(item => ({
+        symbol: item.symbol,
+        quantity: item.quantity,
+        price: item.price,
+        hasPrice: item.price > 0
+      })));
+    }
     
     return {
       data: {

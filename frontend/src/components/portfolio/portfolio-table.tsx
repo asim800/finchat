@@ -19,6 +19,7 @@ import { formatPurchaseDate } from '@/lib/tax-utils';
 import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
 import { AssetAdditionWizard } from './asset-addition-wizard';
 import { useErrorSystem, ErrorContainer } from '@/components/ui/error-display';
+import { QuantityValidationUtils } from '@/lib/validation';
 
 interface PortfolioTableProps {
   isGuestMode?: boolean;
@@ -694,9 +695,13 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                           type="text"
                           inputMode="decimal"
                           value={editValues.quantity || ''}
-                          onChange={(e) => setEditValues({...editValues, quantity: parseFloat(e.target.value) || 0})}
+                          onChange={(e) => {
+                            const parseResult = QuantityValidationUtils.parseQuantity(e.target.value);
+                            setEditValues({...editValues, quantity: parseResult.value});
+                          }}
                           className="w-full"
                           placeholder="0"
+                          step="0.01"
                         />
                       </div>
                       <div className="col-span-2">
@@ -754,7 +759,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <div className="text-gray-500">Quantity</div>
-                        <div className="font-medium text-gray-900">{asset.quantity}</div>
+                        <div className="font-medium text-gray-900">{QuantityValidationUtils.formatQuantity(asset.quantity)}</div>
                       </div>
                       <div>
                         <div className="text-gray-500">Current Price</div>
@@ -875,12 +880,16 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         type="text"
                         inputMode="decimal"
                         value={editValues.quantity || ''}
-                        onChange={(e) => setEditValues({...editValues, quantity: parseFloat(e.target.value) || 0})}
+                        onChange={(e) => {
+                          const parseResult = QuantityValidationUtils.parseQuantity(e.target.value);
+                          setEditValues({...editValues, quantity: parseResult.value});
+                        }}
                         className="w-full min-w-20 max-w-28 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="0"
+                        step="0.01"
                       />
                     ) : (
-                      <div className="text-sm text-gray-900">{asset.quantity}</div>
+                      <div className="text-sm text-gray-900">{QuantityValidationUtils.formatQuantity(asset.quantity)}</div>
                     )}
                   </TableCell>
                   <TableCell>
