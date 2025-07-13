@@ -105,6 +105,7 @@ model Asset {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   price       Float?
+  purchaseDate DateTime? // Optional purchase date for tax calculations
   
   // Options-specific fields (only used when assetType = "options")
   optionType      String?   // "call" or "put"

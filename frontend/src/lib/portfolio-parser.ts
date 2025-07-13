@@ -8,6 +8,7 @@ export interface ParsedAsset {
   quantity: number;
   avgCost?: number | null;
   assetType?: string;
+  purchaseDate?: string;
   
   // Options-specific fields
   optionType?: string;

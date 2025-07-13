@@ -1,7 +1,7 @@
 ## standard Workflow
 
 1. Always think through the problem, read the codebase for relevant files, and write a plan to tasks.md.
-2. The plan shoudl have a list of todo items that you can check off as you complete them.
+2. The plan should have a list of todo items that you can check off as you complete them.
    You do not need my permissions to update tasks.md and todo.md files
 3. Before you begin working, check in with me and I will verify the plan.
 4. Then, begin working on the todo items, marking them as complete as you go.
@@ -47,4 +47,37 @@ to implement function.
 │ generate better prompts and/or fine-tuning an LLM model later.\  
 Python microservices will do the heavy lifting of analysis and number crunching at the backend. We need to define more elaborate endpoints for FastAPI to interact with LLM model that mediates user request in chat and Python functions.
 We have already defined a few Python microservices and we'd like to extend those services extensively to meet our user demands.
-Please help me with a roadmap to address this critical dev task.
+
+Let's strategies over multiple dev approach for chatbox -> LLM - backend/MCP -> LLM -> chatbox thread. Here a user starts with a financial query that is routed to backend / MCP via LLM and back to the user. Here are a few things to consider
+
+- LLM technology is rapidly improving and our plan should embrace and plan toleverage potential future improvements in LLM world
+- We need LLM to help understand user's request and distill them into structured output to help leverage complex backend algorithms
+- We need LLMs to consider user profile, language and tone to help infer and drive towards the solution
+- We need LLMs to make user interaction sticky
+- You are welcome to add a few more considerations here
+- - translating complex chat query into structured response and going back to the user for missing information
+- a lot of user's query can be translated into a mathematical optimzation problem - we can leverage Python based solvers for them. How can LLM help us a natural language query and user information into a mathematical statement
+- pay special attention to the learning loop - what are we collecting and tracking that allows us to improve overall user experience. What are metrics?
+  I want you to include an admin analyitics and test page that allows to see and query key
+  performance metrics
+  Thoughs?
+
+Let's strategies and consider dev approaches and plans available for chatbox-LLM-backend-LLM-chatbox path. More specifically,
+we want to interact with a user that starts
+
+I want to add a field that indicates if a given stock long-term or short-term for tax purposes.
+Please provide a plan to add the field to db table, portfolio UI and CSV import and export. Also the new field is optional in db.
+
+---
+
+I want to invext $1000 to my portfolio
+
+I want to maximize long term growth
+I want to maximize income
+I want lower risk profile
+
+---
+
+I want you to run tests on app to identify specific pain points for the user and suggest potential solutions
+
+---

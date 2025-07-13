@@ -112,14 +112,14 @@ export default async function HomePage() {
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  &ldquo;Unlike Personal Capital, we never call to sell you anything&rdquo;
+                  &ldquo;I have $500 to invest to my portfolio for growth. Show me some examples. &rdquo;
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  &ldquo;Unlike Morningstar, we explain what the numbers actually mean&rdquo;
+                  &ldquo;How can I withdraw $1000 and keep same risk profile? &rdquo;
                 </p>
               </CardContent>
             </Card>

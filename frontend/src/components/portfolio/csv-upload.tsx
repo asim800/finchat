@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { FileUpload } from '@/components/ui/file-upload';
 import { CsvHelpModal } from './csv-help-modal';
+import { parsePurchaseDate } from '@/lib/tax-utils';
 
 interface ParsedAsset {
   symbol: string;
@@ -19,6 +20,7 @@ interface ParsedAsset {
   optionType?: string;
   strikePrice?: number;
   expirationDate?: string;
+  purchaseDate?: string;
 }
 
 interface CsvUploadProps {
@@ -90,9 +92,10 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
       // 1: Quantity (required) 
       // 2: Price (optional)
       // 3: AssetType (optional, defaults to 'stock')
-      // 4: OptionType (for options only)
-      // 5: StrikePrice (for options only)
-      // 6: ExpirationDate (for options only)
+      // 4: PurchaseDate (optional, for tax calculations)
+      // 5: OptionType (for options/bonds only)
+      // 6: StrikePrice (for options/bonds only)
+      // 7: ExpirationDate (for options/bonds only)
 
       // Column 0: Symbol
       if (values[0]) {
@@ -128,19 +131,27 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
         asset.assetType = normalizedType || 'stock';
       }
 
-      // Column 4: OptionType (for options) / BondType (for bonds)
-      if (values[4] && (asset.assetType === 'option' || asset.assetType === 'bond')) {
-        asset.optionType = values[4].trim().toLowerCase();
+      // Column 4: PurchaseDate (optional, for tax calculations)
+      if (values[4] && values[4].trim()) {
+        const purchaseDate = parsePurchaseDate(values[4].trim());
+        if (purchaseDate) {
+          asset.purchaseDate = purchaseDate.toISOString().split('T')[0];
+        }
       }
 
-      // Column 5: StrikePrice (for options) / CouponRate (for bonds)
+      // Column 5: OptionType (for options) / BondType (for bonds)
       if (values[5] && (asset.assetType === 'option' || asset.assetType === 'bond')) {
-        asset.strikePrice = parseFloat(values[5]) || undefined;
+        asset.optionType = values[5].trim().toLowerCase();
       }
 
-      // Column 6: ExpirationDate (for options) / MaturityDate (for bonds)
+      // Column 6: StrikePrice (for options) / CouponRate (for bonds)
       if (values[6] && (asset.assetType === 'option' || asset.assetType === 'bond')) {
-        const value = values[6];
+        asset.strikePrice = parseFloat(values[6]) || undefined;
+      }
+
+      // Column 7: ExpirationDate (for options) / MaturityDate (for bonds)
+      if (values[7] && (asset.assetType === 'option' || asset.assetType === 'bond')) {
+        const value = values[7];
         // Parse different date formats: MM/DD/YYYY or YYYY-MM-DD
         if (value.trim()) {
           let parsedDate: string | undefined;
@@ -281,6 +292,11 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
                         {asset.avgCost && `$${asset.avgCost.toFixed(2)}`}
                       </span>
                     </div>
+                    {asset.purchaseDate && (
+                      <div className="text-xs text-green-600 ml-2">
+                        Purchase Date: {asset.purchaseDate}
+                      </div>
+                    )}
                     {asset.assetType === 'option' && (
                       <div className="text-xs text-green-600 ml-2">
                         Options: {asset.optionType || 'N/A'} | Strike: ${asset.strikePrice || 'N/A'} | Exp: {asset.expirationDate || 'N/A'}
@@ -324,19 +340,20 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
 
         <div className="text-xs text-gray-500">
           <p><strong>CSV Format (Position-Based):</strong></p>
-          <p className="mt-1">Column 1: Symbol (required) | Column 2: Quantity (required) | Column 3: Price (optional) | Column 4: AssetType (optional)</p>
+          <p className="mt-1">Column 1: Symbol (required) | Column 2: Quantity (required) | Column 3: Price (optional) | Column 4: AssetType (optional) | Column 5: PurchaseDate (optional)</p>
           <p className="mt-1"><strong>Basic Example:</strong></p>
-          <p>AAPL,100,150.50,stock</p>
-          <p>SPY,50,493.52,etf</p>
-          <p className="mt-1"><strong>Options Example (7 columns):</strong></p>
-          <p>SPY250910,5,12.50,option,put,560.00,09/10/2025</p>
-          <p className="text-xs mt-1">Columns 5-7 for options: OptionType, StrikePrice, ExpirationDate</p>
-          <p className="mt-1"><strong>Bond Example (7 columns):</strong></p>
-          <p>GOVT10Y,1000,98.50,bond,usd,4.5,05/15/2034</p>
-          <p>GTDEM10Y,500,102.25,bond,dem,3.8,03/01/2029</p>
-          <p className="text-xs mt-1">Columns 5-7 for bonds: BondType (usd,dem,gbp,jpy,etc.), CouponRate, MaturityDate</p>
+          <p>AAPL,100,150.50,stock,2023-01-15</p>
+          <p>SPY,50,493.52,etf,12/01/2022</p>
+          <p className="mt-1"><strong>Options Example (8 columns):</strong></p>
+          <p>SPY250910,5,12.50,option,2024-08-01,put,560.00,09/10/2025</p>
+          <p className="text-xs mt-1">Columns 6-8 for options: OptionType, StrikePrice, ExpirationDate</p>
+          <p className="mt-1"><strong>Bond Example (8 columns):</strong></p>
+          <p>GOVT10Y,1000,98.50,bond,2023-05-10,usd,4.5,05/15/2034</p>
+          <p>GTDEM10Y,500,102.25,bond,2023-03-20,dem,3.8,03/01/2029</p>
+          <p className="text-xs mt-1">Columns 6-8 for bonds: BondType (usd,dem,gbp,jpy,etc.), CouponRate, MaturityDate</p>
           <p className="mt-2"><strong>Supported Asset Types:</strong> stock, etf, bond, crypto, mutual_fund, option, other</p>
-          <p className="mt-1"><strong>Date Formats:</strong> YYYY-MM-DD or MM/DD/YYYY</p>
+          <p className="mt-1"><strong>Date Formats:</strong> YYYY-MM-DD, MM/DD/YYYY, or MM-DD-YYYY</p>
+          <p className="mt-1"><strong>Purchase Date:</strong> Optional field for tracking acquisition date (useful for tax planning)</p>
         </div>
       </CardContent>
     </Card>

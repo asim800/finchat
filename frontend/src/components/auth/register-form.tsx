@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useRouter } from 'next/navigation';
 import { ButtonWithLoading as Button } from '@/components/ui/button-with-loading';
 import { FormField } from '@/components/ui/form-field';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,6 +26,7 @@ type RegisterFormData = z.infer<typeof RegisterSchema>;
 export const RegisterForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const {
     register,
@@ -53,8 +55,8 @@ export const RegisterForm: React.FC = () => {
         throw new Error(result.error || 'Registration failed');
       }
 
-      // Registration successful, force a full page reload to pick up auth cookie
-      window.location.href = '/dashboard/myportfolio';
+      // Registration successful, navigate smoothly without page reload
+      router.push('/dashboard/myportfolio');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

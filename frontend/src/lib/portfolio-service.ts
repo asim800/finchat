@@ -27,6 +27,7 @@ export interface Asset {
   currentValue?: number | null;
   createdAt: Date;
   updatedAt: Date;
+  purchaseDate?: Date | null;
   
   // Options-specific fields
   optionType?: string | null;
@@ -234,17 +235,31 @@ export class PortfolioService {
               newAvgPrice = parsedAsset.avgCost;
             }
 
+            // Fetch current price if not already set
+            let currentPrice = existingAsset.price;
+            if (currentPrice === null) {
+              currentPrice = await HistoricalPriceService.getLatestPrice(parsedAsset.symbol);
+            }
+
             const updatedAsset = await prisma.asset.update({
               where: { id: existingAsset.id },
               data: {
                 quantity: newQuantity,
                 avgCost: newAvgPrice,
+                price: currentPrice, // Update current market price
+                // Update purchase date if provided and existing one is null
+                ...(parsedAsset.purchaseDate && !existingAsset.purchaseDate && {
+                  purchaseDate: new Date(parsedAsset.purchaseDate)
+                }),
                 updatedAt: new Date()
               }
             });
 
             addedAssets.push(updatedAsset);
           } else {
+            // Fetch current price from historical data
+            const currentPrice = await HistoricalPriceService.getLatestPrice(parsedAsset.symbol);
+            
             // Create new asset
             const newAsset = await prisma.asset.create({
               data: {
@@ -252,7 +267,9 @@ export class PortfolioService {
                 symbol: parsedAsset.symbol,
                 quantity: parsedAsset.quantity,
                 avgCost: parsedAsset.avgCost,
+                price: currentPrice, // Set current market price from historical data
                 assetType: parsedAsset.assetType || 'stock',
+                purchaseDate: parsedAsset.purchaseDate ? new Date(parsedAsset.purchaseDate) : null,
                 // Add options-specific fields if asset is an option or bond
                 ...((parsedAsset.assetType === 'option' || parsedAsset.assetType === 'bond') && {
                   optionType: parsedAsset.optionType,

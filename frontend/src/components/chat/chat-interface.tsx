@@ -15,6 +15,7 @@ import { useChatAPI } from '@/hooks/use-chat-api';
 import { simulateAIResponse } from '@/lib/chat-simulation';
 import { generateGuestSessionId } from '@/lib/guest-portfolio';
 import { conversationAnalytics, trackChatMessage, trackChatResponse } from '@/lib/conversation-analytics';
+import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
 
 // Throttle utility function
 const throttle = <T extends (...args: any[]) => any>(func: T, delay: number): T => {
@@ -506,6 +507,15 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
         </div>
       )}
 
+      {/* Guest Mode Indicator */}
+      {isGuestMode && (
+        <div className="p-3 border-b">
+          <GuestModeIndicator 
+            variant="inline"
+            feature="chat history persistence and portfolio integration"
+          />
+        </div>
+      )}
 
       {/* Messages Area */}
       <div 
@@ -524,7 +534,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
-                <span className="text-sm text-gray-600">Loading more messages...</span>
+                <span className="text-sm text-gray-600">Loading conversation history...</span>
               </div>
             </div>
           </div>

@@ -3,6 +3,8 @@
 // CSV export utilities for portfolio data
 // ============================================================================
 
+import { formatPurchaseDate } from './tax-utils';
+
 export interface ExportableAsset {
   symbol: string;
   quantity: number;
@@ -10,6 +12,7 @@ export interface ExportableAsset {
   currentPrice?: number | null; // Current market price
   assetType: string;
   totalValue?: number;
+  purchaseDate?: Date | null; // Purchase date for tax calculations
   
   // Options-specific fields
   optionType?: string | null;
@@ -24,6 +27,7 @@ export interface CsvExportOptions {
   includeTotalValue?: boolean;
   includeAssetType?: boolean;
   includeOptionsFields?: boolean;
+  includePurchaseDate?: boolean;
   delimiter?: string;
 }
 
@@ -34,6 +38,7 @@ const DEFAULT_OPTIONS: CsvExportOptions = {
   includeTotalValue: true,
   includeAssetType: true,
   includeOptionsFields: true,
+  includePurchaseDate: true,
   delimiter: ','
 };
 
@@ -76,6 +81,10 @@ export function exportPortfolioToCsv(
       row.push(asset.assetType);
     }
     
+    if (opts.includePurchaseDate) {
+      row.push(asset.purchaseDate ? asset.purchaseDate.toISOString().split('T')[0] : '');
+    }
+    
     if (opts.includeOptionsFields && (asset.assetType === 'option' || asset.assetType === 'bond')) {
       row.push(asset.optionType || '');
       row.push(asset.strikePrice?.toString() || '');
@@ -108,6 +117,10 @@ function getHeaders(options: CsvExportOptions): string[] {
   
   if (options.includeAssetType) {
     headers.push('Asset Type');
+  }
+  
+  if (options.includePurchaseDate) {
+    headers.push('Purchase Date');
   }
   
   if (options.includeOptionsFields) {

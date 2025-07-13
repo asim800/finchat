@@ -15,6 +15,10 @@ import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, X } from 'lucide-react';
 import { GuestPortfolioService, generateGuestSessionId } from '@/lib/guest-portfolio';
+import { formatPurchaseDate } from '@/lib/tax-utils';
+import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
+import { AssetAdditionWizard } from './asset-addition-wizard';
+import { useErrorSystem, ErrorContainer } from '@/components/ui/error-display';
 
 interface PortfolioTableProps {
   isGuestMode?: boolean;
@@ -35,6 +39,7 @@ interface DisplayAsset {
   totalValue: number;
   createdAt: Date;
   updatedAt: Date;
+  purchaseDate?: Date | null;
   
   // Options-specific fields
   optionType?: string | null;
@@ -47,6 +52,7 @@ interface NewAsset {
   quantity: number;
   avgCost?: number | null;
   assetType: string;
+  purchaseDate?: string; // String for form input
   
   // Options-specific fields
   optionType?: string;
@@ -62,6 +68,7 @@ interface ApiAsset {
   assetType: string;
   createdAt: string;
   updatedAt: string;
+  purchaseDate?: string | null;
   
   // Options-specific fields
   optionType?: string | null;
@@ -95,12 +102,14 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
     quantity: 0,
     avgCost: undefined,
     assetType: 'stock',
+    purchaseDate: undefined,
     optionType: undefined,
     expirationDate: undefined,
     strikePrice: undefined
   });
   const [guestSessionId] = useState<string>(() => generateGuestSessionId());
   const [error, setError] = useState<string | null>(null);
+  const { showAssetAddError, showNetworkError, showValidationError, clearErrors } = useErrorSystem();
 
   // Load portfolio data
   useEffect(() => {
@@ -155,7 +164,8 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
           createdAt: new Date(asset.createdAt),
           updatedAt: new Date(asset.updatedAt),
           totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
-          expirationDate: asset.expirationDate ? new Date(asset.expirationDate) : null
+          expirationDate: asset.expirationDate ? new Date(asset.expirationDate) : null,
+          purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate) : null
         }));
         updateAssets(displayAssets);
       } else {
@@ -163,8 +173,8 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         updateAssets([]);
       }
     } catch (err) {
-      setError('Failed to load portfolio');
       console.error('Portfolio loading error:', err);
+      showNetworkError(() => loadPortfolio());
       // Set empty assets on error to avoid showing stale data
       updateAssets([]);
     } finally {
@@ -172,47 +182,54 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
     }
   }, [isGuestMode, userId, portfolioId, guestSessionId, updateAssets]);
 
-  // Add new asset
-  const handleAddAsset = useCallback(async () => {
-    if (!newAsset.symbol || newAsset.quantity <= 0) {
-      setError('Please enter a valid symbol and quantity greater than 0');
+  // Handle wizard submission
+  const handleWizardSubmit = useCallback(async (wizardAsset: NewAsset) => {
+    // Convert wizard asset to the format expected by handleAddAsset
+    setNewAsset(wizardAsset);
+    await handleAddAssetInternal(wizardAsset);
+  }, []);
+
+  // Add new asset (internal function)
+  const handleAddAssetInternal = useCallback(async (assetData: NewAsset) => {
+    if (!assetData.symbol || assetData.quantity <= 0) {
+      showValidationError('Please enter a valid symbol and quantity greater than 0', 'symbol');
       return;
     }
 
     // Validate options-specific fields
-    if (newAsset.assetType === 'option') {
-      if (!newAsset.optionType) {
-        setError('Please select an option type (Call or Put)');
+    if (assetData.assetType === 'option') {
+      if (!assetData.optionType) {
+        showValidationError('Please select an option type (Call or Put)', 'optionType');
         return;
       }
-      if (!newAsset.strikePrice || newAsset.strikePrice <= 0) {
-        setError('Please enter a valid strike price greater than 0');
+      if (!assetData.strikePrice || assetData.strikePrice <= 0) {
+        showValidationError('Please enter a valid strike price greater than 0', 'strikePrice');
         return;
       }
-      if (!newAsset.expirationDate) {
-        setError('Please select an expiration date');
+      if (!assetData.expirationDate) {
+        showValidationError('Please select an expiration date', 'expirationDate');
         return;
       }
     }
 
     // Validate bond-specific fields
-    if (newAsset.assetType === 'bond') {
-      if (!newAsset.optionType) {
-        setError('Please select a bond type');
+    if (assetData.assetType === 'bond') {
+      if (!assetData.optionType) {
+        showValidationError('Please select a bond type', 'bondType');
         return;
       }
-      if (!newAsset.strikePrice || newAsset.strikePrice <= 0) {
-        setError('Please enter a valid coupon rate greater than 0');
+      if (!assetData.strikePrice || assetData.strikePrice <= 0) {
+        showValidationError('Please enter a valid coupon rate greater than 0', 'couponRate');
         return;
       }
-      if (!newAsset.expirationDate) {
-        setError('Please select a maturity date');
+      if (!assetData.expirationDate) {
+        showValidationError('Please select a maturity date', 'maturityDate');
         return;
       }
     }
 
     if (!isGuestMode && !userId) {
-      setError('Unable to add asset: Please sign in or use guest mode');
+      showValidationError('Unable to add asset: Please sign in or use guest mode', 'authentication');
       return;
     }
 
@@ -223,14 +240,14 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       if (isGuestMode) {
         // Add to guest portfolio
         const assetToAdd = {
-          symbol: newAsset.symbol.toUpperCase(),
-          quantity: newAsset.quantity,
-          avgCost: newAsset.avgCost,
-          assetType: newAsset.assetType,
-          ...((newAsset.assetType === 'option' || newAsset.assetType === 'bond') && {
-            optionType: newAsset.optionType,
-            strikePrice: newAsset.strikePrice,
-            expirationDate: newAsset.expirationDate
+          symbol: assetData.symbol.toUpperCase(),
+          quantity: assetData.quantity,
+          avgCost: assetData.avgCost,
+          assetType: assetData.assetType,
+          ...((assetData.assetType === 'option' || assetData.assetType === 'bond') && {
+            optionType: assetData.optionType,
+            strikePrice: assetData.strikePrice,
+            expirationDate: assetData.expirationDate
           })
         };
         const result = GuestPortfolioService.addAssetsToGuestPortfolio(guestSessionId, [assetToAdd]);
@@ -243,12 +260,13 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
             quantity: 0,
             avgCost: undefined,
             assetType: 'stock',
+            purchaseDate: undefined,
             optionType: undefined,
             expirationDate: undefined,
             strikePrice: undefined
           });
         } else {
-          setError('Failed to add asset to guest portfolio: ' + (result.errors.length > 0 ? result.errors.join(', ') : 'Unknown error'));
+          showAssetAddError(assetData, () => handleAddAssetInternal(assetData));
         }
       } else if (userId) {
         // Add to authenticated user portfolio via API
@@ -260,14 +278,15 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
           body: JSON.stringify({
             portfolioId: portfolioId, // Include portfolio ID for multi-portfolio support
             assets: [{
-              symbol: newAsset.symbol.toUpperCase(),
-              quantity: newAsset.quantity,
-              avgCost: newAsset.avgCost,
-              assetType: newAsset.assetType,
-              ...((newAsset.assetType === 'option' || newAsset.assetType === 'bond') && {
-                optionType: newAsset.optionType,
-                strikePrice: newAsset.strikePrice,
-                expirationDate: newAsset.expirationDate
+              symbol: assetData.symbol.toUpperCase(),
+              quantity: assetData.quantity,
+              avgCost: assetData.avgCost,
+              assetType: assetData.assetType,
+              purchaseDate: assetData.purchaseDate,
+              ...((assetData.assetType === 'option' || assetData.assetType === 'bond') && {
+                optionType: assetData.optionType,
+                strikePrice: assetData.strikePrice,
+                expirationDate: assetData.expirationDate
               })
             }]
           })
@@ -287,21 +306,42 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
             quantity: 0,
             avgCost: undefined,
             assetType: 'stock',
+            purchaseDate: undefined,
             optionType: undefined,
             expirationDate: undefined,
             strikePrice: undefined
           });
         } else {
-          setError('Failed to add asset to portfolio: ' + (result.errors.length > 0 ? result.errors.join(', ') : 'Unknown error'));
+          showAssetAddError(assetData, () => handleAddAssetInternal(assetData));
         }
       }
     } catch (err) {
-      setError('Failed to add asset: ' + (err instanceof Error ? err.message : 'Unexpected error occurred'));
       console.error('Add asset error:', err);
+      showAssetAddError(assetData, () => handleAddAssetInternal(assetData));
     } finally {
       setLoading(false);
     }
-  }, [isGuestMode, userId, portfolioId, guestSessionId, newAsset, loadPortfolio]);
+  }, [isGuestMode, userId, portfolioId, guestSessionId, loadPortfolio]);
+
+  // Add asset from wizard
+  const handleAddAsset = () => {
+    handleAddAssetInternal(newAsset);
+  };
+
+  // Handle wizard cancel
+  const handleWizardCancel = () => {
+    setShowAddForm(false);
+    setNewAsset({
+      symbol: '',
+      quantity: 0,
+      avgCost: undefined,
+      assetType: 'stock',
+      purchaseDate: undefined,
+      optionType: undefined,
+      expirationDate: undefined,
+      strikePrice: undefined
+    });
+  };
 
   // Start editing an asset
   const startEdit = useCallback((asset: DisplayAsset) => {
@@ -325,7 +365,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
     }
 
     if (!isGuestMode && !userId) {
-      setError('Unable to update asset: Please sign in or use guest mode');
+      showValidationError('Unable to update asset: Please sign in or use guest mode', 'authentication');
       return;
     }
 
@@ -382,7 +422,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       setEditingId(null);
       setEditValues({});
     } catch (err) {
-      setError('Failed to update asset: ' + (err instanceof Error ? err.message : 'Unexpected error occurred'));
+      showAssetAddError(editValues, () => saveEdit());
       console.error('Update asset error:', err);
     } finally {
       setLoading(false);
@@ -396,7 +436,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
     }
 
     if (!isGuestMode && !userId) {
-      setError('Unable to delete asset: Please sign in or use guest mode');
+      showValidationError('Unable to delete asset: Please sign in or use guest mode', 'authentication');
       return;
     }
 
@@ -432,7 +472,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         }
       }
     } catch (err) {
-      setError('Failed to delete asset: ' + (err instanceof Error ? err.message : 'Unexpected error occurred'));
+      showAssetAddError(asset, () => deleteAsset(asset));
       console.error('Delete asset error:', err);
     } finally {
       setLoading(false);
@@ -446,9 +486,86 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
 
   if (loading && assets.length === 0) {
     return (
-      <div className="p-8 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-2 text-gray-600">Loading portfolio...</p>
+      <div className={showSummary ? "p-6" : ""}>
+        {/* Portfolio Summary Skeleton */}
+        {showSummary && (
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-gray-50 p-4 rounded-lg border animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Assets Loading Skeleton */}
+        <div className="mb-4 flex justify-between items-center">
+          <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
+          <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
+        </div>
+        
+        {/* Mobile Card Skeletons */}
+        <div className="block md:hidden space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white rounded-lg shadow border p-4 animate-pulse">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <div className="h-6 bg-gray-200 rounded w-16 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-12"></div>
+                </div>
+                <div className="text-right">
+                  <div className="h-6 bg-gray-200 rounded w-20 mb-1"></div>
+                  <div className="h-3 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-3">
+                <div>
+                  <div className="h-3 bg-gray-200 rounded w-12 mb-1"></div>
+                  <div className="h-4 bg-gray-200 rounded w-8"></div>
+                </div>
+                <div>
+                  <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
+                  <div className="h-4 bg-gray-200 rounded w-12"></div>
+                </div>
+                <div>
+                  <div className="h-3 bg-gray-200 rounded w-14 mb-1"></div>
+                  <div className="h-4 bg-gray-200 rounded w-10"></div>
+                </div>
+                <div>
+                  <div className="h-3 bg-gray-200 rounded w-18 mb-1"></div>
+                  <div className="h-4 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <div className="h-10 bg-gray-200 rounded flex-1"></div>
+                <div className="h-10 bg-gray-200 rounded flex-1"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Desktop Table Skeleton */}
+        <div className="hidden md:block rounded-md border">
+          <div className="space-y-4 p-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse flex items-center space-x-4">
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-gray-200 rounded w-12"></div>
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-4 bg-gray-200 rounded w-12"></div>
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="flex space-x-2">
+                  <div className="h-8 bg-gray-200 rounded w-12"></div>
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -477,7 +594,20 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         </div>
       )}
 
-      {/* Error Display */}
+      {/* Guest Mode Indicator */}
+      {isGuestMode && (
+        <div className="mb-6">
+          <GuestModeIndicator 
+            variant="banner"
+            feature="Portfolio data persistence and advanced analysis"
+          />
+        </div>
+      )}
+
+      {/* Comprehensive Error System */}
+      <ErrorContainer className="mb-4" />
+
+      {/* Legacy Error Display (for backward compatibility) */}
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
@@ -485,9 +615,8 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
             {error}
             <Button
               variant="ghost"
-              size="sm"
               onClick={() => setError(null)}
-              className="h-auto p-1 hover:bg-transparent"
+              className="h-auto p-1 hover:bg-transparent min-h-[44px] min-w-[44px]"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -506,181 +635,18 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         </Button>
       </div>
 
-      {/* Add Asset Form */}
+      {/* Add Asset Wizard */}
       {showAddForm && (
-        <div className="mb-6 bg-muted/50 p-4 rounded-lg border">
-          <h3 className="text-md font-medium mb-4">Add New Asset</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <FormField
-              label="Symbol *"
-              type="text"
-              value={newAsset.symbol}
-              onChange={(e) => setNewAsset({...newAsset, symbol: e.target.value.toUpperCase()})}
-              placeholder="AAPL"
-            />
-            <FormField
-              label="Quantity *"
-              type="number"
-              value={newAsset.quantity || ''}
-              onChange={(e) => setNewAsset({...newAsset, quantity: parseFloat(e.target.value) || 0})}
-              placeholder="100"
-              min="0"
-              step="0.01"
-            />
-            <FormField
-              label="Avg Cost"
-              type="number"
-              value={newAsset.avgCost || ''}
-              onChange={(e) => setNewAsset({...newAsset, avgCost: parseFloat(e.target.value) || undefined})}
-              placeholder="150.00"
-              min="0"
-              step="0.01"
-            />
-            <div>
-              <label className="block text-sm font-medium mb-2">Type</label>
-              <Select
-                value={newAsset.assetType}
-                onValueChange={(value) => setNewAsset({...newAsset, assetType: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="stock">Stock</SelectItem>
-                  <SelectItem value="etf">ETF</SelectItem>
-                  <SelectItem value="bond">Bond</SelectItem>
-                  <SelectItem value="crypto">Crypto</SelectItem>
-                  <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
-                  <SelectItem value="option">Option</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Options-specific fields */}
-          {newAsset.assetType === 'option' && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg border">
-              <h4 className="text-sm font-medium text-blue-800 mb-3">Options Details</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Option Type *</label>
-                  <Select
-                    value={newAsset.optionType || ''}
-                    onValueChange={(value) => setNewAsset({...newAsset, optionType: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="call">Call</SelectItem>
-                      <SelectItem value="put">Put</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <FormField
-                  label="Strike Price *"
-                  type="number"
-                  value={newAsset.strikePrice || ''}
-                  onChange={(e) => setNewAsset({...newAsset, strikePrice: parseFloat(e.target.value) || undefined})}
-                  placeholder="100.00"
-                  min="0"
-                  step="0.01"
-                />
-                <FormField
-                  label="Expiration Date *"
-                  type="date"
-                  value={newAsset.expirationDate || ''}
-                  onChange={(e) => setNewAsset({...newAsset, expirationDate: e.target.value})}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Bond-specific fields */}
-          {newAsset.assetType === 'bond' && (
-            <div className="mt-4 p-4 bg-green-50 rounded-lg border">
-              <h4 className="text-sm font-medium text-green-800 mb-3">Bond Details</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Bond Type *</label>
-                  <Select
-                    value={newAsset.optionType || ''}
-                    onValueChange={(value) => setNewAsset({...newAsset, optionType: value})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="usd">USD - US Treasury</SelectItem>
-                      <SelectItem value="ii">II - US TIPS</SelectItem>
-                      <SelectItem value="dem">DEM - Germany (Bundesanleihe)</SelectItem>
-                      <SelectItem value="gbp">GBP - United Kingdom (Gilt)</SelectItem>
-                      <SelectItem value="jpy">JPY - Japan Government</SelectItem>
-                      <SelectItem value="cad">CAD - Canada Government</SelectItem>
-                      <SelectItem value="mexn">MEXN - Mexico Government</SelectItem>
-                      <SelectItem value="brl">BRL - Brazil Government</SelectItem>
-                      <SelectItem value="frf">FRF - France (OAT)</SelectItem>
-                      <SelectItem value="inr">INR - India Government</SelectItem>
-                      <SelectItem value="aud">AUD - Australia Government</SelectItem>
-                      <SelectItem value="nzd">NZD - New Zealand Government</SelectItem>
-                      <SelectItem value="itl">ITL - Italy Government</SelectItem>
-                      <SelectItem value="esp">ESP - Spain Government</SelectItem>
-                      <SelectItem value="sek">SEK - Sweden Government</SelectItem>
-                      <SelectItem value="pte">PTE - Portugal Government</SelectItem>
-                      <SelectItem value="nlg">NLG - Netherlands Government</SelectItem>
-                      <SelectItem value="chf">CHF - Switzerland Government</SelectItem>
-                      <SelectItem value="tr">TR - Turkey Government</SelectItem>
-                      <SelectItem value="corporate">Corporate</SelectItem>
-                      <SelectItem value="municipal">Municipal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <FormField
-                  label="Coupon Rate (%) *"
-                  type="number"
-                  value={newAsset.strikePrice || ''}
-                  onChange={(e) => setNewAsset({...newAsset, strikePrice: parseFloat(e.target.value) || undefined})}
-                  placeholder="4.5"
-                  min="0"
-                  step="0.01"
-                />
-                <FormField
-                  label="Maturity Date *"
-                  type="date"
-                  value={newAsset.expirationDate || ''}
-                  onChange={(e) => setNewAsset({...newAsset, expirationDate: e.target.value})}
-                />
-              </div>
-            </div>
-          )}
-          
-          <div className="mt-4 flex space-x-2">
-            <Button onClick={handleAddAsset} disabled={loading}>
-              Add Asset
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setShowAddForm(false);
-                setNewAsset({
-                  symbol: '',
-                  quantity: 0,
-                  avgCost: undefined,
-                  assetType: 'stock',
-                  optionType: undefined,
-                  expirationDate: undefined,
-                  strikePrice: undefined
-                });
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
+        <div className="mb-6">
+          <AssetAdditionWizard
+            onSubmit={handleWizardSubmit}
+            onCancel={handleWizardCancel}
+            loading={loading}
+          />
         </div>
       )}
 
-      {/* Assets Table */}
+      {/* Assets Display */}
       {assets.length === 0 ? (
         <div className="text-center py-12">
           <div className="mx-auto h-12 w-12 text-gray-400">
@@ -699,7 +665,181 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
           )}
         </div>
       ) : (
-        <div className="rounded-md border">
+        <>
+          {/* Mobile Card Layout */}
+          <div className="block md:hidden space-y-4">
+            {assets.map((asset) => (
+              <div key={asset.id} className="bg-white rounded-lg shadow border p-4">
+                {editingId === asset.id ? (
+                  // Editing card
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold text-gray-900">Edit Asset</h3>
+                      <Badge variant="secondary">{asset.assetType}</Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
+                        <Input
+                          type="text"
+                          value={editValues.symbol || ''}
+                          onChange={(e) => setEditValues({...editValues, symbol: e.target.value.toUpperCase()})}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          value={editValues.quantity || ''}
+                          onChange={(e) => setEditValues({...editValues, quantity: parseFloat(e.target.value) || 0})}
+                          className="w-full"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Average Cost</label>
+                        <Input
+                          type="text"
+                          inputMode="decimal"
+                          value={editValues.avgCost || ''}
+                          onChange={(e) => setEditValues({...editValues, avgCost: parseFloat(e.target.value) || undefined})}
+                          className="w-full"
+                          placeholder="Optional"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-2 pt-2">
+                      <Button
+                        onClick={saveEdit}
+                        disabled={loading}
+                        className="flex-1 text-green-600 hover:text-green-900 border-green-200 hover:border-green-300 min-h-[44px]"
+                        variant="outline"
+                      >
+                        Save Changes
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditValues({});
+                        }}
+                        variant="outline"
+                        className="flex-1 text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300 min-h-[44px]"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // Display card
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{asset.symbol}</h3>
+                        <Badge variant="secondary" className="text-xs">
+                          {asset.assetType}
+                        </Badge>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900">
+                          ${asset.totalValue.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-500">Total Value</div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <div className="text-gray-500">Quantity</div>
+                        <div className="font-medium text-gray-900">{asset.quantity}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">Current Price</div>
+                        <div className="font-medium text-gray-900">
+                          {asset.price ? `$${asset.price.toFixed(2)}` : 'N/A'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">Avg Cost</div>
+                        <div className="font-medium text-gray-900">
+                          {asset.avgCost ? `$${asset.avgCost.toFixed(2)}` : '-'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-500">Purchase Date</div>
+                        <div className="font-medium text-gray-900">
+                          {formatPurchaseDate(asset.purchaseDate)}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Asset Details for Options/Bonds */}
+                    {asset.assetType === 'option' && (
+                      <div className="bg-blue-50 rounded-lg p-3 text-sm">
+                        <div className="font-medium text-blue-800 mb-1">Option Details</div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-blue-600">Type:</span> {asset.optionType ? asset.optionType.toUpperCase() : 'N/A'}
+                          </div>
+                          <div>
+                            <span className="text-blue-600">Strike:</span> ${asset.strikePrice ? asset.strikePrice.toFixed(2) : 'N/A'}
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-blue-600">Expiration:</span> {asset.expirationDate ? 
+                              new Date(asset.expirationDate).toLocaleDateString() : 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {asset.assetType === 'bond' && (
+                      <div className="bg-green-50 rounded-lg p-3 text-sm">
+                        <div className="font-medium text-green-800 mb-1">Bond Details</div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-green-600">Type:</span> {asset.optionType ? asset.optionType.toUpperCase() : 'N/A'}
+                          </div>
+                          <div>
+                            <span className="text-green-600">Coupon:</span> {asset.strikePrice ? `${asset.strikePrice}%` : 'N/A'}
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-green-600">Maturity:</span> {asset.expirationDate ? 
+                              new Date(asset.expirationDate).toLocaleDateString() : 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex space-x-2 pt-2">
+                      <Button
+                        onClick={() => startEdit(asset)}
+                        variant="outline"
+                        disabled={loading}
+                        className="flex-1 text-indigo-600 hover:text-indigo-900 border-indigo-200 hover:border-indigo-300 min-h-[44px]"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => deleteAsset(asset)}
+                        variant="outline"
+                        disabled={loading}
+                        className="flex-1 text-red-600 hover:text-red-900 border-red-200 hover:border-red-300 min-h-[44px]"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block">
+            <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -709,6 +849,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                 <TableHead>Avg Cost</TableHead>
                 <TableHead>Total Value</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Purchase Date</TableHead>
                 <TableHead>Asset Details</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -794,6 +935,11 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     )}
                   </TableCell>
                   <TableCell>
+                    <div className="text-sm text-gray-900">
+                      {formatPurchaseDate(asset.purchaseDate)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     {asset.assetType === 'option' ? (
                       <div className="text-xs space-y-1">
                         <div className="font-medium text-gray-900">
@@ -830,9 +976,8 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         <Button
                           onClick={saveEdit}
                           variant="outline"
-                          size="sm"
                           disabled={loading}
-                          className="text-green-600 hover:text-green-900 border-green-200 hover:border-green-300"
+                          className="text-green-600 hover:text-green-900 border-green-200 hover:border-green-300 min-h-[44px] min-w-[44px] text-sm"
                         >
                           Save
                         </Button>
@@ -842,8 +987,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                             setEditValues({});
                           }}
                           variant="outline"
-                          size="sm"
-                          className="text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300"
+                          className="text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300 min-h-[44px] min-w-[44px] text-sm"
                         >
                           Cancel
                         </Button>
@@ -853,18 +997,16 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         <Button
                           onClick={() => startEdit(asset)}
                           variant="outline"
-                          size="sm"
                           disabled={loading}
-                          className="text-indigo-600 hover:text-indigo-900 border-indigo-200 hover:border-indigo-300"
+                          className="text-indigo-600 hover:text-indigo-900 border-indigo-200 hover:border-indigo-300 min-h-[44px] min-w-[44px] text-sm"
                         >
                           Edit
                         </Button>
                         <Button
                           onClick={() => deleteAsset(asset)}
                           variant="outline"
-                          size="sm"
                           disabled={loading}
-                          className="text-red-600 hover:text-red-900 border-red-200 hover:border-red-300"
+                          className="text-red-600 hover:text-red-900 border-red-200 hover:border-red-300 min-h-[44px] min-w-[44px] text-sm"
                         >
                           Delete
                         </Button>
@@ -875,7 +1017,9 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
               ))}
             </TableBody>
           </Table>
-        </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
