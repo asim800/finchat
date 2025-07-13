@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PortfolioTable } from './portfolio-table';
 import { CsvManager } from './csv-manager';
+import { PortfolioBadges } from './portfolio-badges';
 
 interface Portfolio {
   id: string;
@@ -386,7 +387,14 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                           </div>
                         ) : (
                           <div>
-                            <h3 className="text-lg font-medium text-gray-900">{portfolio.name}</h3>
+                            <div className="flex items-center gap-3 mb-1">
+                              <h3 className="text-lg font-medium text-gray-900">{portfolio.name}</h3>
+                              <PortfolioBadges 
+                                assets={portfolio.assets}
+                                portfolioValue={portfolioMarketValue}
+                                portfolioCost={portfolioCost}
+                              />
+                            </div>
                             {portfolio.description && (
                               <p className="text-sm text-gray-500">{portfolio.description}</p>
                             )}
