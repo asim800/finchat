@@ -13,7 +13,7 @@ import { ChartDisplay } from './chart-display';
 import { FileProcessor } from './file-processor';
 import { useChatAPI } from '@/hooks/use-chat-api';
 import { simulateAIResponse } from '@/lib/chat-simulation';
-import { generateGuestSessionId } from '@/lib/guest-portfolio';
+import { generateGuestSessionId, GuestPortfolioService } from '@/lib/guest-portfolio';
 import { conversationAnalytics, trackChatMessage, trackChatResponse } from '@/lib/conversation-analytics';
 import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
 
@@ -420,13 +420,37 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
   }, summary: string) => {
     setUploadedData(data);
     
+    // If this is portfolio data and we're in guest mode, automatically add to guest portfolio
+    if (isGuestMode && data.type === 'portfolio' && data.holdings && data.holdings.length > 0) {
+      try {
+        // Convert holdings to the format expected by GuestPortfolioService
+        const assetsToAdd = data.holdings.map(holding => ({
+          symbol: String(holding.symbol),
+          quantity: Number(holding.quantity) || 0,
+          avgCost: Number(holding.price) || undefined, // Use 'price' as avgCost
+          assetType: 'stock' as const // Default to stock type
+        })).filter(asset => asset.symbol && asset.quantity > 0);
+        
+        if (assetsToAdd.length > 0) {
+          const result = GuestPortfolioService.addAssetsToGuestPortfolio(guestSessionId, assetsToAdd);
+          if (result.success) {
+            console.log(`Successfully added ${assetsToAdd.length} assets to guest portfolio`);
+          } else {
+            console.warn('Failed to add some assets to guest portfolio:', result.errors);
+          }
+        }
+      } catch (error) {
+        console.error('Error adding uploaded portfolio to guest portfolio:', error);
+      }
+    }
+    
     // Enable auto-scroll when adding file message
     shouldAutoScroll.current = true;
     
     const fileMessage: Message = {
       id: Date.now().toString(),
       role: 'assistant',
-      content: `Great! I've processed your uploaded file. ${summary}\n\nI can now provide insights based on this data. Try asking me questions like:\n• "Analyze my portfolio allocation"\n• "What are my risk exposures?"\n• "How can I improve my portfolio?"`,
+      content: `Great! I've processed your uploaded file. ${summary}\n\n${isGuestMode && data.type === 'portfolio' ? "I've also added these holdings to your portfolio! You can view them on the Portfolio tab.\n\n" : ""}I can now provide insights based on this data. Try asking me questions like:\n• "Analyze my portfolio allocation"\n• "What are my risk exposures?"\n• "How can I improve my portfolio?"`,
       timestamp: new Date(),
       provider: 'simulation',
       fileData: data
