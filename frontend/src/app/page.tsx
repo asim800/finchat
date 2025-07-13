@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AuthenticatedTopBar } from '@/components/ui/authenticated-top-bar';
 import { GuestTopBar } from '@/components/ui/guest-top-bar';
+import { FinancialDisclaimerFooter } from '@/components/ui/financial-disclaimer-footer';
 
 export default async function HomePage() {
   // Check if user is authenticated
@@ -40,7 +41,7 @@ export default async function HomePage() {
     // Not authenticated or invalid token
   }
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Use consistent top bar components */}
       {user ? (
         <AuthenticatedTopBar user={user} />
@@ -49,7 +50,7 @@ export default async function HomePage() {
       )}
 
       {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex-grow">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-foreground sm:text-6xl">
             {user ? (
@@ -112,28 +113,28 @@ export default async function HomePage() {
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  &ldquo;I have $500 to invest to my portfolio for growth. Show me some examples. &rdquo;
+                  &ldquo;Get instant answers about your portfolio, understand risk calculations, and discover actionable steps—all on your schedule&rdquo;
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  &ldquo;How can I withdraw $1000 and keep same risk profile? &rdquo;
+                  &ldquo;Skip the $3,000 advisor fees. Get sophisticated financial analysis through intelligent conversation&rdquo;
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  &ldquo;Unlike robo-advisors, you understand exactly how we calculate your risk&rdquo;
+                  &ldquo;Why did my portfolio drop 3% this week? Break it down in simple terms&rdquo;
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground italic">
-                  &ldquo;Unlike financial advisors, we don&apos;t charge thousands for basic analysis&rdquo;
+                  &ldquo;How can I withdraw $1,000 while maintaining my current risk level? &rdquo;
                 </p>
               </CardContent>
             </Card>
@@ -217,6 +218,9 @@ export default async function HomePage() {
 
 
       </main>
+
+      {/* Financial Disclaimer Footer */}
+      <FinancialDisclaimerFooter />
     </div>
   );
 }

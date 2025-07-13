@@ -7,6 +7,7 @@ import React from 'react';
 import { headers } from 'next/headers';
 import { AuthenticatedTopBar } from '@/components/ui/authenticated-top-bar';
 import { GuestTopBar } from '@/components/ui/guest-top-bar';
+import { FinancialDisclaimerFooter } from '@/components/ui/financial-disclaimer-footer';
 
 interface User {
   id: string;
@@ -57,7 +58,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = async ({ children
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Render appropriate TopBar based on authentication */}
       {isGuestMode || !user ? (
         <GuestTopBar />
@@ -66,9 +67,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = async ({ children
       )}
 
       {/* Main content */}
-      <main>
+      <main className="flex-grow">
         {children}
       </main>
+
+      {/* Financial Disclaimer Footer */}
+      <FinancialDisclaimerFooter />
 
       {/* Admin floater - only show for admin users */}
       {user?.role === 'admin' && (
