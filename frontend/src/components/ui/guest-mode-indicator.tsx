@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon, XIcon } from 'lucide-react';
 
 interface GuestModeIndicatorProps {
-  variant?: 'banner' | 'inline' | 'minimal';
+  variant?: 'banner' | 'inline' | 'minimal' | 'compact' | 'demo-only';
   feature?: string;
   showDismiss?: boolean;
   onDismiss?: () => void;
@@ -31,6 +31,39 @@ export const GuestModeIndicator: React.FC<GuestModeIndicatorProps> = ({
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 ${className}`}>
         Demo Mode
       </span>
+    );
+  }
+
+  if (variant === 'compact') {
+    return (
+      <div className={`bg-blue-50 border border-blue-200 rounded-lg p-3 ${className}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <InfoIcon className="h-4 w-4 text-blue-600 mr-2" />
+            <p className="text-sm text-blue-800">
+              Demo mode - data won't be saved permanently
+            </p>
+          </div>
+          <Link href="/register">
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white ml-3 whitespace-nowrap">
+              Sign up now
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === 'demo-only') {
+    return (
+      <div className={`bg-blue-50 border border-blue-200 rounded-lg p-3 ${className}`}>
+        <div className="flex items-center">
+          <InfoIcon className="h-4 w-4 text-blue-600 mr-2" />
+          <p className="text-sm text-blue-800">
+            Demo mode - data won't be saved permanently
+          </p>
+        </div>
+      </div>
     );
   }
 

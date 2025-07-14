@@ -535,8 +535,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
       {isGuestMode && (
         <div className="p-3 border-b">
           <GuestModeIndicator 
-            variant="inline"
-            feature="chat history persistence and portfolio integration"
+            variant="compact"
           />
         </div>
       )}

@@ -599,8 +599,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       {isGuestMode && (
         <div className="mb-6">
           <GuestModeIndicator 
-            variant="banner"
-            feature="Portfolio data persistence and advanced analysis"
+            variant="compact"
           />
         </div>
       )}
