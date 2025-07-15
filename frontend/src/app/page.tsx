@@ -107,7 +107,7 @@ export default async function HomePage() {
         {/* Competitive Section */}
         <div className="mt-20">
           <h2 className="text-3xl font-bold text-foreground text-center mb-12">
-            Why Smart Investors Choose RiskLens
+            Why Smart Investors Choose MyStocks.ai
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card>
@@ -201,20 +201,22 @@ export default async function HomePage() {
           </Card>
         </div>
 
-        {/* CTA Section */}
-        <div className="mt-20 bg-primary rounded-2xl p-8 text-center">
-          <h3 className="text-2xl font-bold text-primary-foreground mb-4">
-            Ready to take control of your finances?
-          </h3>
-          <p className="text-primary-foreground/80 mb-6">
-            Join thousands of users who trust our platform with their financial decisions.
-          </p>
-          <Link href="/register">
-            <Button variant="outline" size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-primary-foreground">
-              Start Your Free Account
-            </Button>
-          </Link>
-        </div>
+        {/* CTA Section - Only show for guest users */}
+        {!user && (
+          <div className="mt-20 bg-primary rounded-2xl p-8 text-center">
+            <h3 className="text-2xl font-bold text-primary-foreground mb-4">
+              Ready to take control of your finances?
+            </h3>
+            <p className="text-primary-foreground/80 mb-6">
+              Join thousands of users who trust our platform with their financial decisions.
+            </p>
+            <Link href="/register">
+              <Button variant="outline" size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-primary-foreground">
+                Start Your Free Account
+              </Button>
+            </Link>
+          </div>
+        )}
 
 
       </main>

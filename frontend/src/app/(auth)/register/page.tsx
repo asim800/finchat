@@ -14,7 +14,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Link href="/">
-              <h1 className="text-3xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">RiskLens</h1>
+              <h1 className="text-3xl font-bold text-foreground hover:text-primary transition-colors cursor-pointer">MyStocks.ai</h1>
             </Link>
             <p className="text-gray-600">Professional Portfolio Analysis, Finally Explained Clearly</p>
           </div>

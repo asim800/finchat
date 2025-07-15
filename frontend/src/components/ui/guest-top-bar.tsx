@@ -27,16 +27,16 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="bg-white shadow-sm border-b">
+    <div className="bg-background shadow-sm border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Left side */}
           <div className="flex items-center space-x-4">
-            <Link href="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
-              RiskLens
+            <Link href="/" className="text-xl font-bold text-foreground hover:text-primary transition-colors">
+              MyStocks.ai
             </Link>
             
-            <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
               Demo Mode
             </span>
           </div>
@@ -115,7 +115,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-3">
-            <span className="sm:hidden inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            <span className="sm:hidden inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
               Demo
             </span>
             <ThemeToggle />
@@ -136,7 +136,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t bg-white py-4">
+          <div className="md:hidden border-t border-border bg-background py-4">
             <div className="flex flex-col space-y-3">
               <Link href="/dashboard/myportfolio" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button 

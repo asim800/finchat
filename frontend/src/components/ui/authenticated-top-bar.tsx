@@ -40,20 +40,20 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="bg-white shadow-sm border-b">
+    <div className="bg-background shadow-sm border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Left side */}
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
-              RiskLens
+            <Link href="/" className="text-xl font-bold text-foreground hover:text-primary transition-colors">
+              MyStocks.ai
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <span className="text-sm text-gray-600">
-              Hi, <span className="font-medium text-gray-900">{user.firstName}</span>
+            <span className="text-sm text-muted-foreground">
+              Hi, <span className="font-medium text-foreground">{user.firstName}</span>
             </span>
             
             <div className="flex items-center space-x-3 sm:space-x-2">
@@ -168,8 +168,8 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-3">
-            <span className="text-sm text-gray-600">
-              Hi, <span className="font-medium text-gray-900">{user.firstName}</span>
+            <span className="text-sm text-muted-foreground">
+              Hi, <span className="font-medium text-foreground">{user.firstName}</span>
             </span>
             <ThemeToggle />
             <Button
@@ -189,7 +189,7 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t bg-white py-4">
+          <div className="md:hidden border-t border-border bg-background py-4">
             <div className="flex flex-col space-y-3">
               <Link href="/dashboard/myportfolio" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button 

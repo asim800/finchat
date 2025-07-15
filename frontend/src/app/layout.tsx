@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RiskLens - Portfolio Management & Analysis",
+  title: "MyStocks.ai - Portfolio Management & Analysis",
   description: "Intelligent portfolio management and financial analysis with AI-powered insights",
 };
 

@@ -1,5 +1,5 @@
 // ============================================================================
-// PRISMA SCHEMA - RiskLens Finance Application
+// PRISMA SCHEMA - MyStocks.ai Finance Application
 // ============================================================================
 // This schema contains all models organized by domain:
 // - Shared/Market Data: Models used by multiple services (frontend, FastAPI)

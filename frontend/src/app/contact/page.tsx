@@ -37,7 +37,7 @@ const CONTACT_TOPICS = [
   { id: 'risk', label: 'Portfolio Risk', icon: '⚖️' },
   { id: 'retirement', label: 'Retirement', icon: '🏖️' },
   { id: 'monte-carlo', label: 'Monte Carlo Simulations', icon: '🎲' },
-  { id: 'other', label: 'Something Else', icon: '💬' }
+  { id: 'ideas', label: 'Ideas & Suggestions', icon: '💡' }
 ];
 
 export default function ContactPage() {

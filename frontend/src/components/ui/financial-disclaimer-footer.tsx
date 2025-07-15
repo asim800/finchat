@@ -31,7 +31,7 @@ export const FinancialDisclaimerFooter: React.FC = () => {
             </p>
             <div className="pt-3 border-t border-gray-300 mt-4">
               <p className="text-xs text-gray-500">
-                © 2025 RiskLens Portfolio Management. This platform is for demonstration and educational purposes. 
+                © 2025 MyStocks.ai Portfolio Management. This platform is for demonstration and educational purposes. 
                 Not affiliated with any registered investment advisor or financial institution.
               </p>
             </div>
