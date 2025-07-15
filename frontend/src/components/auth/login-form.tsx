@@ -53,8 +53,8 @@ export const LoginForm: React.FC = () => {
         throw new Error(result.error || 'Login failed');
       }
 
-      // Login successful, navigate smoothly without page reload
-      router.push('/dashboard/myportfolio');
+      // Login successful, force page reload to ensure cookie is set
+      window.location.href = '/dashboard/myportfolio';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
