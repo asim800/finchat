@@ -668,7 +668,7 @@ export const ChatInterface = React.memo(ChatInterfaceComponent);
 //       role: 'assistant',
 //       content: isGuestMode 
 //         ? 'Hi! I\'m your AI financial assistant. In demo mode, I can help you with general financial questions, market trends, and basic investment concepts. You can also upload portfolio files for analysis. Try asking me about stocks, bonds, or financial planning!'
-//         : 'Hi! I\'m your AI financial assistant. I can help you with your portfolio, market analysis, and personalized financial advice. You can also upload your portfolio or preference files for detailed analysis. What would you like to know?',
+//         : 'Hi! I\'m your AI financial assistant. I can help you with your portfolio, market analysis, and personalized financial insights. You can also upload your portfolio or preference files for detailed analysis. What would you like to know?',
 //       timestamp: new Date(),
 //     }
 //   ]);
@@ -829,7 +829,7 @@ export const ChatInterface = React.memo(ChatInterfaceComponent);
 //                   onClick={() => handleSampleQuestion("What should I invest in next?")}
 //                   className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
 //                 >
-//                   Investment Advice
+//                   Investment Analysis
 //                 </button>
 //                 <button
 //                   onClick={() => handleSampleQuestion("Show me market trends")}

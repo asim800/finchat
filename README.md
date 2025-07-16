@@ -41,7 +41,7 @@ This is a **microservice architecture** with the Next.js frontend communicating 
 
 ## Features
 
-- 🤖 **AI Chat Assistant**: OpenAI/Anthropic-powered financial advice
+- 🤖 **AI Chat Assistant**: OpenAI/Anthropic-powered financial analysis
 - 📊 **Portfolio Analysis**: Real-time risk metrics and performance tracking  
 - 📈 **Interactive Charts**: Portfolio visualization with dedicated chart panel
 - 👤 **User Management**: Authentication with JWT tokens

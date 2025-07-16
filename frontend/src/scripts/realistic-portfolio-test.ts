@@ -74,7 +74,7 @@ const testScenarios = [
   },
   {
     query: "What's the best investment strategy for tech stocks?",
-    description: "Complex financial advice (LLM)",
+    description: "Complex financial analysis (LLM)",
     expectedType: 'llm',
     expectSuccess: true
   }

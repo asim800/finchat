@@ -109,8 +109,8 @@ function detectPortfolioOperations(input: string): boolean {
  */
 function detectLLMRequirement(input: string): boolean {
   const llmKeywords = [
-    // Analysis and advice
-    'analyze', 'analysis', 'advice', 'recommend', 'suggestion', 'should i',
+    // Analysis and insights
+    'analyze', 'analysis', 'recommend', 'suggestion', 'should i',
     'what do you think', 'opinion', 'strategy', 'plan',
     
     // Complex questions

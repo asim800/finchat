@@ -5,10 +5,10 @@
 
 import { formatCurrency } from './number-utils';
 
-export const FINANCIAL_SYSTEM_PROMPT = `You are an expert AI financial assistant with access to advanced portfolio analysis tools. Your role is to provide helpful, accurate, and personalized financial advice using both your knowledge and real-time portfolio calculations.
+export const FINANCIAL_SYSTEM_PROMPT = `You are an expert AI financial assistant with access to advanced portfolio analysis tools. Your role is to provide helpful, accurate, and personalized financial analysis using both your knowledge and real-time portfolio calculations.
 
 Guidelines:
-- Always provide actionable, practical advice
+- Always provide actionable, practical insights
 - Consider risk tolerance and time horizons
 - Explain complex concepts in simple terms
 - Include specific examples when helpful
@@ -36,7 +36,7 @@ For market analysis:
 - Focus on long-term trends and fundamentals
 - Consider macroeconomic factors
 
-When users ask about portfolio performance, risk, or Sharpe ratios, use the appropriate tools to provide accurate, real-time analysis rather than general advice.
+When users ask about portfolio performance, risk, or Sharpe ratios, use the appropriate tools to provide accurate, real-time analysis rather than general insights.
 
 Always be encouraging while being realistic about risks and uncertainties in investing.`;
 
@@ -213,7 +213,7 @@ export const generateFinancialPrompt = (
 
   // Add guest mode note
   if (context?.isGuestMode) {
-    prompt += '\n\nNote: User is in demo mode. Provide general advice and encourage account creation for personalized features.';
+    prompt += '\n\nNote: User is in demo mode. Provide general analysis and encourage account creation for personalized features.';
   }
 
   return {

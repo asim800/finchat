@@ -51,7 +51,7 @@ const testQueries = [
   {
     query: "What's the best way to diversify my portfolio?",
     expectedType: 'llm',
-    description: "Complex investment advice",
+    description: "Complex investment analysis",
     expectSuccess: true
   },
   {

@@ -74,7 +74,7 @@ async function handleGreetings(
     greeting += "You're in demo mode - I can help with general financial questions and analyze uploaded files. ";
     greeting += "Try asking about investment basics or upload a portfolio CSV!";
   } else if (hasPortfolio) {
-    greeting += "I can help you with portfolio analysis, market insights, and investment advice. ";
+    greeting += "I can help you with portfolio analysis, market insights, and investment guidance. ";
     greeting += "What would you like to know about your investments?";
   } else {
     greeting += "I'm ready to help with your investment questions. ";
@@ -206,7 +206,7 @@ async function handleUICommands(
   _portfolioContext?: any
 ): Promise<LocalResponse | null> {
   const commands: Record<string, string> = {
-    'help': 'I can help you with:\n• Portfolio analysis and risk assessment\n• Market trends and insights\n• Investment advice and strategies\n• Adding/removing assets from your portfolio\n• Financial education and definitions',
+    'help': 'I can help you with:\n• Portfolio analysis and risk assessment\n• Market trends and insights\n• Investment analysis and insights\n• Adding/removing assets from your portfolio\n• Financial education and definitions',
     'clear': 'Chat cleared! How can I help you today?',
     'reset': 'Session reset. What would you like to know about your investments?',
     'refresh': 'Data refreshed. Your portfolio information is up to date.'
