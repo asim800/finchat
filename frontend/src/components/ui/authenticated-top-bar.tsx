@@ -35,9 +35,63 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
   user
 }) => {
   const pathname = usePathname();
-  const isMyPortfolioPage = pathname?.includes('/myportfolio');
-  const isReferencePortfolioPage = pathname?.includes('/dashboard/portfolio') && !pathname?.includes('/myportfolio');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Navigation helper functions
+  const isActiveRoute = (route: string | string[]): boolean => {
+    if (!pathname) return false;
+    const routes = Array.isArray(route) ? route : [route];
+    return routes.some(r => pathname.includes(r));
+  };
+
+  const isMyPortfolioPage = isActiveRoute('/myportfolio');
+  const isReferencePortfolioPage = isActiveRoute('/dashboard/portfolio') && !isActiveRoute('/myportfolio');
+  const isChatPage = isActiveRoute('/chat');
+  const isLearningPage = isActiveRoute('/learning');
+  const isContactPage = isActiveRoute('/contact');
+
+  const getNavButtonVariant = (isActive: boolean, mobileMode = false) => {
+    if (mobileMode) {
+      return isActive ? "default" : "ghost";
+    }
+    return isActive ? "default" : "outline";
+  };
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  // Navigation configuration
+  const mainNavItems = [
+    { href: '/dashboard/myportfolio', label: 'My Portfolio', isActive: isMyPortfolioPage },
+    { href: '/dashboard/portfolio', label: 'Templates', isActive: isReferencePortfolioPage },
+    { href: '/dashboard/chat', label: 'Chat', isActive: isChatPage },
+    { href: '/contact', label: 'Contact us', isActive: isContactPage }
+  ];
+
+  const settingsNavItems = [
+    { href: '/dashboard/account', label: 'Account', icon: UserIcon },
+    { href: '/dashboard/profile', label: 'Profile', icon: CogIcon }
+  ];
+
+  const renderNavButton = (item: typeof mainNavItems[0], mobileMode = false) => (
+    <Link key={item.href} href={item.href} onClick={mobileMode ? closeMobileMenu : undefined}>
+      <Button 
+        variant={getNavButtonVariant(item.isActive, mobileMode)}
+        size="sm"
+        className={`text-sm font-medium ${mobileMode ? 'w-full justify-start' : ''}`}
+      >
+        {item.label}
+      </Button>
+    </Link>
+  );
+
+  const renderSettingsNavItem = (item: typeof settingsNavItems[0]) => (
+    <DropdownMenuItem key={item.href} asChild>
+      <Link href={item.href} className="flex items-center">
+        <item.icon className="mr-2 h-4 w-4" />
+        {item.label}
+      </Link>
+    </DropdownMenuItem>
+  );
 
   return (
     <div className="bg-background shadow-sm border-b border-border">
@@ -57,37 +111,12 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
             </span>
             
             <div className="flex items-center space-x-3 sm:space-x-2">
-              <Link href="/dashboard/myportfolio">
-                <Button 
-                  variant={isMyPortfolioPage ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  My Portfolio
-                </Button>
-              </Link>
-              <Link href="/dashboard/portfolio">
-                <Button 
-                  variant={isReferencePortfolioPage ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  Templates
-                </Button>
-              </Link>
-              <Link href="/dashboard/chat">
-                <Button 
-                  variant={pathname?.includes('/chat') ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  Chat
-                </Button>
-              </Link>
+              {mainNavItems.map(item => renderNavButton(item))}
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
-                    variant={pathname?.includes('/learning') ? "default" : "outline"} 
+                    variant={getNavButtonVariant(isLearningPage)}
                     size="sm"
                     className="text-sm font-medium"
                   >
@@ -104,15 +133,6 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/contact">
-                <Button 
-                  variant={pathname?.includes('/contact') ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  Contact us
-                </Button>
-              </Link>
             </div>
 
             <DropdownMenu>
@@ -123,18 +143,7 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/account" className="flex items-center">
-                    <UserIcon className="mr-2 h-4 w-4" />
-                    Account
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/profile" className="flex items-center">
-                    <CogIcon className="mr-2 h-4 w-4" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
+                {settingsNavItems.map(item => renderSettingsNavItem(item))}
                 {user.role === 'admin' && (
                   <>
                     <DropdownMenuSeparator />
@@ -191,36 +200,11 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-border bg-background py-4">
             <div className="flex flex-col space-y-3">
-              <Link href="/dashboard/myportfolio" onClick={() => setIsMobileMenuOpen(false)}>
+              {mainNavItems.map(item => renderNavButton(item, true))}
+              
+              <Link href="/learning/financial-terms" onClick={closeMobileMenu}>
                 <Button 
-                  variant={isMyPortfolioPage ? "default" : "ghost"} 
-                  size="sm"
-                  className="w-full justify-start text-sm font-medium"
-                >
-                  My Portfolio
-                </Button>
-              </Link>
-              <Link href="/dashboard/portfolio" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant={isReferencePortfolioPage ? "default" : "ghost"} 
-                  size="sm"
-                  className="w-full justify-start text-sm font-medium"
-                >
-                  Portfolio Templates
-                </Button>
-              </Link>
-              <Link href="/dashboard/chat" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant={pathname?.includes('/chat') ? "default" : "ghost"} 
-                  size="sm"
-                  className="w-full justify-start text-sm font-medium"
-                >
-                  Chat
-                </Button>
-              </Link>
-              <Link href="/learning/financial-terms" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant={pathname?.includes('/learning') ? "default" : "ghost"} 
+                  variant={getNavButtonVariant(isLearningPage, true)}
                   size="sm"
                   className="w-full justify-start text-sm font-medium"
                 >
@@ -228,39 +212,22 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
                   Financial Terms
                 </Button>
               </Link>
-              <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant={pathname?.includes('/contact') ? "default" : "ghost"} 
-                  size="sm"
-                  className="w-full justify-start text-sm font-medium"
-                >
-                  Contact us
-                </Button>
-              </Link>
               
               <div className="border-t pt-3 mt-3">
-                <Link href="/dashboard/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="w-full justify-start text-sm font-medium"
-                  >
-                    <UserIcon className="mr-2 h-4 w-4" />
-                    Profile
-                  </Button>
-                </Link>
-                <Link href="/dashboard/account" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="w-full justify-start text-sm font-medium"
-                  >
-                    <CogIcon className="mr-2 h-4 w-4" />
-                    Account
-                  </Button>
-                </Link>
+                {settingsNavItems.map(item => (
+                  <Link key={item.href} href={item.href} onClick={closeMobileMenu}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="w-full justify-start text-sm font-medium"
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.label}
+                    </Button>
+                  </Link>
+                ))}
                 {user.role === 'admin' && (
-                  <Link href="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/admin" onClick={closeMobileMenu}>
                     <Button 
                       variant="ghost" 
                       size="sm"

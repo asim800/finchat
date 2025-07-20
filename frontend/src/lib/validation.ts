@@ -415,6 +415,82 @@ export const RegisterSchema = z.object({
     .regex(/^[a-zA-Z\s-']+$/, 'Last name can only contain letters, spaces, hyphens, and apostrophes')
 });
 
+// Profile validation schema
+export const ProfileValidationSchema = {
+  firstName: {
+    required: true,
+    minLength: 1,
+    maxLength: 50,
+    custom: (value: string) => {
+      if (!value) return 'First name is required';
+      if (!/^[a-zA-Z\s-']+$/.test(value)) {
+        return 'First name can only contain letters, spaces, hyphens, and apostrophes';
+      }
+      return null;
+    }
+  },
+  lastName: {
+    required: true,
+    minLength: 1,
+    maxLength: 50,
+    custom: (value: string) => {
+      if (!value) return 'Last name is required';
+      if (!/^[a-zA-Z\s-']+$/.test(value)) {
+        return 'Last name can only contain letters, spaces, hyphens, and apostrophes';
+      }
+      return null;
+    }
+  },
+  phone: {
+    pattern: ValidationPatterns.phone,
+    custom: (value: string) => {
+      if (value && !ValidationPatterns.phone.test(value)) {
+        return 'Please enter a valid phone number';
+      }
+      return null;
+    }
+  },
+  zipCode: {
+    pattern: /^\d{5}(-\d{4})?$/,
+    custom: (value: string) => {
+      if (value && !/^\d{5}(-\d{4})?$/.test(value)) {
+        return 'Please enter a valid ZIP code (e.g., 12345 or 12345-6789)';
+      }
+      return null;
+    }
+  },
+  monthlyIncome: {
+    min: 0,
+    custom: (value: number) => {
+      if (value && value < 0) return 'Income cannot be negative';
+      if (value && value > 1000000) return 'Income seems unusually high';
+      return null;
+    }
+  },
+  homeValue: {
+    min: 0,
+    custom: (value: number) => {
+      if (value && value < 0) return 'Home value cannot be negative';
+      if (value && value > 50000000) return 'Home value seems unusually high';
+      return null;
+    }
+  },
+  emergencyFund: {
+    min: 0,
+    custom: (value: number) => {
+      if (value && value < 0) return 'Emergency fund cannot be negative';
+      return null;
+    }
+  },
+  totalDebt: {
+    min: 0,
+    custom: (value: number) => {
+      if (value && value < 0) return 'Debt cannot be negative';
+      return null;
+    }
+  }
+};
+
 export const AssetSchema = z.object({
   symbol: z.string()
     .min(1, 'Symbol is required')

@@ -92,25 +92,25 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
   // Legacy asset state for compatibility
   const asset = formValidation.values as NewAsset;
 
-  const validateStep = (step: number): boolean => {
-    const fieldsToValidate: string[] = [];
+  // Helper functions for step validation
+  const getStepFields = (step: number): string[] => {
+    const stepFieldsMap: Record<number, string[]> = {
+      1: ['assetType'],
+      2: ['symbol', 'quantity'],
+      3: getStep3RequiredFields(),
+    };
+    return stepFieldsMap[step] || [];
+  };
 
-    switch (step) {
-      case 1:
-        fieldsToValidate.push('assetType');
-        break;
-      case 2:
-        fieldsToValidate.push('symbol', 'quantity');
-        break;
-      case 3:
-        if (asset.assetType === 'option') {
-          fieldsToValidate.push('optionType', 'strikePrice', 'expirationDate');
-        }
-        if (asset.assetType === 'bond') {
-          fieldsToValidate.push('optionType', 'strikePrice', 'expirationDate');
-        }
-        break;
+  const getStep3RequiredFields = (): string[] => {
+    if (isAssetType('option') || isAssetType('bond')) {
+      return ['optionType', 'strikePrice', 'expirationDate'];
     }
+    return [];
+  };
+
+  const validateStep = (step: number): boolean => {
+    const fieldsToValidate = getStepFields(step);
 
     // Mark relevant fields as touched and validate
     fieldsToValidate.forEach(fieldName => {
@@ -156,6 +156,109 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
   };
 
   const selectedAssetType = ASSET_TYPES.find(type => type.value === asset.assetType);
+
+  // Helper functions for asset type specific rendering
+  const isAssetType = (type: string) => asset.assetType === type;
+  
+  const renderValidationError = (fieldName: string) => {
+    const field = formValidation.validationState[fieldName];
+    return field?.touched && field?.error ? (
+      <p className="text-sm text-red-600 mt-1">{field.error}</p>
+    ) : null;
+  };
+
+  const renderSpecialFieldsSection = () => {
+    if (isAssetType('option')) {
+      return renderOptionFields();
+    }
+    if (isAssetType('bond')) {
+      return renderBondFields();
+    }
+    return null;
+  };
+
+  const renderOptionFields = () => (
+    <div className="mt-6 p-4 bg-blue-50 rounded-lg border">
+      <h5 className="font-medium text-blue-800 mb-3">Option Details</h5>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {renderTypeSelector('Option Type', 'optionType', [
+          { value: 'call', label: 'Call' },
+          { value: 'put', label: 'Put' }
+        ])}
+        {renderNumberField('Strike Price', 'strikePrice', '100.00', true)}
+        {renderDateField('Expiration Date', 'expirationDate', true)}
+      </div>
+    </div>
+  );
+
+  const renderBondFields = () => (
+    <div className="mt-6 p-4 bg-green-50 rounded-lg border">
+      <h5 className="font-medium text-green-800 mb-3">Bond Details</h5>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {renderTypeSelector('Bond Type', 'optionType', [
+          { value: 'usd', label: 'US Treasury' },
+          { value: 'corporate', label: 'Corporate' },
+          { value: 'municipal', label: 'Municipal' },
+          { value: 'dem', label: 'Germany (Bundesanleihe)' },
+          { value: 'gbp', label: 'UK (Gilt)' },
+          { value: 'jpy', label: 'Japan Government' }
+        ])}
+        {renderNumberField('Coupon Rate (%)', 'strikePrice', '4.5', true)}
+        {renderDateField('Maturity Date', 'expirationDate', true)}
+      </div>
+    </div>
+  );
+
+  const renderTypeSelector = (label: string, fieldName: string, options: Array<{value: string, label: string}>) => (
+    <div>
+      <label className="block text-sm font-medium mb-2">{label} *</label>
+      <Select
+        value={asset[fieldName as keyof NewAsset] as string || ''}
+        onValueChange={(value) => formValidation.setFieldValue(fieldName, value)}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select type" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {renderValidationError(fieldName)}
+    </div>
+  );
+
+  const renderNumberField = (label: string, fieldName: string, placeholder: string, required = false) => (
+    <div>
+      <ValidatedFormField
+        label={`${label}${required ? ' *' : ''}`}
+        type="number"
+        {...formValidation.getFieldProps(fieldName)}
+        onChange={(e) => formValidation.handleFieldChange(fieldName, parseFloat(e.target.value) || undefined)}
+        placeholder={placeholder}
+        min="0"
+        step="0.01"
+        suggestions={formValidation.getFieldSuggestions(fieldName)}
+        required={required}
+      />
+    </div>
+  );
+
+  const renderDateField = (label: string, fieldName: string, required = false) => (
+    <div>
+      <ValidatedFormField
+        label={`${label}${required ? ' *' : ''}`}
+        type="date"
+        {...formValidation.getFieldProps(fieldName)}
+        onChange={(e) => formValidation.handleFieldChange(fieldName, e.target.value)}
+        suggestions={formValidation.getFieldSuggestions(fieldName)}
+        required={required}
+      />
+    </div>
+  );
 
   return (
     <div className="bg-white rounded-lg border p-6 space-y-6">
@@ -218,9 +321,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
                 </button>
               ))}
             </div>
-            {formValidation.validationState.assetType?.touched && formValidation.validationState.assetType?.error && (
-              <p className="text-sm text-red-600">{formValidation.validationState.assetType.error}</p>
-            )}
+            {renderValidationError('assetType')}
           </div>
         )}
 
@@ -299,113 +400,8 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
               </div>
             </div>
 
-            {/* Special fields for options */}
-            {asset.assetType === 'option' && (
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border">
-                <h5 className="font-medium text-blue-800 mb-3">Option Details</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Option Type *</label>
-                    <Select
-                      value={asset.optionType || ''}
-                      onValueChange={(value) => formValidation.setFieldValue('optionType', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="call">Call</SelectItem>
-                        <SelectItem value="put">Put</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {formValidation.validationState.optionType?.touched && formValidation.validationState.optionType?.error && (
-                      <p className="text-sm text-red-600 mt-1">{formValidation.validationState.optionType.error}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <ValidatedFormField
-                      label="Strike Price *"
-                      type="number"
-                      {...formValidation.getFieldProps('strikePrice')}
-                      onChange={(e) => formValidation.handleFieldChange('strikePrice', parseFloat(e.target.value) || undefined)}
-                      placeholder="100.00"
-                      min="0"
-                      step="0.01"
-                      suggestions={formValidation.getFieldSuggestions('strikePrice')}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <ValidatedFormField
-                      label="Expiration Date *"
-                      type="date"
-                      {...formValidation.getFieldProps('expirationDate')}
-                      onChange={(e) => formValidation.handleFieldChange('expirationDate', e.target.value)}
-                      suggestions={formValidation.getFieldSuggestions('expirationDate')}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Special fields for bonds */}
-            {asset.assetType === 'bond' && (
-              <div className="mt-6 p-4 bg-green-50 rounded-lg border">
-                <h5 className="font-medium text-green-800 mb-3">Bond Details</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Bond Type *</label>
-                    <Select
-                      value={asset.optionType || ''}
-                      onValueChange={(value) => formValidation.setFieldValue('optionType', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="usd">US Treasury</SelectItem>
-                        <SelectItem value="corporate">Corporate</SelectItem>
-                        <SelectItem value="municipal">Municipal</SelectItem>
-                        <SelectItem value="dem">Germany (Bundesanleihe)</SelectItem>
-                        <SelectItem value="gbp">UK (Gilt)</SelectItem>
-                        <SelectItem value="jpy">Japan Government</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {formValidation.validationState.optionType?.touched && formValidation.validationState.optionType?.error && (
-                      <p className="text-sm text-red-600 mt-1">{formValidation.validationState.optionType.error}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <ValidatedFormField
-                      label="Coupon Rate (%) *"
-                      type="number"
-                      {...formValidation.getFieldProps('strikePrice')}
-                      onChange={(e) => formValidation.handleFieldChange('strikePrice', parseFloat(e.target.value) || undefined)}
-                      placeholder="4.5"
-                      min="0"
-                      step="0.01"
-                      suggestions={formValidation.getFieldSuggestions('strikePrice')}
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <ValidatedFormField
-                      label="Maturity Date *"
-                      type="date"
-                      {...formValidation.getFieldProps('expirationDate')}
-                      onChange={(e) => formValidation.handleFieldChange('expirationDate', e.target.value)}
-                      suggestions={formValidation.getFieldSuggestions('expirationDate')}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Special fields for options and bonds */}
+            {renderSpecialFieldsSection()}
           </div>
         )}
 

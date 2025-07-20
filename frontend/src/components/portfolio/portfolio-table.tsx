@@ -6,6 +6,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { usePortfolioState } from '@/hooks/usePortfolioState';
+import { usePortfolioCRUD } from '@/hooks/usePortfolioCRUD';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -14,12 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, X } from 'lucide-react';
-import { GuestPortfolioService, generateGuestSessionId } from '@/lib/guest-portfolio';
+import { generateGuestSessionId } from '@/lib/guest-portfolio';
 import { formatPurchaseDate } from '@/lib/tax-utils';
 import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
 import { AssetAdditionWizard } from './asset-addition-wizard';
 import { useErrorSystem, ErrorContainer } from '@/components/ui/error-display';
 import { QuantityValidationUtils } from '@/lib/validation';
+import type { DisplayAsset, NewAsset } from '@/hooks/usePortfolioState';
 
 interface PortfolioTableProps {
   isGuestMode?: boolean;
@@ -30,52 +33,6 @@ interface PortfolioTableProps {
   showSummary?: boolean; // Whether to show portfolio summary boxes
 }
 
-interface DisplayAsset {
-  id: string;
-  symbol: string;
-  quantity: number;
-  avgCost?: number | null;
-  price?: number | null;
-  assetType: string;
-  totalValue: number;
-  createdAt: Date;
-  updatedAt: Date;
-  purchaseDate?: Date | null;
-  
-  // Options-specific fields
-  optionType?: string | null;
-  expirationDate?: Date | null;
-  strikePrice?: number | null;
-}
-
-interface NewAsset {
-  symbol: string;
-  quantity: number;
-  avgCost?: number | null;
-  assetType: string;
-  purchaseDate?: string; // String for form input
-  
-  // Options-specific fields
-  optionType?: string;
-  expirationDate?: string; // String for form input
-  strikePrice?: number;
-}
-
-interface ApiAsset {
-  id: string;
-  symbol: string;
-  quantity: number;
-  avgCost?: number | null;
-  assetType: string;
-  createdAt: string;
-  updatedAt: string;
-  purchaseDate?: string | null;
-  
-  // Options-specific fields
-  optionType?: string | null;
-  expirationDate?: string | null;
-  strikePrice?: number | null;
-}
 
 const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({ 
   isGuestMode = false, 
@@ -85,32 +42,48 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
   onAssetsChange,
   showSummary = true 
 }) => {
-  const [assets, setAssets] = useState<DisplayAsset[]>(initialAssets || []);
-  const [loading, setLoading] = useState(!initialAssets); // Only loading if no initial assets
-
-  // Custom setAssets that also calls the callback
-  const updateAssets = (newAssets: DisplayAsset[]) => {
-    setAssets(newAssets);
-    if (onAssetsChange) {
-      onAssetsChange(newAssets);
-    }
-  };
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<Partial<DisplayAsset>>({});
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newAsset, setNewAsset] = useState<NewAsset>({
-    symbol: '',
-    quantity: 0,
-    avgCost: undefined,
-    assetType: 'stock',
-    purchaseDate: undefined,
-    optionType: undefined,
-    expirationDate: undefined,
-    strikePrice: undefined
-  });
   const [guestSessionId] = useState<string>(() => generateGuestSessionId());
-  const [error, setError] = useState<string | null>(null);
   const { showAssetAddError, showNetworkError, showValidationError, clearErrors } = useErrorSystem();
+
+  // Simplified state management with useReducer
+  const portfolioState = usePortfolioState(initialAssets, onAssetsChange);
+  const {
+    assets,
+    loading,
+    error,
+    editingId,
+    editValues,
+    showAddForm,
+    newAsset,
+    totalValue,
+    assetCount,
+    hasAssets,
+    isEditing,
+    getEditValue,
+    // Actions
+    setLoading,
+    setError,
+    setAssets,
+    addAsset: addAssetToState,
+    updateAsset: updateAssetInState,
+    deleteAsset: deleteAssetFromState,
+    startEditing,
+    stopEditing,
+    updateEditValues,
+    setShowAddForm,
+    updateNewAsset,
+    resetNewAsset,
+    clearAllErrors
+  } = portfolioState;
+
+  // CRUD operations
+  const crudOperations = usePortfolioCRUD({
+    isGuestMode,
+    userId,
+    portfolioId,
+    guestSessionId,
+    onError: setError
+  });
 
   // Load portfolio data
   useEffect(() => {
@@ -121,67 +94,16 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
 
   const loadPortfolio = useCallback(async () => {
     setLoading(true);
-    setError(null);
+    clearAllErrors();
     
     try {
-      if (isGuestMode) {
-        // Load guest portfolio
-        const guestPortfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
-        const displayAssets: DisplayAsset[] = guestPortfolio.assets.map((asset, index) => ({
-          id: `guest_${index}`,
-          symbol: asset.symbol,
-          quantity: asset.quantity,
-          avgCost: asset.avgCost,
-          assetType: asset.assetType,
-          totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
-          createdAt: asset.addedAt,
-          updatedAt: asset.addedAt,
-          optionType: asset.optionType || null,
-          expirationDate: asset.expirationDate ? new Date(asset.expirationDate) : null,
-          strikePrice: asset.strikePrice || null
-        }));
-        updateAssets(displayAssets);
-      } else if (userId) {
-        // Load authenticated user portfolio via API
-        const url = portfolioId ? `/api/portfolio?portfolioId=${encodeURIComponent(portfolioId)}` : '/api/portfolio';
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Failed to load portfolio from server');
-        }
-        
-        const data = await response.json();
-        
-        let portfolioData;
-        if (portfolioId) {
-          // Single portfolio response
-          portfolioData = data.portfolio;
-        } else {
-          // Multiple portfolios response - use the first (default) portfolio
-          portfolioData = data.portfolios && data.portfolios.length > 0 ? data.portfolios[0] : { assets: [] };
-        }
-        
-        const displayAssets: DisplayAsset[] = portfolioData.assets.map((asset: ApiAsset) => ({
-          ...asset,
-          createdAt: new Date(asset.createdAt),
-          updatedAt: new Date(asset.updatedAt),
-          totalValue: asset.avgCost ? asset.quantity * asset.avgCost : 0,
-          expirationDate: asset.expirationDate ? new Date(asset.expirationDate) : null,
-          purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate) : null
-        }));
-        updateAssets(displayAssets);
-      } else {
-        // No userId provided - set empty portfolio
-        updateAssets([]);
-      }
+      const loadedAssets = await crudOperations.loadAssets();
+      setAssets(loadedAssets);
     } catch (err) {
-      console.error('Portfolio loading error:', err);
+      console.error('Error loading portfolio:', err);
       showNetworkError(() => loadPortfolio());
-      // Set empty assets on error to avoid showing stale data
-      updateAssets([]);
-    } finally {
-      setLoading(false);
     }
-  }, [isGuestMode, userId, portfolioId, guestSessionId, updateAssets]);
+  }, [crudOperations, setLoading, setAssets, clearAllErrors, showNetworkError]);
 
   // Handle wizard submission
   const handleWizardSubmit = useCallback(async (wizardAsset: NewAsset) => {
@@ -571,6 +493,139 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
     );
   }
 
+  // Helper functions for cleaner conditional rendering
+  const isEditingAsset = (assetId: string) => editingId === assetId;
+  
+  const renderEditableSymbolCell = (asset: DisplayAsset) => {
+    if (isEditingAsset(asset.id)) {
+      return (
+        <Input
+          type="text"
+          value={getEditValue('symbol') || ''}
+          onChange={(e) => updateEditValues({ symbol: e.target.value.toUpperCase() })}
+          className="w-full min-w-16 max-w-20"
+        />
+      );
+    }
+    return <div className="text-sm font-medium text-gray-900">{asset.symbol}</div>;
+  };
+
+  const renderEditableQuantityCell = (asset: DisplayAsset) => {
+    if (isEditingAsset(asset.id)) {
+      return (
+        <Input
+          type="text"
+          inputMode="decimal"
+          value={getEditValue('quantity') || ''}
+          onChange={(e) => {
+            const parseResult = QuantityValidationUtils.parseQuantity(e.target.value);
+            updateEditValues({ quantity: parseResult.value });
+          }}
+          className="w-full min-w-20 max-w-28 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          placeholder="0"
+          step="0.01"
+        />
+      );
+    }
+    return <div className="text-sm text-gray-900">{QuantityValidationUtils.formatQuantity(asset.quantity)}</div>;
+  };
+
+  const renderEditableAvgCostCell = (asset: DisplayAsset) => {
+    if (isEditingAsset(asset.id)) {
+      return (
+        <Input
+          type="text"
+          inputMode="decimal"
+          value={getEditValue('avgCost') || ''}
+          onChange={(e) => updateEditValues({ avgCost: parseFloat(e.target.value) || undefined })}
+          className="w-full min-w-20 max-w-32 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          placeholder="Optional"
+        />
+      );
+    }
+    return (
+      <div className="text-sm text-gray-900">
+        {asset.avgCost ? `$${asset.avgCost.toFixed(2)}` : '-'}
+      </div>
+    );
+  };
+
+  const renderEditableAssetTypeCell = (asset: DisplayAsset) => {
+    if (isEditingAsset(asset.id)) {
+      return (
+        <Select
+          value={getEditValue('assetType') || ''}
+          onValueChange={(value) => updateEditValues({ assetType: value })}
+        >
+          <SelectTrigger className="w-28">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="stock">Stock</SelectItem>
+            <SelectItem value="etf">ETF</SelectItem>
+            <SelectItem value="bond">Bond</SelectItem>
+            <SelectItem value="crypto">Crypto</SelectItem>
+            <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
+            <SelectItem value="option">Option</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    }
+    return (
+      <Badge variant="secondary">
+        {asset.assetType}
+      </Badge>
+    );
+  };
+
+  const renderActionButtons = (asset: DisplayAsset) => {
+    const isLoading = Boolean(loading);
+    
+    if (isEditingAsset(asset.id)) {
+      return (
+        <div className="flex space-x-3 sm:space-x-2">
+          <Button
+            onClick={saveEdit}
+            disabled={isLoading}
+            size="sm"
+            className="text-xs px-2 py-1 h-7"
+          >
+            Save
+          </Button>
+          <Button
+            onClick={stopEditing}
+            variant="outline"
+            size="sm"
+            className="text-xs px-2 py-1 h-7"
+          >
+            Cancel
+          </Button>
+        </div>
+      );
+    }
+    return (
+      <div className="flex space-x-3 sm:space-x-2">
+        <Button
+          onClick={() => startEdit(asset)}
+          variant="outline"
+          size="sm"
+          className="text-xs px-2 py-1 h-7"
+        >
+          Edit
+        </Button>
+        <Button
+          onClick={() => deleteAsset(asset)}
+          variant="destructive"
+          size="sm"
+          className="text-xs px-2 py-1 h-7"
+        >
+          Delete
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <div className={showSummary ? "p-6" : ""}>
       {/* Portfolio Summary */}
@@ -629,7 +684,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         <h2 className="text-lg font-semibold text-gray-900">Assets</h2>
         <Button 
           onClick={() => setShowAddForm(true)}
-          disabled={loading || showAddForm}
+          disabled={Boolean(loading) || Boolean(showAddForm)}
         >
           + Add Asset
         </Button>
@@ -719,7 +774,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     <div className="flex space-x-2 pt-2">
                       <Button
                         onClick={saveEdit}
-                        disabled={loading}
+                        disabled={Boolean(loading)}
                         className="flex-1 text-green-600 hover:text-green-900 border-green-200 hover:border-green-300 min-h-[44px]"
                         variant="outline"
                       >
@@ -821,7 +876,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                       <Button
                         onClick={() => startEdit(asset)}
                         variant="outline"
-                        disabled={loading}
+                        disabled={Boolean(loading)}
                         className="flex-1 text-indigo-600 hover:text-indigo-900 border-indigo-200 hover:border-indigo-300 min-h-[44px]"
                       >
                         Edit
@@ -829,7 +884,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                       <Button
                         onClick={() => deleteAsset(asset)}
                         variant="outline"
-                        disabled={loading}
+                        disabled={Boolean(loading)}
                         className="flex-1 text-red-600 hover:text-red-900 border-red-200 hover:border-red-300 min-h-[44px]"
                       >
                         Delete
@@ -862,34 +917,10 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
               {assets.map((asset) => (
                 <TableRow key={asset.id}>
                   <TableCell>
-                    {editingId === asset.id ? (
-                      <Input
-                        type="text"
-                        value={editValues.symbol || ''}
-                        onChange={(e) => setEditValues({...editValues, symbol: e.target.value.toUpperCase()})}
-                        className="w-full min-w-16 max-w-20"
-                      />
-                    ) : (
-                      <div className="text-sm font-medium text-gray-900">{asset.symbol}</div>
-                    )}
+                    {renderEditableSymbolCell(asset)}
                   </TableCell>
                   <TableCell>
-                    {editingId === asset.id ? (
-                      <Input
-                        type="text"
-                        inputMode="decimal"
-                        value={editValues.quantity || ''}
-                        onChange={(e) => {
-                          const parseResult = QuantityValidationUtils.parseQuantity(e.target.value);
-                          setEditValues({...editValues, quantity: parseResult.value});
-                        }}
-                        className="w-full min-w-20 max-w-28 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="0"
-                        step="0.01"
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">{QuantityValidationUtils.formatQuantity(asset.quantity)}</div>
-                    )}
+                    {renderEditableQuantityCell(asset)}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-900">
@@ -897,20 +928,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     </div>
                   </TableCell>
                   <TableCell>
-                    {editingId === asset.id ? (
-                      <Input
-                        type="text"
-                        inputMode="decimal"
-                        value={editValues.avgCost || ''}
-                        onChange={(e) => setEditValues({...editValues, avgCost: parseFloat(e.target.value) || undefined})}
-                        className="w-full min-w-20 max-w-32 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        placeholder="Optional"
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">
-                        {asset.avgCost ? `$${asset.avgCost.toFixed(2)}` : '-'}
-                      </div>
-                    )}
+                    {renderEditableAvgCostCell(asset)}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm font-medium text-gray-900">
@@ -918,29 +936,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     </div>
                   </TableCell>
                   <TableCell>
-                    {editingId === asset.id ? (
-                      <Select
-                        value={editValues.assetType || ''}
-                        onValueChange={(value) => setEditValues({...editValues, assetType: value})}
-                      >
-                        <SelectTrigger className="w-28">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="stock">Stock</SelectItem>
-                          <SelectItem value="etf">ETF</SelectItem>
-                          <SelectItem value="bond">Bond</SelectItem>
-                          <SelectItem value="crypto">Crypto</SelectItem>
-                          <SelectItem value="mutual_fund">Mutual Fund</SelectItem>
-                          <SelectItem value="option">Option</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Badge variant="secondary">
-                        {asset.assetType}
-                      </Badge>
-                    )}
+                    {renderEditableAssetTypeCell(asset)}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-900">
@@ -979,47 +975,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     )}
                   </TableCell>
                   <TableCell>
-                    {editingId === asset.id ? (
-                      <div className="flex space-x-3 sm:space-x-2">
-                        <Button
-                          onClick={saveEdit}
-                          variant="outline"
-                          disabled={loading}
-                          className="text-green-600 hover:text-green-900 border-green-200 hover:border-green-300 min-h-[44px] min-w-[44px] text-sm"
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setEditingId(null);
-                            setEditValues({});
-                          }}
-                          variant="outline"
-                          className="text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300 min-h-[44px] min-w-[44px] text-sm"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex space-x-3 sm:space-x-2">
-                        <Button
-                          onClick={() => startEdit(asset)}
-                          variant="outline"
-                          disabled={loading}
-                          className="text-indigo-600 hover:text-indigo-900 border-indigo-200 hover:border-indigo-300 min-h-[44px] min-w-[44px] text-sm"
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={() => deleteAsset(asset)}
-                          variant="outline"
-                          disabled={loading}
-                          className="text-red-600 hover:text-red-900 border-red-200 hover:border-red-300 min-h-[44px] min-w-[44px] text-sm"
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    )}
+                    {renderActionButtons(asset)}
                   </TableCell>
                 </TableRow>
               ))}

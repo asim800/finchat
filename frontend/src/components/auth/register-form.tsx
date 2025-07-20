@@ -5,42 +5,34 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ButtonWithLoading as Button } from '@/components/ui/button-with-loading';
-import { FormField } from '@/components/ui/form-field';
+import { ValidatedFormField } from '@/components/ui/validated-form-field';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
+import { useStandardForm } from '@/hooks/use-standard-form';
+import { FormError } from '@/components/ui/form-error';
+import { AuthValidationSchemas } from '@/lib/validation';
 
-const RegisterSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-});
-
-type RegisterFormData = z.infer<typeof RegisterSchema>;
+interface RegisterFormData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
 
 export const RegisterForm: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(RegisterSchema),
-  });
-
-  const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const form = useStandardForm<RegisterFormData>({
+    schema: AuthValidationSchemas.register,
+    initialValues: {
+      email: '',
+      password: '',
+      firstName: '',
+      lastName: ''
+    },
+    onSubmit: async (data) => {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -57,12 +49,8 @@ export const RegisterForm: React.FC = () => {
 
       // Registration successful, navigate smoothly without page reload
       router.push('/dashboard/myportfolio');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
-    } finally {
-      setIsLoading(false);
     }
-  };
+  });
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -75,47 +63,48 @@ export const RegisterForm: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+        <form onSubmit={form.handleSubmit} className="space-y-4">
+          <FormError error={form.error} />
 
           <div className="grid grid-cols-2 gap-4">
-            <FormField
+            <ValidatedFormField
               label="First Name"
-              {...register('firstName')}
-              error={errors.firstName?.message}
+              {...form.getFieldProps('firstName')}
               placeholder="John"
+              suggestions={form.getFieldSuggestions('firstName')}
+              required
             />
-            <FormField
+            <ValidatedFormField
               label="Last Name"
-              {...register('lastName')}
-              error={errors.lastName?.message}
+              {...form.getFieldProps('lastName')}
               placeholder="Doe"
+              suggestions={form.getFieldSuggestions('lastName')}
+              required
             />
           </div>
 
-          <FormField
+          <ValidatedFormField
             label="Email"
             type="email"
-            {...register('email')}
-            error={errors.email?.message}
+            {...form.getFieldProps('email')}
             placeholder="john@example.com"
+            suggestions={form.getFieldSuggestions('email')}
+            required
           />
 
-          <FormField
+          <ValidatedFormField
             label="Password"
             type="password"
-            {...register('password')}
-            error={errors.password?.message}
+            {...form.getFieldProps('password')}
             placeholder="Minimum 8 characters"
+            suggestions={form.getFieldSuggestions('password')}
+            required
           />
 
           <Button
             type="submit"
-            loading={isLoading}
+            loading={form.loading}
+            disabled={!form.canSubmit}
             className="w-full"
           >
             Create Account

@@ -23,8 +23,66 @@ interface GuestTopBarProps {}
 
 export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
   const pathname = usePathname();
-  const isPortfolioPage = pathname?.includes('/portfolio');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Navigation helper functions
+  const isActiveRoute = (route: string | string[]): boolean => {
+    if (!pathname) return false;
+    const routes = Array.isArray(route) ? route : [route];
+    return routes.some(r => pathname.includes(r));
+  };
+
+  const isMyPortfolioPage = isActiveRoute('/myportfolio');
+  const isReferencePortfolioPage = isActiveRoute('/dashboard/portfolio') && !isActiveRoute('/myportfolio');
+  const isChatPage = isActiveRoute('/chat');
+  const isLearningPage = isActiveRoute('/learning');
+  const isContactPage = isActiveRoute('/contact');
+
+  const getNavButtonVariant = (isActive: boolean, mobileMode = false) => {
+    if (mobileMode) {
+      return isActive ? "default" : "ghost";
+    }
+    return isActive ? "default" : "outline";
+  };
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+
+  // Navigation configuration
+  const mainNavItems = [
+    { href: '/dashboard/myportfolio', label: 'My Portfolio', isActive: isMyPortfolioPage },
+    { href: '/dashboard/portfolio', label: 'Templates', isActive: isReferencePortfolioPage },
+    { href: '/dashboard/chat', label: 'Chat', isActive: isChatPage },
+    { href: '/contact', label: 'Contact us', isActive: isContactPage }
+  ];
+
+  const authNavItems = [
+    { href: '/login', label: 'Sign In', variant: 'outline' as const },
+    { href: '/register', label: 'Sign Up', variant: 'default' as const }
+  ];
+
+  const renderNavButton = (item: typeof mainNavItems[0], mobileMode = false) => (
+    <Link key={item.href} href={item.href} onClick={mobileMode ? closeMobileMenu : undefined}>
+      <Button 
+        variant={getNavButtonVariant(item.isActive, mobileMode)}
+        size="sm"
+        className={`text-sm font-medium ${mobileMode ? 'w-full justify-start' : ''}`}
+      >
+        {item.label}
+      </Button>
+    </Link>
+  );
+
+  const renderAuthButton = (item: typeof authNavItems[0], mobileMode = false) => (
+    <Link key={item.href} href={item.href} onClick={mobileMode ? closeMobileMenu : undefined}>
+      <Button 
+        variant={item.variant}
+        size="sm"
+        className={`text-sm font-medium ${mobileMode ? 'w-full justify-start mb-2' : ''}`}
+      >
+        {item.label}
+      </Button>
+    </Link>
+  );
 
   return (
     <div className="bg-background shadow-sm border-b border-border">
@@ -44,37 +102,12 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="flex items-center space-x-3 sm:space-x-2">
-              <Link href="/dashboard/myportfolio">
-                <Button 
-                  variant={isPortfolioPage ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  My Portfolio
-                </Button>
-              </Link>
-              <Link href="/dashboard/portfolio">
-                <Button 
-                  variant={pathname?.includes('/dashboard/portfolio') && !pathname?.includes('/myportfolio') ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  Templates
-                </Button>
-              </Link>
-              <Link href="/dashboard/chat">
-                <Button 
-                  variant={pathname?.includes('/chat') ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  Chat
-                </Button>
-              </Link>
+              {mainNavItems.map(item => renderNavButton(item))}
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
-                    variant={pathname?.includes('/learning') ? "default" : "outline"} 
+                    variant={getNavButtonVariant(isLearningPage)}
                     size="sm"
                     className="text-sm font-medium"
                   >
@@ -91,24 +124,10 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/contact">
-                <Button 
-                  variant={pathname?.includes('/contact') ? "default" : "outline"} 
-                  size="sm"
-                  className="text-sm font-medium"
-                >
-                  Contact us
-                </Button>
-              </Link>
             </div>
 
             <div className="border-l border-gray-200 pl-4 flex items-center space-x-2">
-              <Link href="/login">
-                <Button variant="outline" size="sm" className="text-sm font-medium">Sign In</Button>
-              </Link>
-              <Link href="/register">
-                <Button size="sm" className="text-sm font-medium">Sign Up</Button>
-              </Link>
+              {authNavItems.map(item => renderAuthButton(item))}
               <ThemeToggle />
             </div>
           </div>
@@ -138,36 +157,11 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-border bg-background py-4">
             <div className="flex flex-col space-y-3">
-              <Link href="/dashboard/myportfolio" onClick={() => setIsMobileMenuOpen(false)}>
+              {mainNavItems.map(item => renderNavButton(item, true))}
+              
+              <Link href="/learning/financial-terms" onClick={closeMobileMenu}>
                 <Button 
-                  variant={isPortfolioPage ? "default" : "ghost"} 
-                  size="sm"
-                  className="w-full justify-start text-sm font-medium"
-                >
-                  My Portfolio
-                </Button>
-              </Link>
-              <Link href="/dashboard/portfolio" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant={pathname?.includes('/dashboard/portfolio') && !pathname?.includes('/myportfolio') ? "default" : "ghost"} 
-                  size="sm"
-                  className="w-full justify-start text-sm font-medium"
-                >
-                  Portfolio Templates
-                </Button>
-              </Link>
-              <Link href="/dashboard/chat" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant={pathname?.includes('/chat') ? "default" : "ghost"} 
-                  size="sm"
-                  className="w-full justify-start text-sm font-medium"
-                >
-                  Chat
-                </Button>
-              </Link>
-              <Link href="/learning/financial-terms" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant={pathname?.includes('/learning') ? "default" : "ghost"} 
+                  variant={getNavButtonVariant(isLearningPage, true)}
                   size="sm"
                   className="w-full justify-start text-sm font-medium"
                 >
@@ -175,34 +169,9 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
                   Financial Terms
                 </Button>
               </Link>
-              <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button 
-                  variant={pathname?.includes('/contact') ? "default" : "ghost"} 
-                  size="sm"
-                  className="w-full justify-start text-sm font-medium"
-                >
-                  Contact us
-                </Button>
-              </Link>
               
               <div className="border-t pt-3 mt-3">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full justify-start text-sm font-medium mb-2"
-                  >
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button 
-                    size="sm"
-                    className="w-full justify-start text-sm font-medium"
-                  >
-                    Sign Up
-                  </Button>
-                </Link>
+                {authNavItems.map(item => renderAuthButton(item, true))}
               </div>
             </div>
           </div>

@@ -5,38 +5,18 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageBubble, Message } from './message-bubble';
 import { ChartDisplay } from './chart-display';
 import { FileProcessor } from './file-processor';
 import { useChatAPI } from '@/hooks/use-chat-api';
+import { useScrollManager } from '@/hooks/useScrollManager';
 import { simulateAIResponse } from '@/lib/chat-simulation';
 import { generateGuestSessionId, GuestPortfolioService } from '@/lib/guest-portfolio';
 import { conversationAnalytics, trackChatMessage, trackChatResponse } from '@/lib/conversation-analytics';
 import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
-
-// Throttle utility function
-const throttle = <T extends (...args: any[]) => any>(func: T, delay: number): T => {
-  let timeoutId: NodeJS.Timeout | null = null;
-  let lastExecTime = 0;
-  
-  return ((...args: Parameters<T>) => {
-    const currentTime = Date.now();
-    
-    if (currentTime - lastExecTime > delay) {
-      func(...args);
-      lastExecTime = currentTime;
-    } else {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        func(...args);
-        lastExecTime = Date.now();
-      }, delay - (currentTime - lastExecTime));
-    }
-  }) as T;
-};
 
 interface ChatInterfaceProps {
   isGuestMode?: boolean;
@@ -67,6 +47,73 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
   const [guestSessionId] = useState<string>(() => generateGuestSessionId());
   
   const { sendMessage, loadLatestSession, loadMoreMessages, isLoading } = useChatAPI();
+
+  // Load more messages handler for scroll manager
+  const handleLoadMore = useCallback(async () => {
+    if (!currentSessionId || isLoadingMore || !hasMoreMessages || messages.length === 0) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+    
+    try {
+      const oldestMessage = messages[0];
+      
+      const moreMessages = await loadMoreMessages(
+        currentSessionId,
+        oldestMessage.id,
+        10, // Load 10 more messages
+        isGuestMode ? guestSessionId : undefined
+      );
+
+      if (moreMessages && moreMessages.length > 0) {
+        // Store current scroll position
+        const container = messagesContainerRef.current;
+        const scrollTop = container?.scrollTop || 0;
+        const scrollHeight = container?.scrollHeight || 0;
+
+        // Add new messages to the beginning
+        setMessages(prev => [...moreMessages, ...prev]);
+
+        // Restore scroll position (maintain user's position)
+        setTimeout(() => {
+          if (container && typeof container.scrollHeight === 'number' && typeof container.scrollTop === 'number') {
+            try {
+              const newScrollHeight = container.scrollHeight;
+              container.scrollTop = scrollTop + (newScrollHeight - scrollHeight);
+            } catch (error) {
+              console.warn('Error restoring scroll position:', error);
+            }
+          }
+        }, 0);
+
+        // Check if we got fewer messages than requested (indicates no more messages)
+        if (moreMessages.length < 10) {
+          setHasMoreMessages(false);
+        }
+      } else {
+        setHasMoreMessages(false);
+      }
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentSessionId, isLoadingMore, hasMoreMessages, messages, loadMoreMessages, isGuestMode, guestSessionId]);
+
+  // Scroll management hook
+  const {
+    messagesEndRef,
+    messagesContainerRef,
+    handleScroll,
+    enableAutoScroll
+  } = useScrollManager({
+    messages,
+    isInitiallyLoaded,
+    hasMoreMessages,
+    isLoadingMore,
+    onLoadMore: handleLoadMore
+  });
 
   // Memoized initialization function
   const initializeSession = useCallback(async () => {
@@ -137,145 +184,6 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
   useEffect(() => {
     initializeSession();
   }, [initializeSession]); // Include memoized initializeSession
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    // Use both scrollIntoView and manual scroll for better reliability
-    if (messagesEndRef.current) {
-      try {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      } catch (error) {
-        console.warn('Error scrolling to bottom with scrollIntoView:', error);
-      }
-    }
-    
-    // Fallback: manually scroll the container to bottom
-    if (messagesContainerRef.current) {
-      const container = messagesContainerRef.current;
-      setTimeout(() => {
-        try {
-          // Safety check before accessing scrollHeight
-          if (container && typeof container.scrollHeight === 'number') {
-            container.scrollTop = container.scrollHeight;
-          }
-        } catch (error) {
-          console.warn('Error scrolling to bottom manually:', error);
-        }
-      }, 100);
-    }
-  };
-
-  // Only auto-scroll to bottom for new messages, not when loading more history
-  const lastMessageCount = useRef(0);
-  const shouldAutoScroll = useRef(true);
-  
-  useEffect(() => {
-    // Only scroll to bottom if messages were added at the end (not at the beginning)
-    if (messages.length > lastMessageCount.current) {
-      const container = messagesContainerRef.current;
-      
-      if (container && typeof container.scrollHeight === 'number' && typeof container.scrollTop === 'number' && typeof container.clientHeight === 'number') {
-        try {
-          const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-          
-          // Auto-scroll if:
-          // 1. User was near the bottom (within 100px)
-          // 2. It's the initial load
-          // 3. This is a new response to user's message (shouldAutoScroll is true)
-          if (wasAtBottom || !isInitiallyLoaded || shouldAutoScroll.current) {
-            // Use requestAnimationFrame for smoother scrolling
-            requestAnimationFrame(() => {
-              scrollToBottom();
-            });
-          }
-        } catch (error) {
-          console.warn('Error in auto-scroll effect:', error);
-        }
-      }
-    }
-    lastMessageCount.current = messages.length;
-  }, [messages, isInitiallyLoaded]);
-
-  // Load more messages when scrolled to top
-  const handleLoadMore = useCallback(async () => {
-    if (!currentSessionId || isLoadingMore || !hasMoreMessages || messages.length === 0) {
-      return;
-    }
-
-    setIsLoadingMore(true);
-    
-    try {
-      const oldestMessage = messages[0];
-      
-      const moreMessages = await loadMoreMessages(
-        currentSessionId,
-        oldestMessage.id,
-        10, // Load 10 more messages
-        isGuestMode ? guestSessionId : undefined
-      );
-
-      if (moreMessages && moreMessages.length > 0) {
-        // Store current scroll position
-        const container = messagesContainerRef.current;
-        const scrollTop = container?.scrollTop || 0;
-        const scrollHeight = container?.scrollHeight || 0;
-
-        // Add new messages to the beginning
-        setMessages(prev => [...moreMessages, ...prev]);
-
-        // Restore scroll position (maintain user's position)
-        setTimeout(() => {
-          if (container && typeof container.scrollHeight === 'number' && typeof container.scrollTop === 'number') {
-            try {
-              const newScrollHeight = container.scrollHeight;
-              container.scrollTop = scrollTop + (newScrollHeight - scrollHeight);
-            } catch (error) {
-              console.warn('Error restoring scroll position:', error);
-            }
-          }
-        }, 0);
-
-        // Check if we got fewer messages than requested (indicates no more messages)
-        if (moreMessages.length < 10) {
-          setHasMoreMessages(false);
-        }
-      } else {
-        setHasMoreMessages(false);
-      }
-    } catch (error) {
-      console.error('Error loading more messages:', error);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [currentSessionId, isLoadingMore, hasMoreMessages, messages, loadMoreMessages, isGuestMode, guestSessionId]);
-
-  // Base scroll handler (not throttled for critical operations)
-  const baseScrollHandler = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const container = e.currentTarget;
-    
-    // Safety check: ensure container exists and has required properties
-    if (!container || typeof container.scrollTop !== 'number' || typeof container.scrollHeight !== 'number' || typeof container.clientHeight !== 'number') {
-      return;
-    }
-    
-    // Trigger load more when user scrolls within 10px of top
-    // Only trigger after initial load is complete to prevent auto-loading on page load
-    if (container.scrollTop <= 10 && hasMoreMessages && !isLoadingMore && messages.length > 0 && isInitiallyLoaded) {
-      handleLoadMore();
-    }
-    
-    // Detect if user is near the bottom to enable/disable auto-scroll
-    const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-    shouldAutoScroll.current = isNearBottom;
-  }, [handleLoadMore, hasMoreMessages, isLoadingMore, messages.length, isInitiallyLoaded]);
-
-  // Throttled scroll handler to improve performance
-  const handleScroll = useMemo(
-    () => throttle(baseScrollHandler, 100), // 100ms throttle
-    [baseScrollHandler]
-  );
 
 
   const handleSend = async () => {
@@ -295,7 +203,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
     );
 
     // Enable auto-scroll when user sends a message
-    shouldAutoScroll.current = true;
+    enableAutoScroll();
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -445,7 +353,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
     }
     
     // Enable auto-scroll when adding file message
-    shouldAutoScroll.current = true;
+    enableAutoScroll();
     
     const fileMessage: Message = {
       id: Date.now().toString(),
@@ -470,7 +378,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
   const handleSampleQuestion = (question: string) => {
     setInputValue(question);
     // Enable auto-scroll when user selects a sample question
-    shouldAutoScroll.current = true;
+    enableAutoScroll();
   };
 
   return (
@@ -543,9 +451,16 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
       {/* Messages Area */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px] max-h-[500px]"
+        className="flex-1 overflow-y-scroll min-h-0"
+        style={{ scrollbarGutter: 'stable' }}
         onScroll={handleScroll}
       >
+        {/* Content wrapper with forced minimum height */}
+        <div className="min-h-[calc(100vh-300px)] p-4 space-y-4">
+          {/* Top spacer to ensure scrollable content when history available */}
+          {hasMoreMessages && !isLoadingMore && (
+            <div className="h-96 w-full" />
+          )}
 
         {/* Load More Indicator */}
         {isLoadingMore && (
@@ -595,6 +510,7 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
           </div>
         )}
         <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Input Area */}

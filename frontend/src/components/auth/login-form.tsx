@@ -5,40 +5,30 @@
 
 'use client';
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ButtonWithLoading as Button } from '@/components/ui/button-with-loading';
-import { FormField } from '@/components/ui/form-field';
+import { ValidatedFormField } from '@/components/ui/validated-form-field';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
+import { useStandardForm } from '@/hooks/use-standard-form';
+import { FormError } from '@/components/ui/form-error';
+import { AuthValidationSchemas } from '@/lib/validation';
 
-const LoginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-type LoginFormData = z.infer<typeof LoginSchema>;
+interface LoginFormData {
+  email: string;
+  password: string;
+}
 
 export const LoginForm: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(LoginSchema),
-  });
-
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const form = useStandardForm<LoginFormData>({
+    schema: AuthValidationSchemas.login,
+    initialValues: {
+      email: '',
+      password: ''
+    },
+    onSubmit: async (data) => {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -55,12 +45,8 @@ export const LoginForm: React.FC = () => {
 
       // Login successful, force page reload to ensure cookie is set
       window.location.href = '/dashboard/myportfolio';
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setIsLoading(false);
     }
-  };
+  });
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -73,32 +59,31 @@ export const LoginForm: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+        <form onSubmit={form.handleSubmit} className="space-y-4">
+          <FormError error={form.error} />
 
-          <FormField
+          <ValidatedFormField
             label="Email"
             type="email"
-            {...register('email')}
-            error={errors.email?.message}
+            {...form.getFieldProps('email')}
             placeholder="john@example.com"
+            suggestions={form.getFieldSuggestions('email')}
+            required
           />
 
-          <FormField
+          <ValidatedFormField
             label="Password"
             type="password"
-            {...register('password')}
-            error={errors.password?.message}
+            {...form.getFieldProps('password')}
             placeholder="Enter your password"
+            suggestions={form.getFieldSuggestions('password')}
+            required
           />
 
           <Button
             type="submit"
-            loading={isLoading}
+            loading={form.loading}
+            disabled={!form.canSubmit}
             className="w-full"
           >
             Sign In
