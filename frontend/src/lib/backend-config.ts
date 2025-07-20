@@ -3,7 +3,7 @@
 // Configuration management for choosing between MCP and FastAPI backends
 // ============================================================================
 
-export type BackendType = 'mcp' | 'fastapi';
+export type BackendType = 'fastapi';
 
 export interface BackendConfig {
   type: BackendType;
@@ -23,8 +23,8 @@ class BackendConfigManager {
     const isProduction = process.env.NODE_ENV === 'production';
     const isVercel = process.env.VERCEL === '1';
     
-    // Default to MCP in production/Vercel unless explicitly set
-    const defaultBackend = (isProduction || isVercel) ? 'mcp' : 'mcp';
+    // Default to FastAPI in all environments unless explicitly set
+    const defaultBackend = 'fastapi';
     const primaryBackend = (process.env.PRIMARY_ANALYSIS_BACKEND || defaultBackend) as BackendType;
     const fallbackEnabled = process.env.ENABLE_BACKEND_FALLBACK === 'true';
     const fastApiUrl = process.env.FASTAPI_SERVICE_URL || 'http://localhost:8000';

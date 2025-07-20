@@ -99,7 +99,7 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
               </h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>
-                  You can chat with our AI assistant about general financial topics, but personalized advice requires an account.
+                  You can chat with our AI assistant about general financial topics, but personalized analysis requires an account.
                   <Link href="/register" className="font-medium underline hover:text-blue-600 ml-1">
                     Sign up for free
                   </Link>
@@ -111,7 +111,7 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
       )}
 
       {/* Chat Container */}
-      <div className="bg-white rounded-lg shadow min-h-[600px]">
+      <div className="bg-white rounded-lg shadow h-[calc(100vh-200px)]">
         <ResponsiveChatLayout isGuestMode={isGuestMode} userId={userId} />
       </div>
     </div>

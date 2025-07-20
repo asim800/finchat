@@ -40,7 +40,7 @@ export const ResponsiveChatLayout: React.FC<ResponsiveChatLayoutProps> = ({
   // };
 
   return (
-    <div className="h-full flex flex-col min-h-0">
+    <div className="h-full flex flex-col">
       {/* Chat Interface */}
       <div className="flex-1 flex flex-col min-h-0">
         <ChatInterface 

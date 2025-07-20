@@ -28,7 +28,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   const title = 'Interactive Chat';
   const description = isGuestMode 
-    ? 'Chat with our AI assistant about general financial topics. Sign up for personalized advice!'
+    ? 'Chat with our AI assistant about general financial topics. Sign up for personalized analysis!'
     : 'Get personalized financial insights and portfolio analysis from our AI assistant.';
 
   const actions = [

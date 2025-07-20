@@ -8,7 +8,6 @@ import { llmService, LLMProvider } from '@/lib/llm-service';
 // import { FINANCIAL_SYSTEM_PROMPT, generateFinancialPrompt } from '@/lib/financial-prompts';
 import { getUserFromRequest } from '@/lib/auth';
 import { ChatService } from '@/lib/chat-service';
-import { financeMCPClient } from '@/lib/mcp-client';
 import { unifiedAnalysisService } from '@/lib/unified-analysis-service';
 import { backendConfig } from '@/lib/backend-config';
 import { fastAPIClient } from '@/lib/fastapi-client';
@@ -382,20 +381,6 @@ async function analyzeMCPToolNeeds(
     const fallbackEnabled = backendConfig.isFallbackEnabled();
     
     console.log(`🔍 Using ${primaryBackend.type.toUpperCase()} as primary backend, fallback: ${fallbackEnabled}`);
-    
-    // Only check MCP dependencies if MCP is primary OR fallback is enabled
-    if (primaryBackend.type === 'mcp' || fallbackEnabled) {
-      console.log('🔍 Checking MCP server availability...');
-      const dependencyCheck = await financeMCPClient.checkDependencies();
-      
-      if (!dependencyCheck.available && primaryBackend.type === 'mcp' && !fallbackEnabled) {
-        console.warn('⚠️ MCP server dependencies not available:', dependencyCheck.error);
-        return {
-          fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket, needsSentiment),
-          mcpStatus: 'failed'
-        };
-      }
-    }
 
     // Execute tools with individual error handling, using specific portfolio if specified
     if (needsRisk) {
@@ -493,7 +478,7 @@ async function analyzeMCPToolNeeds(
   } catch (error) {
     console.error('MCP Tool execution error:', error);
     return {
-      fallbackMessage: createMCPFallbackMessage(lowerMessage, needsRisk, needsSharpe, needsMarket, needsSentiment),
+      fallbackMessage: 'Analysis temporarily unavailable. Please try again later.',
       mcpStatus: 'failed'
     };
   }
@@ -515,52 +500,5 @@ async function analyzeMCPToolNeeds(
   };
 }
 
-// Helper function to create fallback messages when MCP tools fail
-function createMCPFallbackMessage(
-  _lowerMessage: string, 
-  needsRisk: boolean, 
-  needsSharpe: boolean, 
-  needsMarket: boolean,
-  needsSentiment: boolean
-): string {
-  let fallback = '🤖 **Analysis temporarily unavailable** - I\'ll provide general guidance instead:\n\n';
-
-  if (needsRisk) {
-    fallback += '📊 **Portfolio Risk Guidelines:**\n' +
-               '• Diversification across asset classes reduces risk\n' +
-               '• Higher volatility assets require smaller position sizes\n' +
-               '• Consider your risk tolerance and investment timeline\n' +
-               '• Regular rebalancing helps maintain target allocations\n\n';
-  }
-
-  if (needsSharpe) {
-    fallback += '📈 **Risk-Adjusted Performance Tips:**\n' +
-               '• Sharpe ratio measures return per unit of risk\n' +
-               '• Values > 1.0 are generally considered good\n' +
-               '• Focus on consistent returns rather than high volatility gains\n' +
-               '• Consider low-cost index funds for better risk-adjusted returns\n\n';
-  }
-
-  if (needsMarket) {
-    fallback += '💹 **Market Analysis Approach:**\n' +
-               '• Check financial news sites for current market data\n' +
-               '• Focus on long-term trends rather than daily fluctuations\n' +
-               '• Consider dollar-cost averaging for volatile markets\n' +
-               '• Review fundamentals of your holdings regularly\n\n';
-  }
-
-  if (needsSentiment) {
-    fallback += '📰 **Market Sentiment Guidelines:**\n' +
-               '• Monitor financial news and social media for market mood\n' +
-               '• Consider contrarian investing when sentiment is extreme\n' +
-               '• Use sentiment as one factor among many in decision-making\n' +
-               '• Focus on company fundamentals over short-term sentiment\n' +
-               '• Be aware of Fear & Greed Index and similar sentiment indicators\n\n';
-  }
-
-  fallback += '💡 For detailed analysis, please try again later when our advanced tools are available.';
-  
-  return fallback;
-}
 
 

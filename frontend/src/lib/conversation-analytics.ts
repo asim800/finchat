@@ -36,7 +36,7 @@ export type AnalyticsEventType =
 export type EventSeverity = 'info' | 'warning' | 'error' | 'critical';
 
 // Backend types for tracking which services are used
-export type BackendType = 'mcp' | 'fastapi' | 'llm' | 'simulation';
+export type BackendType = 'fastapi' | 'llm' | 'simulation';
 
 // Core analytics event interface
 export interface AnalyticsEvent {
@@ -482,7 +482,6 @@ class ConversationAnalytics {
     const totalLatency = sessionEvents.reduce((sum, e) => sum + (e.duration || 0), 0);
     
     const backendUsage: Record<BackendType, number> = {
-      mcp: 0,
       fastapi: 0,
       llm: 0,
       simulation: 0

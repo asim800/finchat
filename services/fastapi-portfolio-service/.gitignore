@@ -76,3 +76,14 @@ Thumbs.db
 
 # uv
 .uv/
+# Note: uv.lock should be committed for reproducible builds
+
+# Railway
+.railway/
+
+# Deployment documentation (internal use only)
+RAILWAY_DEPLOYMENT_ISSUES.md
+
+# Temporary pyproject.toml for local development
+pyproject.toml
+uv.lock

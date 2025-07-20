@@ -152,7 +152,7 @@ export default async function HomePage() {
               </div>
               <h3 className="text-lg font-semibold text-foreground">AI Chat Assistant</h3>
               <p className="mt-2 text-muted-foreground">
-                Ask questions about financial markets, get investment advice, and analyze trends with our AI assistant.
+                Ask questions about financial markets, understand investment, and analyze trends with our AI assistant.
               </p>
               <div className="mt-4">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

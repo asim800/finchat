@@ -1,218 +1,109 @@
 // ============================================================================
 // FILE: lib/unified-analysis-service.ts
-// Unified service that can switch between MCP and FastAPI backends
+// Financial analysis service using FastAPI backend
 // ============================================================================
 
-import { financeMCPClient, formatRiskAnalysis as mcpFormatRisk, formatSharpeAnalysis as mcpFormatSharpe } from './mcp-client';
 import { fastAPIClient, formatRiskAnalysis as fastapiFormatRisk, formatSharpeAnalysis as fastapiFormatSharpe, formatPortfolioOptimization, formatMonteCarloSimulation, formatSentimentAnalysis } from './fastapi-client';
-import { backendConfig, logBackendSelection, type BackendType } from './backend-config';
 
 export interface AnalysisResult {
   success: boolean;
   data?: unknown;
   formattedData?: string;
   error?: string;
-  backend: BackendType;
-  fallbackUsed: boolean;
+  backend: 'fastapi';
+  fallbackUsed: false;
 }
 
 class UnifiedAnalysisService {
   
   /**
-   * Check if a backend is available
+   * Check if FastAPI backend is available
    */
-  private async checkBackendHealth(backend: BackendType): Promise<boolean> {
+  private async checkBackendHealth(): Promise<boolean> {
     try {
-      if (backend === 'fastapi') {
-        const health = await fastAPIClient.checkHealth();
-        return health.available;
-      } else {
-        // For MCP, check dependencies
-        const health = await financeMCPClient.checkDependencies();
-        return health.available;
-      }
+      const health = await fastAPIClient.checkHealth();
+      return health.available;
     } catch (error) {
-      console.error(`${backend.toUpperCase()} health check failed:`, error);
+      console.error('FastAPI health check failed:', error);
       return false;
     }
   }
 
   /**
-   * Execute analysis with automatic fallback
+   * Execute analysis using FastAPI backend
    */
-  private async executeWithFallback<T>(
+  private async executeAnalysis<T>(
     operation: string,
-    primaryExecution: () => Promise<T>,
-    fallbackExecution: () => Promise<T>,
+    execution: () => Promise<T>,
     formatter: (data: T) => string
   ): Promise<AnalysisResult> {
-    const primaryBackend = backendConfig.getPrimaryBackend();
-    const fallbackBackend = backendConfig.getFallbackBackend();
-    
-    console.log(`🔍 Starting ${operation} with primary backend: ${primaryBackend.type.toUpperCase()}`);
+    console.log(`🔍 Starting ${operation} with FastAPI backend`);
 
-    // Try primary backend first
     try {
-      const isHealthy = await this.checkBackendHealth(primaryBackend.type);
+      const isHealthy = await this.checkBackendHealth();
       
-      if (isHealthy) {
-        logBackendSelection(primaryBackend.type, `Primary backend healthy for ${operation}`);
-        const data = await primaryExecution();
-        
-        // Check if the result indicates an error
-        if (data && typeof data === 'object' && 'error' in data) {
-          throw new Error(data.error as string);
-        }
-        
-        return {
-          success: true,
-          data,
-          formattedData: formatter(data),
-          backend: primaryBackend.type,
-          fallbackUsed: false
-        };
-      } else {
-        throw new Error(`${primaryBackend.type.toUpperCase()} backend not healthy`);
+      if (!isHealthy) {
+        throw new Error('FastAPI backend not healthy');
       }
-    } catch (primaryError) {
-      console.warn(`⚠️ Primary backend (${primaryBackend.type.toUpperCase()}) failed:`, primaryError);
       
-      // Try fallback if enabled
-      if (backendConfig.isFallbackEnabled()) {
-        try {
-          const fallbackHealthy = await this.checkBackendHealth(fallbackBackend.type);
-          
-          if (fallbackHealthy) {
-            logBackendSelection(fallbackBackend.type, `Fallback after ${primaryBackend.type} failure`);
-            const data = await fallbackExecution();
-            
-            // Check if the result indicates an error
-            if (data && typeof data === 'object' && 'error' in data) {
-              throw new Error(data.error as string);
-            }
-            
-            return {
-              success: true,
-              data,
-              formattedData: formatter(data),
-              backend: fallbackBackend.type,
-              fallbackUsed: true
-            };
-          } else {
-            throw new Error(`${fallbackBackend.type.toUpperCase()} fallback backend not healthy`);
-          }
-        } catch (fallbackError) {
-          console.error(`❌ Fallback backend (${fallbackBackend.type.toUpperCase()}) also failed:`, fallbackError);
-          
-          return {
-            success: false,
-            error: `Both backends failed. Primary (${primaryBackend.type}): ${primaryError instanceof Error ? primaryError.message : String(primaryError)}. Fallback (${fallbackBackend.type}): ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`,
-            backend: primaryBackend.type,
-            fallbackUsed: false
-          };
-        }
-      } else {
-        return {
-          success: false,
-          error: `${primaryBackend.type.toUpperCase()} backend failed: ${primaryError instanceof Error ? primaryError.message : String(primaryError)}`,
-          backend: primaryBackend.type,
-          fallbackUsed: false
-        };
+      const data = await execution();
+      
+      // Check if the result indicates an error
+      if (data && typeof data === 'object' && 'error' in data) {
+        throw new Error(data.error as string);
       }
+      
+      return {
+        success: true,
+        data,
+        formattedData: formatter(data),
+        backend: 'fastapi',
+        fallbackUsed: false
+      };
+    } catch (error) {
+      console.error(`❌ FastAPI backend failed for ${operation}:`, error);
+      
+      return {
+        success: false,
+        error: `FastAPI backend failed: ${error instanceof Error ? error.message : String(error)}`,
+        backend: 'fastapi',
+        fallbackUsed: false
+      };
     }
   }
 
   /**
-   * Calculate portfolio risk using configured backend with fallback
+   * Calculate portfolio risk using FastAPI backend
    */
   async calculatePortfolioRisk(userId: string, portfolioId?: string): Promise<AnalysisResult> {
     console.log('🔍 UnifiedAnalysisService calculatePortfolioRisk called with:', { userId, portfolioId });
-    return await this.executeWithFallback(
+    return await this.executeAnalysis(
       'portfolio risk analysis',
-      () => {
-        const primary = backendConfig.getPrimaryBackend();
-        if (primary.type === 'fastapi') {
-          return fastAPIClient.calculatePortfolioRisk(userId, portfolioId);
-        } else {
-          return financeMCPClient.calculatePortfolioRisk(userId, portfolioId);
-        }
-      },
-      () => {
-        const fallback = backendConfig.getFallbackBackend();
-        if (fallback.type === 'fastapi') {
-          return fastAPIClient.calculatePortfolioRisk(userId, portfolioId);
-        } else {
-          return financeMCPClient.calculatePortfolioRisk(userId, portfolioId);
-        }
-      },
-      (data) => {
-        const primary = backendConfig.getPrimaryBackend();
-        if (primary.type === 'fastapi') {
-          return fastapiFormatRisk(data);
-        } else {
-          return mcpFormatRisk(data);
-        }
-      }
+      () => fastAPIClient.calculatePortfolioRisk(userId, portfolioId),
+      (data) => fastapiFormatRisk(data)
     );
   }
 
   /**
-   * Calculate Sharpe ratio using configured backend with fallback
+   * Calculate Sharpe ratio using FastAPI backend
    */
   async calculateSharpeRatio(userId: string, portfolioId?: string): Promise<AnalysisResult> {
-    return await this.executeWithFallback(
+    return await this.executeAnalysis(
       'Sharpe ratio analysis',
-      () => {
-        const primary = backendConfig.getPrimaryBackend();
-        if (primary.type === 'fastapi') {
-          return fastAPIClient.calculateSharpeRatio(userId, portfolioId);
-        } else {
-          return financeMCPClient.calculateSharpeRatio(userId, portfolioId);
-        }
-      },
-      () => {
-        const fallback = backendConfig.getFallbackBackend();
-        if (fallback.type === 'fastapi') {
-          return fastAPIClient.calculateSharpeRatio(userId, portfolioId);
-        } else {
-          return financeMCPClient.calculateSharpeRatio(userId, portfolioId);
-        }
-      },
-      (data) => {
-        const primary = backendConfig.getPrimaryBackend();
-        if (primary.type === 'fastapi') {
-          return fastapiFormatSharpe(data);
-        } else {
-          return mcpFormatSharpe(data);
-        }
-      }
+      () => fastAPIClient.calculateSharpeRatio(userId, portfolioId),
+      (data) => fastapiFormatSharpe(data)
     );
   }
 
   /**
-   * Get portfolio market data using configured backend with fallback
+   * Get portfolio market data using FastAPI backend
    */
   async getPortfolioMarketData(userId: string, period: string = '1mo', portfolioId?: string): Promise<AnalysisResult> {
-    return await this.executeWithFallback(
+    return await this.executeAnalysis(
       'market data analysis',
-      () => {
-        const primary = backendConfig.getPrimaryBackend();
-        if (primary.type === 'fastapi') {
-          return fastAPIClient.getPortfolioMarketData(userId, period, portfolioId);
-        } else {
-          return financeMCPClient.getPortfolioMarketData(userId, period, portfolioId);
-        }
-      },
-      () => {
-        const fallback = backendConfig.getFallbackBackend();
-        if (fallback.type === 'fastapi') {
-          return fastAPIClient.getPortfolioMarketData(userId, period, portfolioId);
-        } else {
-          return financeMCPClient.getPortfolioMarketData(userId, period, portfolioId);
-        }
-      },
+      () => fastAPIClient.getPortfolioMarketData(userId, period, portfolioId),
       (data) => {
-        // Market data formatting is the same for both backends
+        // Market data formatting
         if (data && typeof data === 'object' && 'market_data' in data) {
           const marketDataObj = data as { period: string; market_data: Record<string, { current_price: number; period_return: number }> };
           let formatted = `📊 **Market Data Summary** (${marketDataObj.period})\n\n`;
@@ -227,7 +118,7 @@ class UnifiedAnalysisService {
   }
 
   /**
-   * Optimize portfolio allocation using configured backend
+   * Optimize portfolio allocation using FastAPI backend
    */
   async optimizePortfolio(
     userId: string, 
@@ -236,29 +127,15 @@ class UnifiedAnalysisService {
     riskTolerance: number = 0.5
   ): Promise<AnalysisResult> {
     console.log('🎯 UnifiedAnalysisService optimizePortfolio called with:', { userId, portfolioId, objective, riskTolerance });
-    return await this.executeWithFallback(
+    return await this.executeAnalysis(
       'portfolio optimization',
-      () => {
-        const primary = backendConfig.getPrimaryBackend();
-        if (primary.type === 'fastapi') {
-          return fastAPIClient.optimizePortfolio(userId, portfolioId, objective, riskTolerance);
-        } else {
-          // MCP doesn't have optimization yet, use FastAPI as fallback
-          throw new Error('MCP backend does not support portfolio optimization yet');
-        }
-      },
-      () => {
-        // Always use FastAPI for optimization
-        return fastAPIClient.optimizePortfolio(userId, portfolioId, objective, riskTolerance);
-      },
-      (data) => {
-        return formatPortfolioOptimization(data as any);
-      }
+      () => fastAPIClient.optimizePortfolio(userId, portfolioId, objective, riskTolerance),
+      (data) => formatPortfolioOptimization(data as any)
     );
   }
 
   /**
-   * Run Monte Carlo simulation using configured backend
+   * Run Monte Carlo simulation using FastAPI backend
    */
   async runMonteCarloSimulation(
     userId: string,
@@ -268,29 +145,15 @@ class UnifiedAnalysisService {
     initialInvestment: number = 100000
   ): Promise<AnalysisResult> {
     console.log('🎲 UnifiedAnalysisService runMonteCarloSimulation called with:', { userId, portfolioId, timeHorizonYears, simulations });
-    return await this.executeWithFallback(
+    return await this.executeAnalysis(
       'Monte Carlo simulation',
-      () => {
-        const primary = backendConfig.getPrimaryBackend();
-        if (primary.type === 'fastapi') {
-          return fastAPIClient.runMonteCarloSimulation(userId, portfolioId, timeHorizonYears, simulations, initialInvestment);
-        } else {
-          // MCP doesn't have Monte Carlo yet, use FastAPI as fallback
-          throw new Error('MCP backend does not support Monte Carlo simulation yet');
-        }
-      },
-      () => {
-        // Always use FastAPI for Monte Carlo
-        return fastAPIClient.runMonteCarloSimulation(userId, portfolioId, timeHorizonYears, simulations, initialInvestment);
-      },
-      (data) => {
-        return formatMonteCarloSimulation(data as any);
-      }
+      () => fastAPIClient.runMonteCarloSimulation(userId, portfolioId, timeHorizonYears, simulations, initialInvestment),
+      (data) => formatMonteCarloSimulation(data as any)
     );
   }
 
   /**
-   * Analyze market sentiment using configured backend
+   * Analyze market sentiment using FastAPI backend
    */
   async analyzeMarketSentiment(
     userId: string,
@@ -299,31 +162,17 @@ class UnifiedAnalysisService {
     newsSources: string[] = ['general']
   ): Promise<AnalysisResult> {
     console.log('📰 UnifiedAnalysisService analyzeMarketSentiment called with:', { userId, portfolioId, timeRange, newsSources });
-    return await this.executeWithFallback(
+    return await this.executeAnalysis(
       'market sentiment analysis',
-      () => {
-        const primary = backendConfig.getPrimaryBackend();
-        if (primary.type === 'fastapi') {
-          return fastAPIClient.analyzeMarketSentiment(userId, portfolioId, timeRange, newsSources);
-        } else {
-          // MCP doesn't have sentiment analysis yet, use FastAPI as fallback
-          throw new Error('MCP backend does not support sentiment analysis yet');
-        }
-      },
-      () => {
-        // Always use FastAPI for sentiment analysis
-        return fastAPIClient.analyzeMarketSentiment(userId, portfolioId, timeRange, newsSources);
-      },
-      (data) => {
-        return formatSentimentAnalysis(data as any);
-      }
+      () => fastAPIClient.analyzeMarketSentiment(userId, portfolioId, timeRange, newsSources),
+      (data) => formatSentimentAnalysis(data as any)
     );
   }
 
   /**
    * Analyze a query and route to appropriate backend service
    */
-  async analyzeQuery(query: string, userId: string, portfolios: unknown[] = []): Promise<{ content: string; backend: BackendType }> {
+  async analyzeQuery(query: string, userId: string, portfolios: unknown[] = []): Promise<{ content: string; backend: 'fastapi' }> {
     console.log('🔍 UnifiedAnalysisService analyzeQuery called with:', { query, userId, portfoliosCount: portfolios.length });
     
     const lowerQuery = query.toLowerCase();

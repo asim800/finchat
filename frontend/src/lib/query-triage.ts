@@ -40,7 +40,11 @@ export class QueryTriage {
       // "add some AAPL" - vague quantity (will trigger hybrid)
       /(?:add|buy|purchase)\s+(?:some|few|several|more)\s+(?:shares?\s+of\s+)?([A-Z]{1,5})/i,
       // "add AAPL" - no quantity specified
-      /(?:add|buy|purchase)\s+([A-Z]{1,5})(?:\s+shares?|\s+stock)?/i
+      /(?:add|buy|purchase)\s+([A-Z]{1,5})(?:\s+shares?|\s+stock)?/i,
+      // Company name patterns - "add 5 Nvidia stocks"
+      /(?:add|buy|purchase)\s+(\d+)\s+([A-Za-z\s]+)\s+(?:stocks?|shares?)/i,
+      // "add Nvidia" - company name without quantity
+      /(?:add|buy|purchase)\s+([A-Za-z\s]+)(?:\s+stocks?|\s+shares?)?$/i
     ],
     
     // REMOVE/SELL patterns
@@ -101,9 +105,35 @@ export class QueryTriage {
   // Portfolio name patterns
   private static readonly PORTFOLIO_PATTERNS = [
     /(?:in|from|to)\s+(?:my\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*'?s?)\s+portfolio/i,
-    /(?:in|from|to)\s+(main|default|primary)\s+portfolio/i,
-    /(?:in|from|to)\s+portfolio\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
+    /(?:in|from|to)\s+(main|default|primary|my|ours)\s+portfolio/i,
+    /(?:in|from|to)\s+portfolio\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+    // Handle "my portfolio" directly
+    /(?:my|my\s+own)\s+portfolio/i
   ];
+
+  // Company name to stock symbol mapping
+  private static readonly COMPANY_TO_SYMBOL = {
+    'nvidia': 'NVDA',
+    'apple': 'AAPL',
+    'microsoft': 'MSFT',
+    'google': 'GOOGL',
+    'alphabet': 'GOOGL',
+    'amazon': 'AMZN',
+    'tesla': 'TSLA',
+    'meta': 'META',
+    'facebook': 'META',
+    'netflix': 'NFLX',
+    'advanced micro devices': 'AMD',
+    'intel': 'INTC',
+    'walmart': 'WMT',
+    'disney': 'DIS',
+    'coca cola': 'KO',
+    'pepsi': 'PEP',
+    'mcdonalds': 'MCD',
+    'starbucks': 'SBUX',
+    'nike': 'NKE',
+    'boeing': 'BA'
+  };
 
   static analyzeQuery(query: string): TriageResult {
     const trimmedQuery = query.trim();
@@ -226,9 +256,23 @@ export class QueryTriage {
             symbol = match[1].toUpperCase();
             quantity = undefined; // No numeric quantity for vague patterns
             price = undefined;
+          } else if (match[2] && /^[A-Za-z\s]+$/.test(match[2])) {
+            // Pattern: "add 5 Nvidia stocks" - company name with quantity
+            symbol = this.convertCompanyToSymbol(match[2]);
+            quantity = parseInt(match[1]) || undefined;
+            price = parseFloat(match[3]) || undefined;
+            confidence = 0.85; // Slightly lower confidence for company names
+          } else if (match[1] && /^[A-Za-z\s]+$/.test(match[1])) {
+            // Pattern: "add Nvidia" - company name without quantity
+            symbol = this.convertCompanyToSymbol(match[1]);
+            quantity = undefined;
+            price = undefined;
+            confidence = 0.7; // Lower confidence for company names without quantity
           }
           avgCost = price; // For add operations, price becomes avgCost
-          confidence = quantity ? 0.9 : 0.6; // Lower confidence for vague quantities
+          if (confidence === 0.8) { // Only set default confidence if not already set
+            confidence = quantity ? 0.9 : 0.6; // Lower confidence for vague quantities
+          }
           break;
           
         case 'remove':
@@ -307,10 +351,24 @@ export class QueryTriage {
     for (const pattern of this.PORTFOLIO_PATTERNS) {
       const match = query.match(pattern);
       if (match) {
+        // Handle "my portfolio" and "ours portfolio" cases
+        if (match[1] && (match[1].toLowerCase() === 'my' || match[1].toLowerCase() === 'ours')) {
+          return 'Main Portfolio';
+        }
+        // Handle existing "my portfolio" pattern (standalone) - this pattern has no capture groups
+        if (pattern.source.includes('(?:my|my\\s+own)')) {
+          return 'Main Portfolio';
+        }
         return match[1] || 'main';
       }
     }
     return undefined;
+  }
+
+  // Convert company name to stock symbol
+  private static convertCompanyToSymbol(input: string): string {
+    const cleanInput = input.toLowerCase().trim();
+    return this.COMPANY_TO_SYMBOL[cleanInput] || input.toUpperCase();
   }
 
   // Check if a query needs hybrid processing (regexp + LLM)

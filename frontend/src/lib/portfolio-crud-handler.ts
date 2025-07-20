@@ -145,9 +145,7 @@ export class PortfolioCrudHandler {
         };
       } else if (userId) {
         // Handle authenticated user
-        const portfolio = portfolioName 
-          ? await this.findPortfolioByName(userId, portfolioName)
-          : await PortfolioService.getOrCreateDefaultPortfolio(userId);
+        const { portfolio, fallbackMessage } = await this.findPortfolioWithFallback(userId, portfolioName);
         
         if (!portfolio) {
           return {
@@ -163,9 +161,15 @@ export class PortfolioCrudHandler {
         if (result.success) {
           const valueAdded = avgCost ? quantity * avgCost : 0;
           
+          // Construct message with optional fallback notice
+          let message = `Added ${quantity} shares of ${symbol}${avgCost ? ` at ${formatCurrency(avgCost)}` : ''} to ${portfolio.name} portfolio`;
+          if (fallbackMessage) {
+            message = `${fallbackMessage} ${message}`;
+          }
+          
           return {
             success: true,
-            message: `Added ${quantity} shares of ${symbol}${avgCost ? ` at ${formatCurrency(avgCost)}` : ''} to ${portfolio.name} portfolio`,
+            message,
             data: {
               action: 'add',
               symbol,
@@ -769,6 +773,29 @@ export class PortfolioCrudHandler {
       console.error('Error finding portfolio by name:', error);
       return null;
     }
+  }
+
+  // Helper method to get portfolio with fallback message
+  private static async findPortfolioWithFallback(userId: string, portfolioName?: string): Promise<{portfolio: Portfolio | null, fallbackMessage?: string}> {
+    if (!portfolioName) {
+      const portfolio = await PortfolioService.getOrCreateDefaultPortfolio(userId);
+      return { portfolio };
+    }
+
+    const portfolio = await this.findPortfolioByName(userId, portfolioName);
+    
+    if (!portfolio) {
+      // Try to fall back to default portfolio
+      const defaultPortfolio = await PortfolioService.getOrCreateDefaultPortfolio(userId);
+      if (defaultPortfolio) {
+        return {
+          portfolio: defaultPortfolio,
+          fallbackMessage: `I did not find '${portfolioName}' portfolio. Using ${defaultPortfolio.name} portfolio instead.`
+        };
+      }
+    }
+    
+    return { portfolio };
   }
   
   // Validate if a symbol is likely valid (basic check)

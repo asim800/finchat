@@ -6,7 +6,5 @@ numpy>=1.26.0
 pandas>=2.1.0
 python-multipart>=0.0.6
 scipy>=1.11.0
-requests>=2.32.4
-textblob>=0.18.0
-
-
+textblob>=0.17.1
+requests>=2.32.0

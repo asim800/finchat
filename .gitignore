@@ -61,3 +61,6 @@ pythonscripts/*
 # Note: Python services now in separate repositories
 # MCP server: ./mcp-server/ (still in this repo)
 # FastAPI service: separate fastapi-portfolio-service repository
+
+# Exclude FastAPI service directory (deployed separately)
+services/fastapi-portfolio-service/

@@ -189,13 +189,13 @@ export async function simulateAIResponse(
       const timeHorizon = settings['time horizon'] || settings['time_horizon'] || '10 years';
       
       return {
-        content: `Based on your uploaded preferences:\n\n• **Risk Tolerance**: ${riskLevel}\n• **Time Horizon**: ${timeHorizon}\n• **Investment Goal**: ${settings['investment goal'] || settings['goal'] || 'Long-term growth'}\n\nI can now provide personalized advice that matches your profile. ${isGuestMode ? 'Create an account to save these preferences and get ongoing personalized recommendations!' : 'What specific investment guidance would you like based on these preferences?'}`
+        content: `Based on your uploaded preferences:\n\n• **Risk Tolerance**: ${riskLevel}\n• **Time Horizon**: ${timeHorizon}\n• **Investment Goal**: ${settings['investment goal'] || settings['goal'] || 'Long-term growth'}\n\nI can now provide personalized analysis that matches your profile. ${isGuestMode ? 'Create an account to save these preferences and get ongoing personalized recommendations!' : 'What specific investment guidance would you like based on these preferences?'}`
       };
     }
 
     if (uploadedData.type === 'text' && uploadedData.keywords) {
       return {
-        content: `I've analyzed your uploaded text file and found financial keywords: ${uploadedData.keywords.join(', ')}.\n\nBased on the content, I can help you with personalized advice related to your financial goals and preferences. ${isGuestMode ? 'Sign up to save this context for future conversations!' : 'What specific questions do you have about the information in your file?'}`
+        content: `I've analyzed your uploaded text file and found financial keywords: ${uploadedData.keywords.join(', ')}.\n\nBased on the content, I can help you with personalized analysis related to your financial goals and preferences. ${isGuestMode ? 'Sign up to save this context for future conversations!' : 'What specific questions do you have about the information in your file?'}`
       };
     }
 
@@ -279,7 +279,7 @@ ${isGuestMode ? '\n*Create an account to track your own compound growth!' : ''}`
 
   if (lowerMessage.includes('invest') && isGuestMode) {
     return {
-      content: `For general investment advice, consider these principles:
+      content: `For general investment prompt, consider these principles:
 
 • **Diversify** across different asset classes
 • **Start early** to benefit from compound growth
@@ -321,12 +321,12 @@ ${isGuestMode ? '\n*Sign up to get personalized market insights based on your po
 
   // Default responses
   const defaultResponses = isGuestMode ? [
-    "That's a great financial question! In demo mode, I can provide general information. For personalized advice based on your specific situation, please create an account.",
+    "That's a great financial question! In demo mode, I can provide general information. For personalized analysis based on your specific situation, please create an account.",
     "I'd be happy to help with general financial concepts! For detailed analysis of your personal finances, consider signing up for full access.",
     "Good question! I can share general financial principles here. For comprehensive, personalized guidance, please create an account."
   ] : [
     "I'd be happy to help with that! Could you provide more details about your specific situation?",
-    "That's an interesting question. To give you the best advice, I'd need to know more about your financial goals and current portfolio.",
+    "That's an interesting question. To give you the best information, I'd need to know more about your financial goals and current portfolio.",
     "Great question! Let me help you with that. Do you have any specific timeframes or constraints I should consider?"
   ];
 

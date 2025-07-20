@@ -81,3 +81,7 @@ I want lower risk profile
 I want you to run tests on app to identify specific pain points for the user and suggest potential solutions
 
 ---
+
+At a high level we want to make available esoteric and academic finance to non finannce crowd. We'd like somehow encourage communities and exchage and share of ideas related to portfolios.
+
+Do I have a diverisified portfolio and
