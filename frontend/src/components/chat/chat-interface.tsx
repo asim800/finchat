@@ -13,6 +13,7 @@ import { ChartDisplay } from './chart-display';
 import { FileProcessor } from './file-processor';
 import { useChatAPI } from '@/hooks/use-chat-api';
 import { useScrollManager } from '@/hooks/useScrollManager';
+import { useChatHistory } from '@/hooks/useChatHistory';
 import { simulateAIResponse } from '@/lib/chat-simulation';
 import { generateGuestSessionId, GuestPortfolioService } from '@/lib/guest-portfolio';
 import { conversationAnalytics, trackChatMessage, trackChatResponse } from '@/lib/conversation-analytics';
@@ -47,6 +48,18 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
   const [guestSessionId] = useState<string>(() => generateGuestSessionId());
   
   const { sendMessage, loadLatestSession, loadMoreMessages, isLoading } = useChatAPI();
+  
+  // Chat history navigation hook
+  const {
+    addToHistory,
+    navigateHistory,
+    getNavigationState,
+    isNavigating
+  } = useChatHistory({
+    maxHistorySize: 100,
+    storageKey: `chat-history-${isGuestMode ? guestSessionId : userId || 'default'}`,
+    enablePersistence: true
+  });
 
   // Load more messages handler for scroll manager
   const handleLoadMore = useCallback(async () => {
@@ -214,6 +227,10 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
 
     setMessages(prev => [...prev, userMessage]);
     const currentInput = inputValue;
+    
+    // Add message to history for navigation
+    addToHistory(currentInput);
+    
     setInputValue('');
 
     try {
@@ -372,6 +389,14 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const newValue = navigateHistory('up', inputValue);
+      setInputValue(newValue);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const newValue = navigateHistory('down', inputValue);
+      setInputValue(newValue);
     }
   };
 
@@ -524,14 +549,27 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
         )}
         
         <div className="flex space-x-2">
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder={uploadedData ? "Ask about your data..." : "Ask me anything..."}
-            className="flex-1"
-            disabled={isLoading}
-          />
+          <div className="relative flex-1">
+            <Input
+              value={inputValue}
+              onChange={(e) => {
+                // Only update if not currently navigating
+                if (!isNavigating()) {
+                  setInputValue(e.target.value);
+                }
+              }}
+              onKeyDown={handleKeyPress}
+              placeholder={uploadedData ? "Ask about your data..." : "Ask me anything..."}
+              className="flex-1"
+              disabled={isLoading}
+            />
+            {/* History navigation indicator */}
+            {getNavigationState().isNavigating && (
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                ↑↓ {getNavigationState().currentIndex + 1}/{getNavigationState().historyLength}
+              </div>
+            )}
+          </div>
           <Button 
             onClick={handleSend} 
             disabled={!inputValue.trim() || isLoading}
@@ -540,6 +578,11 @@ const ChatInterfaceComponent: React.FC<ChatInterfaceProps> = ({ isGuestMode = fa
           >
             Send
           </Button>
+        </div>
+        
+        {/* Keyboard shortcuts hint */}
+        <div className="text-xs text-gray-400 mt-2 text-center">
+          Press ↑↓ to navigate history • Enter to send • Shift+Enter for new line
         </div>
       </div>
     </div>
