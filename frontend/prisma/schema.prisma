@@ -192,3 +192,21 @@ model FinancialTerm {
   
   @@map("financial_terms")
 }
+
+// Asset Metrics/Description Models
+model AssetMetrics {
+  id            String   @id @default(cuid())
+  symbol        String   @unique
+  beta          Float?
+  volatility    Float?
+  peRatio       Float?
+  dividendYield Float?
+  eps           Float?
+  marketCap     Float?
+  sector        String?
+  industry      String?
+  lastUpdated   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  
+  @@map("asset_metrics")
+}

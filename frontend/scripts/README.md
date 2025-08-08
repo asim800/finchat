@@ -1,8 +1,50 @@
-# Price Update Scripts
+# Scripts Directory - Operational Scripts
+
+This directory contains **operational scripts** for the Finance App that users and administrators run.
+
+## 📁 Script Organization
+
+### `/scripts/` (This Directory) - **Production/Operational Scripts**
+- Scripts for data management and operations
+- Run via `npm run` commands  
+- Used by administrators and in production
+
+### `/src/scripts/` - **Development/Testing Scripts**
+- Development tools and testing utilities
+- Run directly during development
+- Used by developers for debugging and testing
+
+## 🚀 Available Operational Scripts
+
+### Price Management
+```bash
+npm run update-prices          # Simple price update with hardcoded values
+npm run update-prices-advanced # Advanced price update with JSON config
+npm run check-prices           # Check current price data
+npm run clear-prices           # Clear historical price data
+```
+
+### Asset Metrics
+```bash
+npm run populate-metrics       # Populate sample asset metrics (API-based)
+npm run populate-metrics-db    # Populate sample asset metrics (direct DB)
+```
+
+### Data Export
+```bash
+npm run test-csv              # Test CSV export functionality
+```
+
+### Integration Testing  
+```bash
+npm run test-langgraph        # Test LangGraph integration
+```
+
+---
+
+## 💰 Price Update Scripts
 
 Scripts for manually updating historical price data in the database.
-
-## Quick Start
 
 ### Simple Price Update
 ```bash
@@ -132,42 +174,21 @@ Updates the `historical_prices` table with:
 }
 ```
 
-### Mixed Portfolio
-```json
-{
-  "assets": [
-    { "symbol": "SPY", "price": 493.52, "assetType": "etf" },
-    { "symbol": "AAPL", "price": 195.89, "assetType": "stock" },
-    { "symbol": "BTC-USD", "price": 43250.75, "assetType": "crypto" }
-  ]
-}
+---
+
+## 📊 Asset Metrics Scripts
+
+### Sample Data Population
+```bash
+npm run populate-metrics       # Via API (requires auth)
+npm run populate-metrics-db    # Direct database access
 ```
 
-## Output Example
+Populates sample financial metrics (Beta, P/E Ratio, Dividend Yield, etc.) for common stocks like AAPL, MSFT, GOOGL, TSLA, NVDA.
 
-```
-🚀 Starting historical price update...
-📅 Using date: 2024-07-04T00:00:00.000Z
-📊 Processing 3 assets
-────────────────────────────────────────────────────────────
-🔄 Processing AAPL...
-✅ AAPL: Updated $194.50 → $195.89
-🔄 Processing GOOGL...
-🆕 GOOGL: Created new price record at $140.34
-🔄 Processing MSFT...
-⏭️  MSFT: Price unchanged ($378.85), skipping
-────────────────────────────────────────────────────────────
-📈 Price Update Summary:
-✅ Updated: 1
-🆕 Created: 1
-⏭️  Skipped: 1
-❌ Errors: 0
-📊 Total Processed: 3
+---
 
-🎉 All assets processed successfully!
-```
-
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues
 
@@ -193,4 +214,5 @@ Updates the `historical_prices` table with:
 Add more logging by editing the scripts or check the database directly:
 ```sql
 SELECT * FROM historical_prices WHERE date >= '2024-07-04' ORDER BY date DESC;
+SELECT * FROM asset_metrics ORDER BY symbol;
 ```

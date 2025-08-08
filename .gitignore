@@ -64,3 +64,6 @@ pythonscripts/*
 
 # Exclude FastAPI service directory (deployed separately)
 services/fastapi-portfolio-service/
+finapp_notes.txt
+finapp_summ.txt
+

@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { generateGuestSessionId } from '@/lib/guest-portfolio';
 import { formatPurchaseDate } from '@/lib/tax-utils';
 import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
@@ -43,7 +43,21 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
   showSummary = true 
 }) => {
   const [guestSessionId] = useState<string>(() => generateGuestSessionId());
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const { showAssetAddError, showNetworkError, showValidationError, clearErrors } = useErrorSystem();
+
+  // Toggle row expansion
+  const toggleRowExpansion = useCallback((assetId: string) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(assetId)) {
+        newSet.delete(assetId);
+      } else {
+        newSet.add(assetId);
+      }
+      return newSet;
+    });
+  }, []);
 
   // Simplified state management with useReducer
   const portfolioState = usePortfolioState(initialAssets, onAssetsChange);
@@ -871,6 +885,99 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         </div>
                       </div>
                     )}
+
+                    
+                    {/* Expand metrics button (mobile) */}
+                    {asset.metrics && (
+                      <div className="pt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleRowExpansion(asset.id)}
+                          className="w-full justify-between text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <span className="text-sm">View Financial Metrics</span>
+                          {expandedRows.has(asset.id) ? (
+                            <ChevronDown className="h-4 w-4" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Expanded metrics (mobile) */}
+                    {expandedRows.has(asset.id) && asset.metrics && (
+                      <div className="mt-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <h5 className="text-sm font-medium text-blue-900">Financial Metrics</h5>
+                          {asset.metrics.sector && (
+                            <Badge variant="secondary" className="text-xs">
+                              {asset.metrics.sector}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          {asset.metrics.beta !== null && (
+                            <div className="bg-white rounded-md p-3 text-center">
+                              <div className="text-xs text-gray-500 mb-1">Beta</div>
+                              <div className="text-lg font-semibold text-gray-900">
+                                {asset.metrics.beta.toFixed(2)}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {asset.metrics.peRatio !== null && (
+                            <div className="bg-white rounded-md p-3 text-center">
+                              <div className="text-xs text-gray-500 mb-1">P/E Ratio</div>
+                              <div className="text-lg font-semibold text-gray-900">
+                                {asset.metrics.peRatio.toFixed(1)}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {asset.metrics.dividendYield !== null && (
+                            <div className="bg-white rounded-md p-3 text-center">
+                              <div className="text-xs text-gray-500 mb-1">Dividend</div>
+                              <div className="text-lg font-semibold text-green-600">
+                                {(asset.metrics.dividendYield * 100).toFixed(1)}%
+                              </div>
+                            </div>
+                          )}
+                          
+                          {asset.metrics.eps !== null && (
+                            <div className="bg-white rounded-md p-3 text-center">
+                              <div className="text-xs text-gray-500 mb-1">EPS</div>
+                              <div className="text-lg font-semibold text-gray-900">
+                                ${asset.metrics.eps.toFixed(2)}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {asset.metrics.volatility !== null && (
+                            <div className="bg-white rounded-md p-3 text-center col-span-2">
+                              <div className="text-xs text-gray-500 mb-1">Volatility</div>
+                              <div className="text-lg font-semibold text-orange-600">
+                                {(asset.metrics.volatility * 100).toFixed(1)}%
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {(asset.metrics.industry || asset.metrics.marketCap) && (
+                          <div className="mt-3 pt-3 border-t border-blue-200 text-xs text-blue-700">
+                            {asset.metrics.industry && (
+                              <div className="mb-1"><span className="font-medium">Industry:</span> {asset.metrics.industry}</div>
+                            )}
+                            {asset.metrics.marketCap !== null && (
+                              <div className="mb-1"><span className="font-medium">Market Cap:</span> ${(asset.metrics.marketCap / 1000000000).toFixed(1)}B</div>
+                            )}
+                            <div><span className="font-medium">Updated:</span> {new Date(asset.metrics.lastUpdated).toLocaleDateString()}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     <div className="flex space-x-2 pt-2">
                       <Button
@@ -902,6 +1009,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12"></TableHead>
                 <TableHead>Symbol</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Current Price</TableHead>
@@ -915,7 +1023,24 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
             </TableHeader>
             <TableBody>
               {assets.map((asset) => (
-                <TableRow key={asset.id}>
+                <React.Fragment key={asset.id}>
+                  <TableRow className="group">
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleRowExpansion(asset.id)}
+                        className="h-8 w-8 p-0 hover:bg-gray-100"
+                        disabled={!asset.metrics}
+                        title={asset.metrics ? 'Click to view financial metrics' : 'No financial metrics available'}
+                      >
+                        {expandedRows.has(asset.id) && asset.metrics ? (
+                          <ChevronDown className="h-4 w-4 text-gray-600" />
+                        ) : (
+                          <ChevronRight className={`h-4 w-4 ${asset.metrics ? 'text-gray-600' : 'text-gray-300'}`} />
+                        )}
+                      </Button>
+                    </TableCell>
                   <TableCell>
                     {renderEditableSymbolCell(asset)}
                   </TableCell>
@@ -978,6 +1103,90 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     {renderActionButtons(asset)}
                   </TableCell>
                 </TableRow>
+                
+                {/* Expanded Metrics Row */}
+                {expandedRows.has(asset.id) && asset.metrics && (
+                  <TableRow className="bg-gray-50/50">
+                    <TableCell></TableCell>
+                    <TableCell colSpan={9} className="p-0">
+                      <div className="px-6 py-4 border-l-4 border-blue-200">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-sm font-medium text-gray-900">Financial Metrics - {asset.symbol}</h4>
+                          {asset.metrics.sector && (
+                            <Badge variant="secondary" className="text-xs">
+                              {asset.metrics.sector}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                          {asset.metrics.beta !== null && (
+                            <div className="bg-white rounded-lg p-3 border border-gray-200">
+                              <div className="text-xs font-medium text-gray-500 mb-1">Beta</div>
+                              <div className="text-lg font-semibold text-gray-900">
+                                {asset.metrics.beta.toFixed(2)}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">Market risk</div>
+                            </div>
+                          )}
+                          
+                          {asset.metrics.peRatio !== null && (
+                            <div className="bg-white rounded-lg p-3 border border-gray-200">
+                              <div className="text-xs font-medium text-gray-500 mb-1">P/E Ratio</div>
+                              <div className="text-lg font-semibold text-gray-900">
+                                {asset.metrics.peRatio.toFixed(1)}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">Price to earnings</div>
+                            </div>
+                          )}
+                          
+                          {asset.metrics.dividendYield !== null && (
+                            <div className="bg-white rounded-lg p-3 border border-gray-200">
+                              <div className="text-xs font-medium text-gray-500 mb-1">Dividend Yield</div>
+                              <div className="text-lg font-semibold text-green-600">
+                                {(asset.metrics.dividendYield * 100).toFixed(1)}%
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">Annual dividend</div>
+                            </div>
+                          )}
+                          
+                          {asset.metrics.eps !== null && (
+                            <div className="bg-white rounded-lg p-3 border border-gray-200">
+                              <div className="text-xs font-medium text-gray-500 mb-1">EPS</div>
+                              <div className="text-lg font-semibold text-gray-900">
+                                ${asset.metrics.eps.toFixed(2)}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">Earnings per share</div>
+                            </div>
+                          )}
+                          
+                          {asset.metrics.volatility !== null && (
+                            <div className="bg-white rounded-lg p-3 border border-gray-200">
+                              <div className="text-xs font-medium text-gray-500 mb-1">Volatility</div>
+                              <div className="text-lg font-semibold text-orange-600">
+                                {(asset.metrics.volatility * 100).toFixed(1)}%
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">Price volatility</div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {(asset.metrics.industry || asset.metrics.marketCap) && (
+                          <div className="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-600 space-y-1">
+                            {asset.metrics.industry && (
+                              <div><span className="font-medium">Industry:</span> {asset.metrics.industry}</div>
+                            )}
+                            {asset.metrics.marketCap !== null && (
+                              <div><span className="font-medium">Market Cap:</span> ${(asset.metrics.marketCap / 1000000000).toFixed(1)}B</div>
+                            )}
+                            <div><span className="font-medium">Last Updated:</span> {new Date(asset.metrics.lastUpdated).toLocaleDateString()}</div>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>

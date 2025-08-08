@@ -6,6 +6,7 @@
 import { prisma } from './db';
 import { ParsedAsset } from './portfolio-parser';
 import { HistoricalPriceService } from './historical-price-service';
+import { AssetMetricsService, AssetMetrics } from './asset-metrics-service';
 
 export interface Portfolio {
   id: string;
@@ -33,9 +34,25 @@ export interface Asset {
   optionType?: string | null;
   expirationDate?: Date | null;
   strikePrice?: number | null;
+  
+  // Asset metrics
+  metrics?: AssetMetrics | null;
 }
 
 export class PortfolioService {
+  
+  // Helper method to enrich assets with metrics data
+  private static async enrichAssetsWithMetrics(assets: any[]): Promise<Asset[]> {
+    if (assets.length === 0) return [];
+
+    const symbols = assets.map(asset => asset.symbol);
+    const metricsMap = await AssetMetricsService.getMetricsForSymbols(symbols);
+
+    return assets.map(asset => ({
+      ...asset,
+      metrics: metricsMap[asset.symbol.toUpperCase()] || null
+    }));
+  }
   
   // Get user's portfolios with main portfolio always first
   static async getUserPortfolios(userId: string): Promise<Portfolio[]> {
@@ -47,12 +64,18 @@ export class PortfolioService {
       orderBy: { createdAt: 'asc' }
     });
 
-    const portfoliosWithValue = portfolios.map(portfolio => ({
-      ...portfolio,
-      totalValue: portfolio.assets.reduce((sum, asset) => {
-        return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
-      }, 0)
-    }));
+    const portfoliosWithValue = await Promise.all(
+      portfolios.map(async (portfolio) => {
+        const assetsWithMetrics = await this.enrichAssetsWithMetrics(portfolio.assets);
+        return {
+          ...portfolio,
+          assets: assetsWithMetrics,
+          totalValue: portfolio.assets.reduce((sum, asset) => {
+            return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
+          }, 0)
+        };
+      })
+    );
 
     // Sort to ensure main portfolio (with user's first name or "Main Portfolio") comes first
     return portfoliosWithValue.sort((a, b) => {
@@ -100,8 +123,11 @@ export class PortfolioService {
       });
     }
 
+    const assetsWithMetrics = await this.enrichAssetsWithMetrics(portfolio.assets);
+    
     return {
       ...portfolio,
+      assets: assetsWithMetrics,
       totalValue: portfolio.assets.reduce((sum, asset) => {
         return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
       }, 0)
@@ -531,8 +557,11 @@ export class PortfolioService {
       const symbols = portfolio.assets.map(asset => asset.symbol);
       const priceMap = await HistoricalPriceService.getLatestPricesForSymbols(symbols);
       
+      // Get metrics for all assets
+      const assetsWithMetrics = await this.enrichAssetsWithMetrics(portfolio.assets);
+      
       // Calculate market values
-      const assetsWithMarketValue = portfolio.assets.map(asset => {
+      const assetsWithMarketValue = assetsWithMetrics.map(asset => {
         const marketPrice = priceMap[asset.symbol.toUpperCase()];
         return {
           ...asset,
