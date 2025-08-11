@@ -1,0 +1,211 @@
+<svg viewBox="0 0 1400 900" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1400" height="900" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" font-size="24" font-weight="bold" fill="#1e293b">LangGraph.js Hybrid Architecture</text>
+  <text x="700" y="55" text-anchor="middle" font-size="14" fill="#6b7280">Smart Client + Backend Orchestration</text>
+  
+  <!-- Frontend Section -->
+  <rect x="50" y="90" width="600" height="380" rx="15" fill="#e0f2fe" stroke="#0369a1" stroke-width="3"/>
+  <text x="350" y="120" text-anchor="middle" font-size="20" font-weight="bold" fill="#0369a1">Frontend (Browser)</text>
+  
+  <!-- Frontend App -->
+  <rect x="80" y="140" width="250" height="120" rx="10" fill="#fff" stroke="#0369a1" stroke-width="2"/>
+  <text x="205" y="165" text-anchor="middle" font-size="16" font-weight="bold" fill="#0369a1">UI Application</text>
+  <text x="205" y="185" text-anchor="middle" font-size="11" fill="#0369a1">• React/Vue/Svelte</text>
+  <text x="205" y="200" text-anchor="middle" font-size="11" fill="#0369a1">• Real-time Updates</text>
+  <text x="205" y="215" text-anchor="middle" font-size="11" fill="#0369a1">• WebSocket Client</text>
+  <text x="205" y="230" text-anchor="middle" font-size="11" fill="#0369a1">• Local State Mgmt</text>
+  <text x="205" y="245" text-anchor="middle" font-size="11" fill="#0369a1">• Responsive Design</text>
+  
+  <!-- Frontend LangGraph -->
+  <rect x="360" y="140" width="260" height="120" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="490" y="165" text-anchor="middle" font-size="16" font-weight="bold" fill="#f59e0b">LangGraph.js Client</text>
+  <text x="490" y="185" text-anchor="middle" font-size="11" fill="#f59e0b">• UI Flow Orchestration</text>
+  <text x="490" y="200" text-anchor="middle" font-size="11" fill="#f59e0b">• Local Processing</text>
+  <text x="490" y="215" text-anchor="middle" font-size="11" fill="#f59e0b">• Simple Tool Calls</text>
+  <text x="490" y="230" text-anchor="middle" font-size="11" fill="#f59e0b">• Streaming Handlers</text>
+  <text x="490" y="245" text-anchor="middle" font-size="11" fill="#f59e0b">• Client-side Routing</text>
+  
+  <!-- Local Storage -->
+  <rect x="80" y="280" width="180" height="80" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1"/>
+  <text x="170" y="305" text-anchor="middle" font-size="14" font-weight="bold" fill="#16a34a">Local Storage</text>
+  <text x="170" y="325" text-anchor="middle" font-size="11" fill="#16a34a">• Session State</text>
+  <text x="170" y="340" text-anchor="middle" font-size="11" fill="#16a34a">• User Preferences</text>
+  <text x="170" y="355" text-anchor="middle" font-size="11" fill="#16a34a">• Cache</text>
+  
+  <!-- Client Tools -->
+  <rect x="280" y="280" width="180" height="80" rx="8" fill="#fdf2f8" stroke="#ec4899" stroke-width="1"/>
+  <text x="370" y="305" text-anchor="middle" font-size="14" font-weight="bold" fill="#ec4899">Client Tools</text>
+  <text x="370" y="325" text-anchor="middle" font-size="11" fill="#ec4899">• File Upload</text>
+  <text x="370" y="340" text-anchor="middle" font-size="11" fill="#ec4899">• Document Processing</text>
+  <text x="370" y="355" text-anchor="middle" font-size="11" fill="#ec4899">• Browser APIs</text>
+  
+  <!-- Routing Logic -->
+  <rect x="480" y="280" width="140" height="80" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1"/>
+  <text x="550" y="305" text-anchor="middle" font-size="14" font-weight="bold" fill="#6b7280">Smart Routing</text>
+  <text x="550" y="325" text-anchor="middle" font-size="11" fill="#6b7280">• Local vs Remote</text>
+  <text x="550" y="340" text-anchor="middle" font-size="11" fill="#6b7280">• Complexity Detection</text>
+  <text x="550" y="355" text-anchor="middle" font-size="11" fill="#6b7280">• Fallback Logic</text>
+  
+  <!-- Communication Layer -->
+  <rect x="80" y="380" width="540" height="70" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="350" y="405" text-anchor="middle" font-size="16" font-weight="bold" fill="#64748b">Communication Layer</text>
+  <text x="200" y="430" text-anchor="middle" font-size="12" fill="#64748b">WebSocket</text>
+  <text x="350" y="430" text-anchor="middle" font-size="12" fill="#64748b">REST API</text>
+  <text x="500" y="430" text-anchor="middle" font-size="12" fill="#64748b">Server-Sent Events</text>
+  
+  <!-- Backend Section -->
+  <rect x="750" y="90" width="600" height="500" rx="15" fill="#fef2f2" stroke="#ef4444" stroke-width="3"/>
+  <text x="1050" y="120" text-anchor="middle" font-size="20" font-weight="bold" fill="#ef4444">Backend (Server)</text>
+  
+  <!-- API Gateway -->
+  <rect x="780" y="140" width="200" height="100" rx="10" fill="#fff" stroke="#ef4444" stroke-width="2"/>
+  <text x="880" y="165" text-anchor="middle" font-size="16" font-weight="bold" fill="#ef4444">API Gateway</text>
+  <text x="880" y="185" text-anchor="middle" font-size="11" fill="#ef4444">• Authentication</text>
+  <text x="880" y="200" text-anchor="middle" font-size="11" fill="#ef4444">• Rate Limiting</text>
+  <text x="880" y="215" text-anchor="middle" font-size="11" fill="#ef4444">• Request Routing</text>
+  <text x="880" y="230" text-anchor="middle" font-size="11" fill="#ef4444">• CORS Handling</text>
+  
+  <!-- Backend LangGraph -->
+  <rect x="1010" y="140" width="320" height="100" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="1170" y="165" text-anchor="middle" font-size="16" font-weight="bold" fill="#f59e0b">LangGraph Backend Engine</text>
+  <text x="1170" y="185" text-anchor="middle" font-size="11" fill="#f59e0b">• Complex Workflow Orchestration</text>
+  <text x="1170" y="200" text-anchor="middle" font-size="11" fill="#f59e0b">• Multi-Agent Coordination</text>
+  <text x="1170" y="215" text-anchor="middle" font-size="11" fill="#f59e0b">• Business Logic Processing</text>
+  <text x="1170" y="230" text-anchor="middle" font-size="11" fill="#f59e0b">• Long-running Tasks</text>
+  
+  <!-- LLM Services -->
+  <rect x="780" y="260" width="250" height="120" rx="8" fill="#fdf2f8" stroke="#ec4899" stroke-width="2"/>
+  <text x="905" y="285" text-anchor="middle" font-size="14" font-weight="bold" fill="#ec4899">LLM Services</text>
+  <text x="830" y="310" text-anchor="middle" font-size="11" fill="#ec4899">OpenAI</text>
+  <text x="905" y="310" text-anchor="middle" font-size="11" fill="#ec4899">Anthropic</text>
+  <text x="980" y="310" text-anchor="middle" font-size="11" fill="#ec4899">Local Models</text>
+  
+  <rect x="795" y="325" width="60" height="25" rx="5" fill="#fff" stroke="#ec4899"/>
+  <text x="825" y="342" text-anchor="middle" font-size="9" fill="#ec4899">GPT-4</text>
+  
+  <rect x="870" y="325" width="60" height="25" rx="5" fill="#fff" stroke="#ec4899"/>
+  <text x="900" y="342" text-anchor="middle" font-size="9" fill="#ec4899">Claude</text>
+  
+  <rect x="945" y="325" width="60" height="25" rx="5" fill="#fff" stroke="#ec4899"/>
+  <text x="975" y="342" text-anchor="middle" font-size="9" fill="#ec4899">Llama</text>
+  
+  <text x="905" y="365" text-anchor="middle" font-size="10" fill="#ec4899">• Secure API Key Management</text>
+  
+  <!-- Backend Tools -->
+  <rect x="1050" y="260" width="280" height="120" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <text x="1190" y="285" text-anchor="middle" font-size="14" font-weight="bold" fill="#16a34a">Backend Tools n Integrations</text>
+  <text x="1110" y="310" text-anchor="middle" font-size="11" fill="#16a34a">Vector DB</text>
+  <text x="1190" y="310" text-anchor="middle" font-size="11" fill="#16a34a">External APIs</text>
+  <text x="1270" y="310" text-anchor="middle" font-size="11" fill="#16a34a">File Processing</text>
+  
+  <rect x="1065" y="325" width="70" height="25" rx="5" fill="#fff" stroke="#16a34a"/>
+  <text x="1100" y="342" text-anchor="middle" font-size="9" fill="#16a34a">Pinecone</text>
+  
+  <rect x="1150" y="325" width="70" height="25" rx="5" fill="#fff" stroke="#16a34a"/>
+  <text x="1185" y="342" text-anchor="middle" font-size="9" fill="#16a34a">Webhooks</text>
+  
+  <rect x="1235" y="325" width="70" height="25" rx="5" fill="#fff" stroke="#16a34a"/>
+  <text x="1270" y="342" text-anchor="middle" font-size="9" fill="#16a34a">PDF/OCR</text>
+  
+  <text x="1190" y="365" text-anchor="middle" font-size="10" fill="#16a34a">• Database Operations • Background Jobs</text>
+  
+  <!-- Data Layer -->
+  <rect x="780" y="400" width="550" height="100" rx="8" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+  <text x="1055" y="425" text-anchor="middle" font-size="14" font-weight="bold" fill="#64748b">Data n Persistence Layer</text>
+  <text x="850" y="450" text-anchor="middle" font-size="11" fill="#64748b">PostgreSQL</text>
+  <text x="950" y="450" text-anchor="middle" font-size="11" fill="#64748b">Redis Cache</text>
+  <text x="1050" y="450" text-anchor="middle" font-size="11" fill="#64748b">Vector Store</text>
+  <text x="1150" y="450" text-anchor="middle" font-size="11" fill="#64748b">File Storage</text>
+  <text x="1250" y="450" text-anchor="middle" font-size="11" fill="#64748b">Analytics</text>
+  
+  <text x="950" y="475" text-anchor="middle" font-size="10" fill="#64748b">• User Sessions • Conversation History</text>
+  <text x="1150" y="475" text-anchor="middle" font-size="10" fill="#64748b">• Knowledge Base • Usage Metrics</text>
+  
+  <!-- Monitoring -->
+  <rect x="780" y="520" width="550" height="60" rx="8" fill="#fefce8" stroke="#eab308" stroke-width="2"/>
+  <text x="1055" y="545" text-anchor="middle" font-size="14" font-weight="bold" fill="#eab308">Monitoring n Observability</text>
+  <text x="900" y="565" text-anchor="middle" font-size="11" fill="#eab308">Error Tracking</text>
+  <text x="1055" y="565" text-anchor="middle" font-size="11" fill="#eab308">Performance Metrics</text>
+  <text x="1210" y="565" text-anchor="middle" font-size="11" fill="#eab308">Usage Analytics</text>
+  
+  <!-- Decision Flow -->
+  <rect x="50" y="620" width="1300" height="220" rx="15" fill="#f0f9ff" stroke="#0284c7" stroke-width="2"/>
+  <text x="700" y="650" text-anchor="middle" font-size="18" font-weight="bold" fill="#0284c7">Smart Routing Decision Flow</text>
+  
+  <!-- Decision boxes -->
+  <rect x="80" y="670" width="150" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="155" y="690" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">User Input</text>
+  <text x="155" y="710" text-anchor="middle" font-size="10" fill="#1d4ed8">• Message received</text>
+  <text x="155" y="725" text-anchor="middle" font-size="10" fill="#1d4ed8">• Context analyzed</text>
+  
+  <rect x="280" y="670" width="150" height="60" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+  <text x="355" y="690" text-anchor="middle" font-size="11" font-weight="bold" fill="#d97706">Complexity Check</text>
+  <text x="355" y="710" text-anchor="middle" font-size="10" fill="#d97706">• Simple QA?</text>
+  <text x="355" y="725" text-anchor="middle" font-size="10" fill="#d97706">• Needs external data?</text>
+  
+  <rect x="480" y="670" width="150" height="60" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1"/>
+  <text x="555" y="690" text-anchor="middle" font-size="11" font-weight="bold" fill="#15803d">Handle Locally</text>
+  <text x="555" y="710" text-anchor="middle" font-size="10" fill="#15803d">• Quick responses</text>
+  <text x="555" y="725" text-anchor="middle" font-size="10" fill="#15803d">• UI interactions</text>
+  
+  <rect x="680" y="670" width="150" height="60" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+  <text x="755" y="690" text-anchor="middle" font-size="11" font-weight="bold" fill="#dc2626">Route to Backend</text>
+  <text x="755" y="710" text-anchor="middle" font-size="10" fill="#dc2626">• Complex workflows</text>
+  <text x="755" y="725" text-anchor="middle" font-size="10" fill="#dc2626">• External integrations</text>
+  
+  <rect x="880" y="670" width="150" height="60" rx="8" fill="#f3e8ff" stroke="#a855f7" stroke-width="1"/>
+  <text x="955" y="690" text-anchor="middle" font-size="11" font-weight="bold" fill="#9333ea">Stream Response</text>
+  <text x="955" y="710" text-anchor="middle" font-size="10" fill="#9333ea">• Real-time updates</text>
+  <text x="955" y="725" text-anchor="middle" font-size="10" fill="#9333ea">• Progress indicators</text>
+  
+  <rect x="1080" y="670" width="150" height="60" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1"/>
+  <text x="1155" y="690" text-anchor="middle" font-size="11" font-weight="bold" fill="#059669">Update UI</text>
+  <text x="1155" y="710" text-anchor="middle" font-size="10" fill="#059669">• Display results</text>
+  <text x="1155" y="725" text-anchor="middle" font-size="10" fill="#059669">• Update state</text>
+  
+  <!-- Decision flow arrows -->
+  <path d="M 230 700 L 280 700" stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 430 700 L 480 700" stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 430 700 L 680 700" stroke="#ef4444" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 830 700 L 880 700" stroke="#a855f7" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 1030 700 L 1080 700" stroke="#10b981" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Labels for decision paths -->
+  <text x="455" y="690" text-anchor="middle" font-size="9" fill="#16a34a">Simple</text>
+  <text x="555" y="690" text-anchor="middle" font-size="9" fill="#ef4444">Complex</text>
+  
+  <!-- Examples -->
+  <rect x="80" y="760" width="400" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="280" y="780" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Frontend Handles:</text>
+  <text x="280" y="800" text-anchor="middle" font-size="10" fill="#64748b">• UI state changes • File uploads • Simple QA</text>
+  <text x="280" y="815" text-anchor="middle" font-size="10" fill="#64748b">• Form validation • Local search • Quick responses</text>
+  
+  <rect x="520" y="760" width="400" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="720" y="780" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Backend Handles:</text>
+  <text x="720" y="800" text-anchor="middle" font-size="10" fill="#64748b">• LLM API calls • Database queries • Complex workflows</text>
+  <text x="720" y="815" text-anchor="middle" font-size="10" fill="#64748b">• Authentication • External APIs • Long computations</text>
+  
+  <rect x="960" y="760" width="400" height="60" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="1160" y="780" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Hybrid Benefits:</text>
+  <text x="1160" y="800" text-anchor="middle" font-size="10" fill="#64748b">• Responsive UX • Secure operations • Scalable</text>
+  <text x="1160" y="815" text-anchor="middle" font-size="10" fill="#64748b">• Cost efficient • Progressive enhancement</text>
+  
+  <!-- Main connection arrows -->
+  <path d="M 350 470 L 350 620" stroke="#0284c7" stroke-width="3" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="10,5"/>
+  <path d="M 650 415 L 750 415" stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 750 200 L 650 200" stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#374151"/>
+    </marker>
+  </defs>
+  
+  <!-- Connection labels -->
+  <text x="700" y="180" text-anchor="middle" font-size="12" font-weight="bold" fill="#64748b">WebSocket/SSE</text>
+  <text x="700" y="435" text-anchor="middle" font-size="12" font-weight="bold" fill="#64748b">REST API</text>
+</svg>
