@@ -134,7 +134,8 @@ export async function POST(request: NextRequest) {
         user?.id, 
         guestSessionId, 
         chatSession,
-        isGuestMode
+        isGuestMode,
+        triageResult.metadata?.analysisData
       );
     }
 
@@ -184,18 +185,25 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Enhanced chart generation function with real portfolio data
+// Enhanced chart generation function with real portfolio data and FastAPI figures
 async function checkForChartGeneration(
   userMessage: string, 
   aiResponse: string, 
   userId?: string,
   guestSessionId?: string,
   chatSession?: { id: string; existingMessages?: unknown[] } | null,
-  isGuestMode: boolean = false
+  isGuestMode: boolean = false,
+  analysisData?: unknown
 ): Promise<{
-  type: string;
+  type: 'pie' | 'bar' | 'figure';
   title: string;
-  data: Array<{ name: string; value: number }>;
+  data?: Array<{ name: string; value: number }>;
+  figureData?: {
+    type: 'svg' | 'interactive';
+    content: string;
+    width?: number;
+    height?: number;
+  };
 } | null> {
   
   // Explicit chart request keywords
@@ -230,7 +238,24 @@ async function checkForChartGeneration(
 
   if (shouldShowChart) {
     try {
-      // Get real portfolio data
+      // Check if we have FastAPI figure data from analysis results
+      const figureData = extractFigureDataFromAnalysis(analysisData);
+      
+      if (figureData) {
+        // Return FastAPI-generated figure
+        return {
+          type: 'figure',
+          title: figureData.title,
+          figureData: {
+            type: figureData.type as 'svg' | 'interactive',
+            content: figureData.content,
+            width: figureData.width,
+            height: figureData.height
+          }
+        };
+      }
+      
+      // Fallback to traditional portfolio chart
       const portfolioData = await getRealPortfolioData(userId, guestSessionId, isGuestMode);
       
       if (portfolioData && portfolioData.length > 0) {
@@ -255,6 +280,45 @@ async function checkForChartGeneration(
     }
   }
 
+  return null;
+}
+
+// Helper function to extract figure data from analysis results
+function extractFigureDataFromAnalysis(analysisData?: unknown): {
+  type: string;
+  content: string;
+  title: string;
+  width?: number;
+  height?: number;
+} | null {
+  if (!analysisData || typeof analysisData !== 'object') {
+    return null;
+  }
+
+  const analysis = analysisData as any;
+  
+  // Check if analysis has figure_data
+  if (analysis.figure_data && analysis.figure_data.content) {
+    // Determine appropriate title based on analysis type
+    let title = 'Financial Analysis Dashboard';
+    
+    if (analysis.totalValue !== undefined) {
+      title = 'Portfolio Risk Analysis Dashboard';
+    } else if (analysis.simulations_run !== undefined) {
+      title = 'Monte Carlo Simulation Results';
+    } else if (analysis.optimized_portfolio !== undefined) {
+      title = 'Portfolio Optimization Results';
+    }
+    
+    return {
+      type: analysis.figure_data.type || 'svg',
+      content: analysis.figure_data.content,
+      title,
+      width: analysis.figure_data.width,
+      height: analysis.figure_data.height
+    };
+  }
+  
   return null;
 }
 
