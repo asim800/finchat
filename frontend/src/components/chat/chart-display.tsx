@@ -7,9 +7,15 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 interface ChartData {
-  type: 'pie' | 'bar';
+  type: 'pie' | 'bar' | 'figure';
   title: string;
-  data: Array<{ name: string; value: number }>;
+  data?: Array<{ name: string; value: number }>; // Optional for backward compatibility
+  figureData?: {
+    type: 'svg' | 'interactive';
+    content: string;
+    width?: number;
+    height?: number;
+  };
 }
 
 interface ChartDisplayProps {
@@ -23,7 +29,32 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
 
   const renderChart = () => {
     switch (data.type) {
+      case 'figure':
+        if (data.figureData?.type === 'svg') {
+          return (
+            <div 
+              className="w-full flex justify-center items-center"
+              style={{ 
+                minHeight: data.figureData.height || 400,
+                maxWidth: '100%',
+                overflow: 'auto'
+              }}
+            >
+              <div 
+                dangerouslySetInnerHTML={{ __html: data.figureData.content }}
+                className="max-w-full h-auto"
+                style={{
+                  maxWidth: data.figureData.width || 800,
+                  maxHeight: data.figureData.height || 600
+                }}
+              />
+            </div>
+          );
+        }
+        return <div className="text-gray-500">Figure format not supported</div>;
+      
       case 'pie':
+        if (!data.data) return <div className="text-gray-500">No data provided</div>;
         return (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -47,6 +78,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
         );
       
       case 'bar':
+        if (!data.data) return <div className="text-gray-500">No data provided</div>;
         return (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.data}>

@@ -9,9 +9,15 @@ import React from 'react';
 import { ChartDisplay } from '@/components/chat/chart-display';
 
 interface ChartData {
-  type: 'pie' | 'bar';
+  type: 'pie' | 'bar' | 'figure';
   title: string;
-  data: Array<{ name: string; value: number }>;
+  data?: Array<{ name: string; value: number }>; // Optional for backward compatibility
+  figureData?: {
+    type: 'svg' | 'interactive';
+    content: string;
+    width?: number;
+    height?: number;
+  };
 }
 
 interface PortfolioChartPanelProps {
@@ -73,7 +79,11 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
         <div className="p-4 border-t border-gray-200 bg-gray-50">
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">
-              Showing {chartData.data.length} items
+              {chartData.type === 'figure' ? (
+                chartData.figureData ? 'Interactive Dashboard' : 'Figure Display'
+              ) : (
+                `Showing ${chartData.data?.length || 0} items`
+              )}
             </span>
             <div className="flex space-x-2">
               <button 

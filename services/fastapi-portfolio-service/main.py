@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 import yfinance as yf
 import numpy as np
 import pandas as pd
@@ -13,6 +13,14 @@ import requests
 import re
 from textblob import TextBlob
 import time
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.colors import LinearSegmentedColormap
+import seaborn as sns
+import io
+import base64
 warnings.filterwarnings('ignore')
 
 # Configure logging
@@ -113,6 +121,7 @@ class PortfolioRiskAnalysis(BaseModel):
     sharpeRatio: float
     beta: float
     riskLevel: str
+    figure_data: Optional[Dict[str, Any]] = None
 
 class SharpeRatioResponse(BaseModel):
     sharpeRatio: float
@@ -148,6 +157,7 @@ class PortfolioOptimizationResponse(BaseModel):
     improvement_metrics: Dict[str, float]
     rebalancing_cost_estimate: float
     implementation_notes: List[str]
+    figure_data: Optional[Dict[str, Any]] = None
 
 # Monte Carlo Simulation Models
 class MonteCarloRequest(BaseModel):
@@ -166,6 +176,7 @@ class MonteCarloResponse(BaseModel):
     worst_case_scenario: float
     best_case_scenario: float
     chart_data: Dict[str, List[float]]  # for visualization
+    figure_data: Optional[Dict[str, Any]] = None
 
 # Market Sentiment Analysis Models
 class SentimentRequest(BaseModel):
@@ -190,6 +201,200 @@ class MarketSentimentResponse(BaseModel):
     market_fear_greed_index: Optional[float]  # 0-100 scale
     analysis_timestamp: str
     recommendations: List[str]
+
+# Figure generation functions
+def generate_risk_analysis_figure(analysis_data: dict, symbols: List[str], portfolio_values: dict) -> Dict[str, Any]:
+    """Generate comprehensive risk analysis figure"""
+    try:
+        logger.info(f"Starting figure generation with analysis_data: {analysis_data}")
+        logger.info(f"Portfolio values: {portfolio_values}")
+        
+        # Create a simple 2x2 figure
+        plt.style.use('default')  # Use simple default style
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 8))
+        fig.suptitle('Portfolio Risk Analysis Dashboard', fontsize=14, fontweight='bold')
+        
+        # 1. Portfolio Composition (Pie Chart)
+        if portfolio_values and any(v > 0 for v in portfolio_values.values()):
+            filtered_values = {k: v for k, v in portfolio_values.items() if v > 0}
+            ax1.pie(filtered_values.values(), labels=filtered_values.keys(), autopct='%1.1f%%')
+        else:
+            ax1.text(0.5, 0.5, 'No Portfolio Data', ha='center', va='center', transform=ax1.transAxes)
+        ax1.set_title('Portfolio Composition')
+        
+        # 2. Risk Metrics Bar Chart
+        risk_metrics = ['VaR', 'Volatility', 'Sharpe', 'Beta']
+        risk_values = [
+            analysis_data['dailyVaR'],
+            analysis_data['annualizedVoL'], 
+            analysis_data['sharpeRatio'] * 10,  # Scale for visibility
+            analysis_data['beta'] * 10
+        ]
+        ax2.bar(risk_metrics, risk_values)
+        ax2.set_title('Risk Metrics')
+        ax2.set_ylabel('Values')
+        
+        # 3. Risk Level Text Display
+        ax3.text(0.5, 0.5, f"Risk Level\\n{analysis_data['riskLevel']}", 
+                ha='center', va='center', fontsize=16, fontweight='bold',
+                transform=ax3.transAxes)
+        ax3.set_title('Risk Assessment')
+        ax3.axis('off')
+        
+        # 4. Portfolio Value Display
+        ax4.text(0.5, 0.6, f'${analysis_data["totalValue"]:,.0f}', 
+                ha='center', va='center', fontsize=20, fontweight='bold',
+                transform=ax4.transAxes)
+        ax4.text(0.5, 0.3, 'Total Portfolio Value', 
+                ha='center', va='center', fontsize=10,
+                transform=ax4.transAxes)
+        ax4.set_title('Portfolio Value')
+        ax4.axis('off')
+        
+        plt.tight_layout()
+        
+        # Convert to SVG string
+        svg_buffer = io.StringIO()
+        plt.savefig(svg_buffer, format='svg', bbox_inches='tight', dpi=100)
+        svg_string = svg_buffer.getvalue()
+        svg_buffer.close()
+        plt.close()
+        
+        logger.info(f"Generated SVG with length: {len(svg_string)} characters")
+        
+        return {
+            'type': 'svg',
+            'content': svg_string,
+            'width': 800,
+            'height': 600
+        }
+    except Exception as e:
+        import traceback
+        logger.error(f"Error generating risk analysis figure: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return None
+
+def generate_monte_carlo_figure(outcomes: list, percentiles: dict, time_horizon_years: int) -> Dict[str, Any]:
+    """Generate Monte Carlo simulation distribution figure"""
+    try:
+        try:
+            plt.style.use('seaborn-v0_8-whitegrid')
+        except OSError:
+            plt.style.use('default')
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        fig.suptitle('Monte Carlo Simulation Results', fontsize=16, fontweight='bold')
+        
+        # 1. Histogram of outcomes
+        if outcomes:
+            ax1.hist(outcomes, bins=50, alpha=0.7, color='#4ECDC4', edgecolor='black')
+            expected_value = np.mean(outcomes)
+            median_value = percentiles.get('50th', np.median(outcomes))
+            ax1.axvline(expected_value, color='red', linestyle='--', linewidth=2, label='Expected Value')
+            ax1.axvline(median_value, color='orange', linestyle='--', linewidth=2, label='Median')
+            ax1.set_xlabel('Final Portfolio Value ($)')
+            ax1.set_ylabel('Frequency')
+            ax1.set_title(f'Distribution of Outcomes ({time_horizon_years} years)')
+            ax1.legend()
+            ax1.ticklabel_format(style='plain', axis='x')
+        
+        # 2. Percentile bands
+        percentile_labels = ['5th', '25th', '50th', '75th', '95th']
+        percentile_values = [percentiles[p] for p in percentile_labels]
+        colors = ['#FF6B6B', '#FFA07A', '#FFD700', '#98FB98', '#90EE90']
+        
+        bars = ax2.bar(percentile_labels, percentile_values, color=colors, alpha=0.7, edgecolor='black')
+        ax2.set_xlabel('Percentile')
+        ax2.set_ylabel('Portfolio Value ($)')
+        ax2.set_title('Outcome Percentiles')
+        ax2.ticklabel_format(style='plain', axis='y')
+        
+        # Add value labels on bars
+        for bar, value in zip(bars, percentile_values):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(percentile_values) * 0.01,
+                    f'${value:,.0f}', ha='center', va='bottom', fontsize=9, rotation=45)
+        
+        plt.tight_layout()
+        
+        # Convert to SVG string
+        svg_buffer = io.StringIO()
+        plt.savefig(svg_buffer, format='svg', bbox_inches='tight', dpi=150)
+        svg_string = svg_buffer.getvalue()
+        plt.close()
+        
+        return {
+            'type': 'svg',
+            'content': svg_string,
+            'width': 900,
+            'height': 400
+        }
+    except Exception as e:
+        logger.error(f"Error generating Monte Carlo figure: {e}")
+        return None
+
+def generate_optimization_figure(current_weights: dict, optimized_weights: dict, symbols: list, metrics: dict) -> Dict[str, Any]:
+    """Generate portfolio optimization comparison figure"""
+    try:
+        try:
+            plt.style.use('seaborn-v0_8-whitegrid')
+        except OSError:
+            plt.style.use('default')
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+        fig.suptitle('Portfolio Optimization Results', fontsize=16, fontweight='bold')
+        
+        # 1. Current vs Optimized Allocation
+        if current_weights and optimized_weights and symbols:
+            current_values = [current_weights.get(symbol, 0) * 100 for symbol in symbols]  # Convert to percentages
+            optimized_values = [optimized_weights.get(symbol, 0) * 100 for symbol in symbols]  # Convert to percentages
+            
+            x = np.arange(len(symbols))
+            width = 0.35
+            
+            ax1.bar(x - width/2, current_values, width, label='Current', alpha=0.7, color='#FF6B6B')
+            ax1.bar(x + width/2, optimized_values, width, label='Optimized', alpha=0.7, color='#4ECDC4')
+            
+            ax1.set_xlabel('Assets')
+            ax1.set_ylabel('Weight (%)')
+            ax1.set_title('Allocation Comparison')
+            ax1.set_xticks(x)
+            ax1.set_xticklabels(symbols, rotation=45)
+            ax1.legend()
+        
+        # 2. Performance Metrics Comparison
+        metrics_display = {
+            'Expected Return (%)': metrics.get('optimized_return', 0),
+            'Expected Volatility (%)': metrics.get('optimized_volatility', 0),
+            'Sharpe Ratio': metrics.get('optimized_sharpe', 0)
+        }
+        
+        bars = ax2.bar(metrics_display.keys(), metrics_display.values(), 
+                      color=['#45B7D1', '#96CEB4', '#FECA57'], alpha=0.7, edgecolor='black')
+        ax2.set_ylabel('Values')
+        ax2.set_title('Optimized Portfolio Metrics')
+        ax2.tick_params(axis='x', rotation=45)
+        
+        # Add value labels on bars
+        for bar, (key, value) in zip(bars, metrics_display.items()):
+            ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(metrics_display.values()) * 0.01,
+                    f'{value:.2f}{"%" if "Return" in key or "Volatility" in key else ""}',
+                    ha='center', va='bottom', fontsize=10)
+        
+        plt.tight_layout()
+        
+        # Convert to SVG string
+        svg_buffer = io.StringIO()
+        plt.savefig(svg_buffer, format='svg', bbox_inches='tight', dpi=150)
+        svg_string = svg_buffer.getvalue()
+        plt.close()
+        
+        return {
+            'type': 'svg',
+            'content': svg_string,
+            'width': 900,
+            'height': 400
+        }
+    except Exception as e:
+        logger.error(f"Error generating optimization figure: {e}")
+        return None
 
 @app.get("/")
 async def root():
@@ -315,13 +520,95 @@ async def analyze_portfolio(request: PortfolioRequest):
         else:
             risk_level = "High"
         
+        # Generate figure data
+        analysis_data = {
+            "totalValue": round(total_value, 2),
+            "dailyVaR": round(abs(daily_var), 2),
+            "annualizedVoL": round(annualized_vol * 100, 2),
+            "sharpeRatio": round(sharpe_ratio, 3),
+            "beta": round(beta, 3),
+            "riskLevel": risk_level
+        }
+        logger.info(f"About to generate figure...")
+        logger.info(f"Analysis data: {analysis_data}")
+        logger.info(f"Valid symbols: {valid_symbols}")  
+        logger.info(f"Portfolio values: {portfolio_values}")
+        
+        # Create a simple SVG figure that always works
+        figure_data = {
+            'type': 'svg',
+            'content': f'''<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" style="background-color:white">
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="black">
+    Portfolio Risk Analysis Dashboard
+  </text>
+  
+  <!-- Portfolio Composition Section -->
+  <text x="200" y="80" text-anchor="middle" font-size="14" font-weight="bold" fill="black">Portfolio Composition</text>
+  <circle cx="200" cy="180" r="80" fill="#4ECDC4" opacity="0.7"/>
+  <text x="200" y="180" text-anchor="middle" font-size="12" fill="black">
+    {len(portfolio_values)} Assets
+  </text>
+  <text x="200" y="200" text-anchor="middle" font-size="10" fill="black">
+    Total: ${analysis_data["totalValue"]:,.0f}
+  </text>
+  
+  <!-- Risk Metrics Section -->
+  <text x="600" y="80" text-anchor="middle" font-size="14" font-weight="bold" fill="black">Risk Metrics</text>
+  
+  <!-- VaR Bar -->
+  <rect x="520" y="100" width="{min(analysis_data['dailyVaR'] / 10, 150)}" height="20" fill="#FF6B6B" opacity="0.7"/>
+  <text x="525" y="115" font-size="10" fill="black">Daily VaR: ${analysis_data['dailyVaR']:.0f}</text>
+  
+  <!-- Volatility Bar -->
+  <rect x="520" y="130" width="{min(analysis_data['annualizedVoL'] * 2, 150)}" height="20" fill="#45B7D1" opacity="0.7"/>
+  <text x="525" y="145" font-size="10" fill="black">Volatility: {analysis_data['annualizedVoL']:.1f}%</text>
+  
+  <!-- Sharpe Ratio Bar -->
+  <rect x="520" y="160" width="{min(analysis_data['sharpeRatio'] * 100, 150)}" height="20" fill="#96CEB4" opacity="0.7"/>
+  <text x="525" y="175" font-size="10" fill="black">Sharpe Ratio: {analysis_data['sharpeRatio']:.2f}</text>
+  
+  <!-- Beta Bar -->
+  <rect x="520" y="190" width="{min(analysis_data['beta'] * 50, 150)}" height="20" fill="#FECA57" opacity="0.7"/>
+  <text x="525" y="205" font-size="10" fill="black">Beta: {analysis_data['beta']:.2f}</text>
+  
+  <!-- Risk Level Section -->
+  <text x="200" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="black">Risk Assessment</text>
+  <rect x="120" y="340" width="160" height="60" fill="{"#dc3545" if analysis_data["riskLevel"] == "High" else "#ffc107" if analysis_data["riskLevel"] == "Medium" else "#28a745"}" opacity="0.2" stroke="{"#dc3545" if analysis_data["riskLevel"] == "High" else "#ffc107" if analysis_data["riskLevel"] == "Medium" else "#28a745"}" stroke-width="2"/>
+  <text x="200" y="375" text-anchor="middle" font-size="16" font-weight="bold" fill="{"#dc3545" if analysis_data["riskLevel"] == "High" else "#ffc107" if analysis_data["riskLevel"] == "Medium" else "#28a745"}">
+    {analysis_data["riskLevel"]} Risk
+  </text>
+  
+  <!-- Portfolio Value Section -->
+  <text x="600" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="black">Portfolio Value</text>
+  <rect x="520" y="340" width="160" height="60" fill="#E3F2FD" stroke="#2196F3" stroke-width="2"/>
+  <text x="600" y="365" text-anchor="middle" font-size="18" font-weight="bold" fill="#2196F3">
+    ${analysis_data["totalValue"]:,.0f}
+  </text>
+  <text x="600" y="385" text-anchor="middle" font-size="12" fill="#666">
+    Total Value
+  </text>
+  
+  <!-- Footer -->
+  <text x="400" y="580" text-anchor="middle" font-size="10" fill="#666">
+    Generated by FastAPI Portfolio Service • {len(valid_symbols)} symbols analyzed
+  </text>
+</svg>''',
+            'width': 800,
+            'height': 600
+        }
+        
+        logger.info(f"Created simple SVG figure with {len(figure_data['content'])} characters")
+        
         risk_analysis_result = PortfolioRiskAnalysis(
             totalValue=round(total_value, 2),
             dailyVaR=round(abs(daily_var), 2),
             annualizedVoL=round(annualized_vol * 100, 2),
             sharpeRatio=round(sharpe_ratio, 3),
             beta=round(beta, 3),
-            riskLevel=risk_level
+            riskLevel=risk_level,
+            figure_data=figure_data
         )
         
         # Log successful analysis
@@ -569,6 +856,23 @@ async def optimize_portfolio(request: OptimizationRequest):
         if request.risk_tolerance < 0.3 and optimized_volatility > 0.15:
             implementation_notes.append("Portfolio may still be too aggressive for conservative risk tolerance.")
         
+        # Generate figure data
+        current_weights_dict = {symbol: current_weights[i] for i, symbol in enumerate(valid_symbols)}
+        optimized_weights_dict = {symbol: optimized_weights[i] for i, symbol in enumerate(valid_symbols)}
+        figure_data = generate_optimization_figure(
+            current_weights_dict,
+            optimized_weights_dict,
+            valid_symbols,
+            {
+                "current_return": round(current_return * 100, 2),
+                "current_volatility": round(current_volatility * 100, 2),
+                "current_sharpe": round(current_sharpe, 3),
+                "optimized_return": round(optimized_return * 100, 2),
+                "optimized_volatility": round(optimized_volatility * 100, 2),
+                "optimized_sharpe": round(optimized_sharpe, 3)
+            }
+        )
+        
         response = PortfolioOptimizationResponse(
             current_portfolio={symbol: round(current_weights[i] * 100, 2) for i, symbol in enumerate(valid_symbols)},
             optimized_portfolio={symbol: round(optimized_weights[i] * 100, 2) for i, symbol in enumerate(valid_symbols)},
@@ -578,7 +882,8 @@ async def optimize_portfolio(request: OptimizationRequest):
             sharpe_ratio=round(optimized_sharpe, 3),
             improvement_metrics=improvement_metrics,
             rebalancing_cost_estimate=round(rebalancing_cost, 2),
-            implementation_notes=implementation_notes
+            implementation_notes=implementation_notes,
+            figure_data=figure_data
         )
         
         logger.info(f"Portfolio optimization completed. Sharpe ratio: {optimized_sharpe:.3f}")
@@ -662,6 +967,13 @@ async def run_monte_carlo_simulation(request: MonteCarloRequest):
             "percentile_bands": list(percentiles.values())
         }
         
+        # Generate figure data
+        figure_data = generate_monte_carlo_figure(
+            simulations.tolist(),
+            percentiles,
+            request.time_horizon_years
+        )
+        
         response = MonteCarloResponse(
             simulations_run=request.simulations,
             time_horizon_years=request.time_horizon_years,
@@ -670,7 +982,8 @@ async def run_monte_carlo_simulation(request: MonteCarloRequest):
             expected_final_value=round(expected_final_value, 2),
             worst_case_scenario=round(worst_case, 2),
             best_case_scenario=round(best_case, 2),
-            chart_data=chart_data
+            chart_data=chart_data,
+            figure_data=figure_data
         )
         
         logger.info(f"Monte Carlo simulation completed. Expected value: ${expected_final_value:,.2f}")
