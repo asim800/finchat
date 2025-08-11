@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { fastAPIClient, formatRiskAnalysis as fastapiFormatRisk, formatSharpeAnalysis as fastapiFormatSharpe, formatPortfolioOptimization, formatMonteCarloSimulation, formatSentimentAnalysis } from './fastapi-client';
+import { backendConfig } from './backend-config';
 
 export interface AnalysisResult {
   success: boolean;
@@ -12,6 +13,7 @@ export interface AnalysisResult {
   error?: string;
   backend: 'fastapi';
   fallbackUsed: false;
+  rawAnalysisData?: unknown; // Raw data for figure extraction
 }
 
 class UnifiedAnalysisService {
@@ -58,7 +60,8 @@ class UnifiedAnalysisService {
         data,
         formattedData: formatter(data),
         backend: 'fastapi',
-        fallbackUsed: false
+        fallbackUsed: false,
+        rawAnalysisData: data // Store raw data for figure extraction
       };
     } catch (error) {
       console.error(`❌ FastAPI backend failed for ${operation}:`, error);
@@ -172,7 +175,7 @@ class UnifiedAnalysisService {
   /**
    * Analyze a query and route to appropriate backend service
    */
-  async analyzeQuery(query: string, userId: string, portfolios: unknown[] = []): Promise<{ content: string; backend: 'fastapi' }> {
+  async analyzeQuery(query: string, userId: string, portfolios: unknown[] = []): Promise<{ content: string; backend: 'fastapi'; rawAnalysisData?: unknown }> {
     console.log('🔍 UnifiedAnalysisService analyzeQuery called with:', { query, userId, portfoliosCount: portfolios.length });
     
     const lowerQuery = query.toLowerCase();
@@ -183,7 +186,8 @@ class UnifiedAnalysisService {
       const result = await this.calculatePortfolioRisk(userId, (portfolios[0] as any)?.id);
       return {
         content: result.formattedData || `Portfolio risk analysis completed. Success: ${result.success}`,
-        backend: result.backend
+        backend: result.backend,
+        rawAnalysisData: result.rawAnalysisData
       };
     }
     
@@ -192,7 +196,8 @@ class UnifiedAnalysisService {
       const result = await this.calculateSharpeRatio(userId, (portfolios[0] as any)?.id);
       return {
         content: result.formattedData || `Sharpe ratio analysis completed. Success: ${result.success}`,
-        backend: result.backend
+        backend: result.backend,
+        rawAnalysisData: result.rawAnalysisData
       };
     }
     
@@ -201,7 +206,8 @@ class UnifiedAnalysisService {
       const result = await this.optimizePortfolio(userId, (portfolios[0] as any)?.id);
       return {
         content: result.formattedData || `Portfolio optimization completed. Success: ${result.success}`,
-        backend: result.backend
+        backend: result.backend,
+        rawAnalysisData: result.rawAnalysisData
       };
     }
     
@@ -210,7 +216,8 @@ class UnifiedAnalysisService {
       const result = await this.runMonteCarloSimulation(userId, (portfolios[0] as any)?.id);
       return {
         content: result.formattedData || `Monte Carlo simulation completed. Success: ${result.success}`,
-        backend: result.backend
+        backend: result.backend,
+        rawAnalysisData: result.rawAnalysisData
       };
     }
     
@@ -219,7 +226,8 @@ class UnifiedAnalysisService {
       const result = await this.analyzeMarketSentiment(userId, (portfolios[0] as any)?.id);
       return {
         content: result.formattedData || `Market sentiment analysis completed. Success: ${result.success}`,
-        backend: result.backend
+        backend: result.backend,
+        rawAnalysisData: result.rawAnalysisData
       };
     }
     
@@ -229,7 +237,8 @@ class UnifiedAnalysisService {
       const result = await this.calculatePortfolioRisk(userId, (portfolios[0] as any)?.id);
       return {
         content: result.formattedData || `Portfolio analysis completed. Success: ${result.success}`,
-        backend: result.backend
+        backend: result.backend,
+        rawAnalysisData: result.rawAnalysisData
       };
     }
     

@@ -13,6 +13,12 @@ export interface PortfolioRiskAnalysis {
   sharpeRatio: number;
   beta: number;
   riskLevel: string;
+  figure_data?: {
+    type: string;
+    content: string;
+    width?: number;
+    height?: number;
+  };
 }
 
 export interface SharpeRatioAnalysis {
@@ -58,6 +64,12 @@ export interface PortfolioOptimizationResponse {
   };
   rebalancing_cost_estimate: number;
   implementation_notes: string[];
+  figure_data?: {
+    type: string;
+    content: string;
+    width?: number;
+    height?: number;
+  };
 }
 
 export interface MonteCarloResponse {
@@ -77,6 +89,12 @@ export interface MonteCarloResponse {
   chart_data: {
     simulation_results: number[];
     percentile_bands: number[];
+  };
+  figure_data?: {
+    type: string;
+    content: string;
+    width?: number;
+    height?: number;
   };
 }
 

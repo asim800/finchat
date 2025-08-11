@@ -26,6 +26,8 @@ export interface TriageProcessorResult {
     portfolioModified?: boolean;
     assetsAffected?: string[];
     valueChanged?: number;
+    analysisData?: unknown; // Raw analysis data for figure extraction
+    backendUsed?: string; // Which backend was used for analysis
   };
   error?: string;
 }
@@ -227,6 +229,7 @@ export class ChatTriageProcessor {
               cacheHit: false,
               portfolioModified: false,
               assetsAffected: [],
+              analysisData: analysisResult.rawAnalysisData, // Pass raw data for figure extraction
             },
           };
         } catch (analysisError) {
