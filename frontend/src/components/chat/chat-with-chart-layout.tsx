@@ -10,9 +10,15 @@ import { ChatInterface } from './chat-interface';
 import { PortfolioChartPanel } from '@/components/portfolio/portfolio-chart-panel';
 
 interface ChartData {
-  type: 'pie' | 'bar';
+  type: 'pie' | 'bar' | 'figure';
   title: string;
-  data: Array<{ name: string; value: number }>;
+  data?: Array<{ name: string; value: number }>; // Optional for backward compatibility
+  figureData?: {
+    type: 'svg' | 'interactive';
+    content: string;
+    width?: number;
+    height?: number;
+  };
 }
 
 interface ChatWithChartLayoutProps {
