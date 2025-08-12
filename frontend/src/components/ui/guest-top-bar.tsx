@@ -16,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MenuIcon, XIcon, ChevronDownIcon, BookOpenIcon } from 'lucide-react';
+import { MenuIcon, XIcon, ChevronDownIcon, BookOpenIcon, DatabaseIcon } from 'lucide-react';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface GuestTopBarProps {}
@@ -124,6 +124,17 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              
+              <Link href="/learning/supported-assets">
+                <Button 
+                  variant={getNavButtonVariant(isLearningPage)}
+                  size="sm"
+                  className="text-sm font-medium"
+                >
+                  <DatabaseIcon className="mr-2 h-4 w-4" />
+                  Supported Assets
+                </Button>
+              </Link>
             </div>
 
             <div className="border-l border-gray-200 pl-4 flex items-center space-x-2">
@@ -167,6 +178,17 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
                 >
                   <BookOpenIcon className="mr-2 h-4 w-4" />
                   Financial Terms
+                </Button>
+              </Link>
+              
+              <Link href="/learning/supported-assets" onClick={closeMobileMenu}>
+                <Button 
+                  variant={getNavButtonVariant(isLearningPage, true)}
+                  size="sm"
+                  className="w-full justify-start text-sm font-medium"
+                >
+                  <DatabaseIcon className="mr-2 h-4 w-4" />
+                  Supported Assets
                 </Button>
               </Link>
               

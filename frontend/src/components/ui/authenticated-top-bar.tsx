@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, MenuIcon, XIcon, ShieldIcon, BookOpenIcon } from 'lucide-react';
+import { ChevronDownIcon, UserIcon, CogIcon, LogOutIcon, MenuIcon, XIcon, ShieldIcon, BookOpenIcon, DatabaseIcon } from 'lucide-react';
 
 interface User {
   id: string;
@@ -144,6 +144,13 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 {settingsNavItems.map(item => renderSettingsNavItem(item))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/learning/supported-assets" className="flex items-center">
+                    <DatabaseIcon className="mr-2 h-4 w-4" />
+                    Supported Assets
+                  </Link>
+                </DropdownMenuItem>
                 {user.role === 'admin' && (
                   <>
                     <DropdownMenuSeparator />
@@ -226,6 +233,16 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
                     </Button>
                   </Link>
                 ))}
+                <Link href="/learning/supported-assets" onClick={closeMobileMenu}>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="w-full justify-start text-sm font-medium"
+                  >
+                    <DatabaseIcon className="mr-2 h-4 w-4" />
+                    Supported Assets
+                  </Button>
+                </Link>
                 {user.role === 'admin' && (
                   <Link href="/admin" onClick={closeMobileMenu}>
                     <Button 
