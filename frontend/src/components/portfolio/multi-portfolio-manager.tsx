@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { PortfolioTable } from './portfolio-table';
 import { CsvManager } from './csv-manager';
 import { PortfolioBadges } from './portfolio-badges';
+import { PortfolioDashboard } from './portfolio-dashboard';
+import { usePortfolioMetrics } from '@/hooks/usePortfolioMetrics';
 
 interface Portfolio {
   id: string;
@@ -47,6 +49,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [collapsedPortfolios, setCollapsedPortfolios] = useState<Set<string>>(new Set());
+  const [showDashboard, setShowDashboard] = useState<Set<string>>(new Set());
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPortfolio, setEditingPortfolio] = useState<string | null>(null);
   const [newPortfolioName, setNewPortfolioName] = useState('Main Portfolio');
@@ -87,6 +90,10 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
       }));
       
       setPortfolios(transformedPortfolios);
+      
+      // Show analytics by default for all portfolios
+      const portfolioIds = transformedPortfolios.map(p => p.id);
+      setShowDashboard(new Set(portfolioIds));
     } catch (err) {
       setError('Failed to load portfolios');
       console.error('Portfolio loading error:', err);
@@ -223,6 +230,55 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
     setCollapsedPortfolios(newCollapsed);
   };
 
+  // Toggle dashboard visibility
+  const toggleDashboard = (portfolioId: string) => {
+    const newShowDashboard = new Set(showDashboard);
+    if (newShowDashboard.has(portfolioId)) {
+      newShowDashboard.delete(portfolioId);
+    } else {
+      newShowDashboard.add(portfolioId);
+    }
+    setShowDashboard(newShowDashboard);
+  };
+
+  // Portfolio Dashboard Wrapper Component
+  const PortfolioDashboardWrapper: React.FC<{
+    portfolioId: string;
+    portfolioName: string;
+    assets: DisplayAsset[];
+    portfolioValue: number;
+    portfolioCost: number;
+    userId?: string;
+  }> = ({ portfolioId, portfolioName, assets, portfolioValue, portfolioCost, userId }) => {
+    const { metrics, loading, error, refreshMetrics } = usePortfolioMetrics({
+      portfolioId,
+      userId: userId || '',
+      assets,
+      portfolioValue,
+      portfolioCost,
+      autoRefresh: false
+    });
+
+    return (
+      <div className="p-4 border-b">
+        <PortfolioDashboard
+          portfolioId={portfolioId}
+          portfolioName={portfolioName}
+          assets={assets}
+          portfolioValue={portfolioValue}
+          portfolioCost={portfolioCost}
+          metrics={metrics}
+          loading={loading}
+          onRefresh={refreshMetrics}
+        />
+        {error && (
+          <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+            Error loading analytics: {error}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (isGuestMode) {
     return (
@@ -411,6 +467,14 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                             />
                             <Button
                               size="sm"
+                              variant={showDashboard.has(portfolio.id) ? "default" : "outline"}
+                              onClick={() => toggleDashboard(portfolio.id)}
+                              disabled={loading}
+                            >
+                              {showDashboard.has(portfolio.id) ? "Hide Analytics" : "Show Analytics"}
+                            </Button>
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => setEditingPortfolio(portfolio.id)}
                               disabled={loading}
@@ -464,6 +528,18 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Portfolio Dashboard */}
+                  {!collapsedPortfolios.has(portfolio.id) && showDashboard.has(portfolio.id) && (
+                    <PortfolioDashboardWrapper 
+                      portfolioId={portfolio.id}
+                      portfolioName={portfolio.name}
+                      assets={portfolio.assets}
+                      portfolioValue={portfolioMarketValue}
+                      portfolioCost={portfolioCost}
+                      userId={userId}
+                    />
                   )}
 
                   {/* Portfolio Content */}
