@@ -192,7 +192,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { symbol, quantity, avgCost, portfolioId, name, description, action } = body;
+    const { symbol, newSymbol, quantity, avgCost, assetType, portfolioId, name, description, action } = body;
 
     if (action === 'update-portfolio') {
       // Update portfolio details
@@ -218,7 +218,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const success = await PortfolioService.updateAsset(user.id, portfolioId, symbol, quantity, avgCost);
+    const success = await PortfolioService.updateAsset(user.id, portfolioId, symbol, quantity, avgCost, newSymbol, assetType);
     
     if (success) {
       // Return updated portfolio

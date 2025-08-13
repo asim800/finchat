@@ -470,7 +470,7 @@ export class PortfolioService {
   }
 
   // Update asset quantity and/or average price in specific portfolio
-  static async updateAsset(userId: string, portfolioId: string, symbol: string, newQuantity: number, newAvgPrice?: number | null): Promise<boolean> {
+  static async updateAsset(userId: string, portfolioId: string, symbol: string, newQuantity: number, newAvgPrice?: number | null, newSymbol?: string, newAssetType?: string): Promise<boolean> {
     try {
       // Verify user owns the portfolio
       const portfolio = await prisma.portfolio.findFirst({
@@ -484,7 +484,7 @@ export class PortfolioService {
         return false;
       }
       
-      const updateData: { quantity: number; avgCost?: number | null; updatedAt: Date } = {
+      const updateData: { quantity: number; avgCost?: number | null; symbol?: string; assetType?: string; updatedAt: Date } = {
         quantity: newQuantity,
         updatedAt: new Date()
       };
@@ -493,7 +493,25 @@ export class PortfolioService {
       if (newAvgPrice !== undefined) {
         updateData.avgCost = newAvgPrice;
       }
+
+      // Update symbol if provided and different
+      if (newSymbol && newSymbol.toUpperCase() !== symbol.toUpperCase()) {
+        updateData.symbol = newSymbol.toUpperCase();
+      }
+
+      // Update assetType if provided
+      if (newAssetType) {
+        updateData.assetType = newAssetType;
+      }
       
+      console.log('Updating asset:', {
+        portfolioId,
+        symbol: symbol.toUpperCase(),
+        updateData,
+        newSymbol,
+        newAssetType
+      });
+
       const updatedAsset = await prisma.asset.updateMany({
         where: {
           portfolioId: portfolioId,
@@ -501,6 +519,19 @@ export class PortfolioService {
         },
         data: updateData
       });
+
+      console.log('Asset update result:', { count: updatedAsset.count });
+      
+      if (updatedAsset.count === 0) {
+        // Check if the asset exists at all
+        const existingAsset = await prisma.asset.findFirst({
+          where: {
+            portfolioId: portfolioId,
+            symbol: symbol.toUpperCase()
+          }
+        });
+        console.log('Existing asset check:', existingAsset ? 'Found' : 'Not found');
+      }
 
       return updatedAsset.count > 0;
     } catch (error) {

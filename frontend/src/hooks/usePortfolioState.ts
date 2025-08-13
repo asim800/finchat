@@ -3,7 +3,7 @@
 // Simplified portfolio state management with useReducer
 // ============================================================================
 
-import { useReducer, useCallback } from 'react';
+import { useReducer, useCallback, useEffect } from 'react';
 
 // Types
 export interface DisplayAsset {
@@ -187,6 +187,13 @@ export const usePortfolioState = (
   onAssetsChange?: (assets: DisplayAsset[]) => void
 ) => {
   const [state, dispatch] = useReducer(portfolioReducer, createInitialState(initialAssets));
+
+  // Update assets when initialAssets changes
+  useEffect(() => {
+    if (initialAssets) {
+      dispatch({ type: 'SET_ASSETS', payload: initialAssets });
+    }
+  }, [initialAssets]);
 
   // Wrapper to call onAssetsChange when assets change
   const updateAssets = useCallback((assets: DisplayAsset[]) => {

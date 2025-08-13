@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FormField } from '@/components/ui/form-field';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, X, ChevronDown, ChevronRight } from 'lucide-react';
-import { generateGuestSessionId } from '@/lib/guest-portfolio';
+import { generateGuestSessionId, GuestPortfolioService } from '@/lib/guest-portfolio';
 import { formatPurchaseDate } from '@/lib/tax-utils';
 import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
 import { AssetAdditionWizard } from './asset-addition-wizard';
@@ -29,7 +29,7 @@ interface PortfolioTableProps {
   userId?: string;
   portfolioId?: string; // For multi-portfolio support
   initialAssets?: DisplayAsset[]; // Pre-loaded assets
-  onAssetsChange?: (assets: DisplayAsset[]) => void;
+  onAssetsChange?: (assets?: DisplayAsset[]) => void;
   showSummary?: boolean; // Whether to show portfolio summary boxes
 }
 
@@ -116,13 +116,15 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
     } catch (err) {
       console.error('Error loading portfolio:', err);
       showNetworkError(() => loadPortfolio());
+    } finally {
+      setLoading(false);
     }
   }, [crudOperations, setLoading, setAssets, clearAllErrors, showNetworkError]);
 
   // Handle wizard submission
   const handleWizardSubmit = useCallback(async (wizardAsset: NewAsset) => {
     // Convert wizard asset to the format expected by handleAddAsset
-    setNewAsset(wizardAsset);
+    updateNewAsset(wizardAsset);
     await handleAddAssetInternal(wizardAsset);
   }, []);
 
@@ -192,16 +194,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         if (result.success) {
           await loadPortfolio();
           setShowAddForm(false);
-          setNewAsset({
-            symbol: '',
-            quantity: 0,
-            avgCost: undefined,
-            assetType: 'stock',
-            purchaseDate: undefined,
-            optionType: undefined,
-            expirationDate: undefined,
-            strikePrice: undefined
-          });
+          resetNewAsset();
         } else {
           showAssetAddError(assetData, () => handleAddAssetInternal(assetData));
         }
@@ -238,16 +231,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         if (result.success) {
           await loadPortfolio();
           setShowAddForm(false);
-          setNewAsset({
-            symbol: '',
-            quantity: 0,
-            avgCost: undefined,
-            assetType: 'stock',
-            purchaseDate: undefined,
-            optionType: undefined,
-            expirationDate: undefined,
-            strikePrice: undefined
-          });
+          resetNewAsset();
         } else {
           showAssetAddError(assetData, () => handleAddAssetInternal(assetData));
         }
@@ -268,22 +252,12 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
   // Handle wizard cancel
   const handleWizardCancel = () => {
     setShowAddForm(false);
-    setNewAsset({
-      symbol: '',
-      quantity: 0,
-      avgCost: undefined,
-      assetType: 'stock',
-      purchaseDate: undefined,
-      optionType: undefined,
-      expirationDate: undefined,
-      strikePrice: undefined
-    });
+    resetNewAsset();
   };
 
   // Start editing an asset
   const startEdit = useCallback((asset: DisplayAsset) => {
-    setEditingId(asset.id);
-    setEditValues({
+    startEditing(asset.id, {
       symbol: asset.symbol,
       quantity: asset.quantity,
       avgCost: asset.avgCost,
@@ -292,10 +266,11 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       expirationDate: asset.expirationDate,
       strikePrice: asset.strikePrice
     });
-  }, []);
+  }, [startEditing]);
 
   // Save edit
   const saveEdit = useCallback(async () => {
+    console.log('🟡 saveEdit called with:', { editingId, editValues });
     if (!editingId || !editValues.quantity || editValues.quantity <= 0) {
       setError('Please enter a valid quantity greater than 0');
       return;
@@ -315,26 +290,53 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
 
       if (isGuestMode) {
         // For guests, we need to rebuild the portfolio with updated asset
-        const guestPortfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
-        const assetIndex = parseInt(editingId.replace('guest_', ''));
-        
-        if (guestPortfolio.assets[assetIndex]) {
-          guestPortfolio.assets[assetIndex] = {
-            ...guestPortfolio.assets[assetIndex],
-            symbol: editValues.symbol || asset.symbol,
-            quantity: editValues.quantity || asset.quantity,
-            avgCost: editValues.avgCost !== undefined ? editValues.avgCost : guestPortfolio.assets[assetIndex].avgCost,
-            assetType: editValues.assetType || asset.assetType
-          };
+        try {
+          const guestPortfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
+          const assetIndex = parseInt(editingId.replace('guest_', ''));
           
-          // Update the portfolio in storage
-          guestPortfolio.lastUpdated = new Date();
-          await loadPortfolio();
+          if (guestPortfolio.assets[assetIndex]) {
+            // Create updated asset with new values
+            const updatedAsset = {
+              ...guestPortfolio.assets[assetIndex],
+              symbol: (editValues.symbol || asset.symbol).toUpperCase(),
+              quantity: editValues.quantity || asset.quantity,
+              avgCost: editValues.avgCost !== undefined ? editValues.avgCost : guestPortfolio.assets[assetIndex].avgCost,
+              assetType: editValues.assetType || asset.assetType,
+              addedAt: new Date() // Update the timestamp
+            };
+            
+            // Update the asset in the portfolio
+            guestPortfolio.assets[assetIndex] = updatedAsset;
+            
+            // Update portfolio metadata
+            guestPortfolio.lastUpdated = new Date();
+            guestPortfolio.totalValue = guestPortfolio.assets.reduce((sum, asset) => {
+              return sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0);
+            }, 0);
+            
+            // Save the updated portfolio back to storage
+            // Note: The GuestPortfolioService automatically manages this via the Map reference
+            
+            // If onAssetsChange is provided, let the parent handle the reload
+            if (onAssetsChange) {
+              onAssetsChange(); // Notify parent to reload
+            } else {
+              await loadPortfolio(); // Only reload internally if no parent callback
+            }
+          } else {
+            throw new Error(`Asset at index ${assetIndex} not found in guest portfolio`);
+          }
+        } catch (guestError) {
+          console.error('Guest portfolio update error:', guestError);
+          throw guestError; // Re-throw to be caught by outer catch block
         }
       } else if (userId) {
         // For authenticated users, use API
-        // Check if quantity or avgCost changed
-        if (editValues.quantity !== asset.quantity || editValues.avgCost !== asset.avgCost) {
+        // Check if any editable field changed
+        if (editValues.quantity !== asset.quantity || 
+            editValues.avgCost !== asset.avgCost || 
+            editValues.symbol !== asset.symbol || 
+            editValues.assetType !== asset.assetType) {
           const response = await fetch('/api/portfolio', {
             method: 'PUT',
             headers: {
@@ -342,28 +344,54 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
             },
             body: JSON.stringify({
               portfolioId: portfolioId, // Include portfolio ID for multi-portfolio support
-              symbol: asset.symbol,
-              quantity: editValues.quantity,
-              avgCost: editValues.avgCost
+              symbol: asset.symbol, // Original symbol to identify the asset
+              newSymbol: editValues.symbol || asset.symbol, // New symbol if changed
+              quantity: editValues.quantity !== undefined ? editValues.quantity : asset.quantity,
+              avgCost: editValues.avgCost !== undefined ? editValues.avgCost : asset.avgCost,
+              assetType: editValues.assetType || asset.assetType
             })
           });
 
           if (!response.ok) {
             const errorData = await response.json();
+            console.error('Asset update failed:', {
+              status: response.status,
+              statusText: response.statusText,
+              errorData,
+              requestBody: {
+                portfolioId,
+                symbol: asset.symbol,
+                newSymbol: editValues.symbol || asset.symbol,
+                quantity: editValues.quantity !== undefined ? editValues.quantity : asset.quantity,
+                avgCost: editValues.avgCost !== undefined ? editValues.avgCost : asset.avgCost,
+                assetType: editValues.assetType || asset.assetType
+              }
+            });
             throw new Error(errorData.error || 'Failed to update asset');
           }
         }
-        await loadPortfolio();
+        // Only reload portfolio if the API call was successful
+        // If onAssetsChange is provided, let the parent handle the reload
+        if (onAssetsChange) {
+          console.log('🔄 Calling onAssetsChange callback');
+          onAssetsChange(); // Notify parent to reload
+        } else {
+          console.log('🔄 No onAssetsChange callback, calling loadPortfolio');
+          await loadPortfolio(); // Only reload internally if no parent callback
+        }
       }
 
-      setEditingId(null);
-      setEditValues({});
+      stopEditing();
     } catch (err) {
-      showAssetAddError(editValues, () => saveEdit());
       console.error('Update asset error:', err);
-    } finally {
+      showAssetAddError(editValues, () => saveEdit());
+      // Don't call stopEditing() on error to preserve the editing state
       setLoading(false);
+      return; // Exit early on error
     }
+    
+    // Only set loading to false if we reach here (success)
+    setLoading(false);
   }, [editingId, editValues, isGuestMode, userId, portfolioId, guestSessionId, assets, loadPortfolio]);
 
   // Delete asset
@@ -383,7 +411,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
     try {
       if (isGuestMode) {
         // Remove from guest portfolio
-        const success = GuestPortfolioService.removeAssetFromGuest(guestSessionId, asset.symbol);
+        const success = GuestPortfolioService.removeAssetFromGuestPortfolio(guestSessionId, asset.symbol);
         if (success) {
           await loadPortfolio();
         } else {
@@ -600,7 +628,10 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       return (
         <div className="flex space-x-3 sm:space-x-2">
           <Button
-            onClick={saveEdit}
+            onClick={() => {
+              console.log('🔴 Save button clicked!');
+              saveEdit();
+            }}
             disabled={isLoading}
             size="sm"
             className="text-xs px-2 py-1 h-7"
@@ -753,7 +784,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         <Input
                           type="text"
                           value={editValues.symbol || ''}
-                          onChange={(e) => setEditValues({...editValues, symbol: e.target.value.toUpperCase()})}
+                          onChange={(e) => updateEditValues({ symbol: e.target.value.toUpperCase() })}
                           className="w-full"
                         />
                       </div>
@@ -765,7 +796,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                           value={editValues.quantity || ''}
                           onChange={(e) => {
                             const parseResult = QuantityValidationUtils.parseQuantity(e.target.value);
-                            setEditValues({...editValues, quantity: parseResult.value});
+                            updateEditValues({ quantity: parseResult.value });
                           }}
                           className="w-full"
                           placeholder="0"
@@ -778,7 +809,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                           type="text"
                           inputMode="decimal"
                           value={editValues.avgCost || ''}
-                          onChange={(e) => setEditValues({...editValues, avgCost: parseFloat(e.target.value) || undefined})}
+                          onChange={(e) => updateEditValues({ avgCost: parseFloat(e.target.value) || undefined })}
                           className="w-full"
                           placeholder="Optional"
                         />
@@ -795,10 +826,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         Save Changes
                       </Button>
                       <Button
-                        onClick={() => {
-                          setEditingId(null);
-                          setEditValues({});
-                        }}
+                        onClick={stopEditing}
                         variant="outline"
                         className="flex-1 text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300 min-h-[44px]"
                       >

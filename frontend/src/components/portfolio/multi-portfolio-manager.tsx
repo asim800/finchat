@@ -76,6 +76,11 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
       
       const data = await response.json();
       const portfoliosData = data.portfolios || [];
+      console.log('📥 Loaded portfolios data:', portfoliosData.map(p => ({ 
+        id: p.id, 
+        name: p.name, 
+        assets: p.assets.map(a => ({ symbol: a.symbol, quantity: a.quantity }))
+      })));
       
       // Transform dates
       const transformedPortfolios = portfoliosData.map((portfolio: Portfolio & { createdAt: string; updatedAt: string; assets: Array<DisplayAsset & { createdAt: string; updatedAt: string }> }) => ({
@@ -89,7 +94,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
         }))
       }));
       
-      setPortfolios(transformedPortfolios);
+      setPortfolios([...transformedPortfolios]); // Force new array reference
       
       // Show analytics by default for all portfolios
       const portfolioIds = transformedPortfolios.map(p => p.id);
@@ -550,7 +555,10 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                         userId={userId}
                         portfolioId={portfolio.id}
                         initialAssets={portfolio.assets}
-                        onAssetsChange={() => loadPortfolios()}
+                        onAssetsChange={() => {
+                          console.log('🔄 MultiPortfolioManager onAssetsChange triggered');
+                          loadPortfolios();
+                        }}
                         showSummary={false}
                       />
                     </div>

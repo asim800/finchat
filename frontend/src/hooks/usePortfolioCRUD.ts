@@ -64,19 +64,19 @@ export const usePortfolioCRUD = ({
       if (isGuestMode) {
         // Load guest portfolio
         const guestPortfolio = GuestPortfolioService.getGuestPortfolio(guestSessionId);
-        return guestPortfolio.assets.map(asset => ({
-          id: asset.id,
+        return guestPortfolio.assets.map((asset, index) => ({
+          id: `guest_${index}`,
           symbol: asset.symbol,
           quantity: asset.quantity,
           avgCost: asset.avgCost,
           price: null,
           assetType: asset.assetType,
           totalValue: (asset.avgCost || 0) * asset.quantity,
-          createdAt: asset.createdAt,
-          updatedAt: asset.updatedAt,
-          purchaseDate: asset.purchaseDate,
+          createdAt: asset.addedAt,
+          updatedAt: asset.addedAt,
+          purchaseDate: asset.addedAt,
           optionType: asset.optionType,
-          expirationDate: asset.expirationDate,
+          expirationDate: asset.expirationDate ? new Date(asset.expirationDate) : null,
           strikePrice: asset.strikePrice
         }));
       } else {
