@@ -148,6 +148,11 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
             <span className="sm:hidden inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
               Demo
             </span>
+            <Link href="/login">
+              <Button variant="outline" size="sm" className="text-xs font-medium px-3">
+                Sign In
+              </Button>
+            </Link>
             <ThemeToggle />
             <Button
               variant="outline"
@@ -193,7 +198,15 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
               </Link>
               
               <div className="border-t pt-3 mt-3">
-                {authNavItems.map(item => renderAuthButton(item, true))}
+                <Link href="/register" onClick={closeMobileMenu}>
+                  <Button 
+                    variant="default"
+                    size="sm"
+                    className="w-full justify-start mb-2 text-sm font-medium"
+                  >
+                    Sign Up
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
