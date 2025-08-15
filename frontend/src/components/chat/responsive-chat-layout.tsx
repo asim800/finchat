@@ -35,6 +35,10 @@ export const ResponsiveChatLayout: React.FC<ResponsiveChatLayoutProps> = ({
     }
   }, []);
 
+  const handleCloseChart = useCallback(() => {
+    setCurrentChartData(null);
+  }, []);
+
   // const toggleChart = () => {
   //   setIsChartVisible(!isChartVisible);
   // };
@@ -53,10 +57,11 @@ export const ResponsiveChatLayout: React.FC<ResponsiveChatLayoutProps> = ({
 
       {/* Chart Panel - Follows Chat Box */}
       {currentChartData && (
-        <div className="flex-shrink-0 mt-4">
-          <div className="h-80 border border-gray-100 rounded">
+        <div className="flex-shrink-0 mt-2 md:mt-4">
+          <div className="border border-gray-100 rounded-lg shadow-sm">
             <PortfolioChartPanel 
               chartData={currentChartData}
+              onClose={handleCloseChart}
               className="h-full"
             />
           </div>

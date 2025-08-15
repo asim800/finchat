@@ -23,34 +23,60 @@ interface ChartData {
 interface PortfolioChartPanelProps {
   chartData: ChartData | null;
   className?: string;
+  onClose?: () => void;
 }
 
 export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({ 
   chartData, 
-  className = '' 
+  className = '',
+  onClose
 }) => {
   return (
-    <div className={`bg-white border border-gray-100 ${className}`}>
+    <div className={`relative bg-white border border-gray-100 ${className}`}>
       {/* Minimalist Header */}
       {chartData && (
-        <div className="p-2 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">{chartData.title}</span>
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+        <div className="p-2 md:p-3 border-b border-gray-100">
+          <div className="flex items-center justify-between pr-8 md:pr-10">
+            <span className="text-sm font-medium text-gray-700 truncate mr-2">{chartData.title}</span>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded whitespace-nowrap">
               {chartData.type.toUpperCase()}
             </span>
           </div>
+          
+          {/* Close Button - Touch Friendly */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="absolute top-2 right-2 md:top-3 md:right-3 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label="Close chart"
+              title="Close chart"
+            >
+              <svg 
+                className="w-4 h-4 md:w-3 md:h-3" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M6 18L18 6M6 6l12 12" 
+                />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 
       {/* Chart Content */}
-      <div className="p-3">
+      <div className="p-2 md:p-3">
         {chartData ? (
-          <div className="h-80">
+          <div className="h-64 md:h-80">
             <ChartDisplay data={chartData} />
           </div>
         ) : (
-          <div className="h-80 flex items-center justify-center text-gray-500">
+          <div className="h-64 md:h-80 flex items-center justify-center text-gray-500">
             <div className="text-center">
               <svg 
                 className="mx-auto h-12 w-12 text-gray-300 mb-4" 
@@ -76,18 +102,18 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
 
       {/* Chart Actions */}
       {chartData && (
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-600">
+        <div className="p-2 md:p-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex justify-between items-center text-xs md:text-sm">
+            <span className="text-gray-600 truncate mr-2">
               {chartData.type === 'figure' ? (
                 chartData.figureData ? 'Interactive Dashboard' : 'Figure Display'
               ) : (
                 `Showing ${chartData.data?.length || 0} items`
               )}
             </span>
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 flex-shrink-0">
               <button 
-                className="text-blue-600 hover:text-blue-800 text-xs"
+                className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-50"
                 onClick={() => {
                   // Future: Add export functionality
                   console.log('Export chart functionality to be implemented');
@@ -96,7 +122,7 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
                 Export
               </button>
               <button 
-                className="text-blue-600 hover:text-blue-800 text-xs"
+                className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 rounded hover:bg-blue-50 hidden md:inline-block"
                 onClick={() => {
                   // Future: Add fullscreen functionality
                   console.log('Fullscreen chart functionality to be implemented');

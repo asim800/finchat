@@ -33,19 +33,20 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
         if (data.figureData?.type === 'svg') {
           return (
             <div 
-              className="w-full flex justify-center items-center"
+              className="w-full flex justify-center items-center overflow-auto"
               style={{ 
-                minHeight: data.figureData.height || 400,
-                maxWidth: '100%',
-                overflow: 'auto'
+                minHeight: Math.min(data.figureData.height || 400, 240), // Max 240px on mobile
+                maxWidth: '100%'
               }}
             >
               <div 
                 dangerouslySetInnerHTML={{ __html: data.figureData.content }}
                 className="max-w-full h-auto"
                 style={{
-                  maxWidth: data.figureData.width || 800,
-                  maxHeight: data.figureData.height || 600
+                  maxWidth: '100%', // Responsive width
+                  maxHeight: window.innerWidth < 768 ? '240px' : (data.figureData.height || 600), // Mobile vs desktop
+                  width: 'auto',
+                  height: 'auto'
                 }}
               />
             </div>
@@ -56,7 +57,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
       case 'pie':
         if (!data.data) return <div className="text-gray-500">No data provided</div>;
         return (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 200 : 300}>
             <PieChart>
               <Pie
                 data={data.data}
@@ -64,7 +65,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
+                outerRadius={window.innerWidth < 768 ? 60 : 80}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -80,13 +81,19 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
       case 'bar':
         if (!data.data) return <div className="text-gray-500">No data provided</div>;
         return (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 200 : 300}>
             <BarChart data={data.data}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <XAxis 
+                dataKey="name" 
+                fontSize={window.innerWidth < 768 ? 10 : 12}
+                angle={window.innerWidth < 768 ? -45 : 0}
+                textAnchor={window.innerWidth < 768 ? 'end' : 'middle'}
+                height={window.innerWidth < 768 ? 60 : 40}
+              />
+              <YAxis fontSize={window.innerWidth < 768 ? 10 : 12} />
               <Tooltip />
-              <Legend />
+              {window.innerWidth >= 768 && <Legend />}
               <Bar dataKey="value" fill="#8884d8" />
             </BarChart>
           </ResponsiveContainer>
@@ -98,8 +105,8 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg border border-gray-200">
-      <h4 className="text-sm font-medium text-gray-700 mb-3">{data.title}</h4>
+    <div className="bg-white p-2 md:p-4 rounded-lg border border-gray-200">
+      <h4 className="text-xs md:text-sm font-medium text-gray-700 mb-2 md:mb-3 truncate">{data.title}</h4>
       {renderChart()}
     </div>
   );
