@@ -245,3 +245,93 @@ mcp-server/
 - Please use uv as package manager and Python version 3.12
 - Both MCP server and FastAPI service use consistent dependency management
 - Environment variables required for database connections in Python services
+
+## Mobile vs Desktop Design Decisions
+
+### Responsive Design Philosophy
+
+Our application follows a **mobile-first approach** with progressive enhancement for larger screens. This ensures optimal performance and user experience across all devices.
+
+### Breakpoint Strategy
+
+- **Primary Breakpoint**: `md:` (768px) - Transition point between mobile and desktop layouts
+- **Mobile Target**: Devices ≤ 767px (phones, small tablets)
+- **Desktop Target**: Devices ≥ 768px (tablets, laptops, desktops)
+
+### Chart & Figure Display Guidelines
+
+#### Height Constraints
+- **Mobile**: Maximum 250px height for charts and figures
+  - Prevents content from overwhelming small screens
+  - Ensures chat interface remains accessible
+- **Desktop**: Maximum 400px height
+  - Takes advantage of larger screen real estate
+  - Provides better detail visibility
+
+#### Touch Interaction
+- **Mobile Close Buttons**: Minimum 44px touch targets (8x8 md:6x6)
+- **Desktop Close Buttons**: Standard 24px targets
+- **Hover States**: Only enabled on desktop (`hover:` prefixes)
+
+#### Component-Specific Decisions
+
+##### PortfolioChartPanel
+```css
+/* Mobile: h-64 (256px), Desktop: h-80 (320px) */
+.chart-container { @apply h-64 md:h-80; }
+
+/* Mobile: p-2, Desktop: p-3/p-4 */
+.chart-padding { @apply p-2 md:p-3; }
+```
+
+##### ChartDisplay (Recharts)
+- **Pie Charts**: 200px height (mobile) vs 300px (desktop)
+- **Bar Charts**: 200px height (mobile) vs 300px (desktop)
+- **Legend**: Hidden on mobile, visible on desktop
+- **Font Sizes**: 10px (mobile) vs 12px (desktop)
+
+##### Figure SVG Handling
+```javascript
+// Responsive figure sizing
+maxHeight: window.innerWidth < 768 ? '240px' : (figureHeight || 600)
+```
+
+### Spacing & Layout
+
+#### Margin Strategy
+- **Mobile**: Compact spacing (`mt-2`, `p-2`)
+- **Desktop**: Generous spacing (`mt-4`, `p-3/p-4`)
+
+#### Text Scaling
+- **Mobile**: `text-xs` for secondary content
+- **Desktop**: `text-sm` for better readability
+
+### Implementation Patterns
+
+#### Responsive Classes
+```css
+/* Preferred pattern for responsive design */
+.responsive-element {
+  @apply h-64 md:h-80 p-2 md:p-4 text-xs md:text-sm;
+}
+```
+
+#### JavaScript Media Queries
+```javascript
+// Use for dynamic sizing in components
+const isMobile = window.innerWidth < 768;
+const chartHeight = isMobile ? 200 : 300;
+```
+
+### Accessibility Considerations
+
+- **Touch Targets**: Minimum 44px for mobile interactions
+- **Content Hierarchy**: Larger touch areas for primary actions
+- **Visual Feedback**: Clear hover states for desktop, press states for mobile
+- **Close Buttons**: Always visible and easily accessible
+
+### Performance Optimization
+
+- **Conditional Rendering**: Hide non-essential elements on mobile
+- **Image Scaling**: Automatic figure scaling prevents overflow
+- **Layout Shift**: Consistent height constraints prevent content jumping
