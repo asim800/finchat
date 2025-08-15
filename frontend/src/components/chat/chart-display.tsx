@@ -20,9 +20,10 @@ interface ChartData {
 
 interface ChartDisplayProps {
   data: ChartData;
+  onClose?: () => void;
 }
 
-export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
+export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data, onClose }) => {
   if (!data || !data.type) return null;
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -105,8 +106,34 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white p-2 md:p-4 rounded-lg border border-gray-200">
-      <h4 className="text-xs md:text-sm font-medium text-gray-700 mb-2 md:mb-3 truncate">{data.title}</h4>
+    <div className="relative bg-white p-2 md:p-4 rounded-lg border border-gray-200">
+      <div className="flex items-center justify-between mb-2 md:mb-3">
+        <h4 className="text-xs md:text-sm font-medium text-gray-700 truncate pr-8">{data.title}</h4>
+        
+        {/* Optional Close Button for Inline Charts */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 md:top-3 md:right-3 w-6 h-6 md:w-5 md:h-5 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors"
+            aria-label="Hide chart"
+            title="Hide chart"
+          >
+            <svg 
+              className="w-3 h-3 md:w-2.5 md:h-2.5" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M6 18L18 6M6 6l12 12" 
+              />
+            </svg>
+          </button>
+        )}
+      </div>
       {renderChart()}
     </div>
   );
