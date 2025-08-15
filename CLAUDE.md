@@ -335,3 +335,118 @@ const chartHeight = isMobile ? 200 : 300;
 - **Conditional Rendering**: Hide non-essential elements on mobile
 - **Image Scaling**: Automatic figure scaling prevents overflow
 - **Layout Shift**: Consistent height constraints prevent content jumping
+
+## Chat Interface & Figure Integration
+
+### Inline Charts Architecture
+
+Our chat interface uses an **inline chart system** that integrates figures directly within the conversation flow for optimal user experience.
+
+#### Design Philosophy
+- **Contextual Integration**: Charts appear as part of the natural conversation flow
+- **Mobile-First**: Optimized for mobile readability and touch interaction
+- **Progressive Enhancement**: Enhanced experience on larger screens
+
+#### Implementation Strategy
+
+##### Inline vs External Charts
+```typescript
+// Inline Charts (Current Implementation)
+<ChatInterface hideInlineCharts={false} />
+// Charts render within MessageBubble components automatically
+
+// External Charts (Previous Implementation - Deprecated)
+<ChatInterface hideInlineCharts={true} onChartUpdate={handler} />
+{chartData && <ExternalChartPanel />}
+```
+
+##### Chart Rendering Flow
+1. **AI Response Generation**: LLM generates response with chart data
+2. **Message Creation**: Chart data attached to message object
+3. **Inline Rendering**: ChartDisplay component renders within MessageBubble
+4. **Responsive Sizing**: Mobile-optimized dimensions applied automatically
+
+#### Component Architecture
+
+##### ChatInterface Integration
+- **Message Flow**: Charts appear after relevant AI responses
+- **Scroll Integration**: Charts scroll naturally with conversation history
+- **Context Preservation**: Charts remain associated with generating messages
+
+##### ChartDisplay Enhancements
+```typescript
+interface ChartDisplayProps {
+  data: ChartData;
+  onClose?: () => void; // Optional dismissal functionality
+}
+```
+
+- **Responsive Design**: Mobile (200px) vs Desktop (300px) chart heights
+- **Optional Dismissal**: Close button for user-controlled chart hiding
+- **Touch Optimization**: Compact close button (24px mobile, 20px desktop)
+
+#### Mobile Optimization Patterns
+
+##### Height Management
+```css
+/* Inline charts use container-relative sizing */
+.inline-chart {
+  height: 200px; /* Mobile */
+}
+
+@media (min-width: 768px) {
+  .inline-chart {
+    height: 300px; /* Desktop */
+  }
+}
+```
+
+##### Touch Interactions
+- **Close Buttons**: Minimum 24px touch targets for inline context
+- **Chart Interaction**: Touch-friendly chart elements
+- **Scroll Behavior**: Smooth scrolling within chat container
+
+#### User Experience Benefits
+
+##### Mobile Experience
+- **Full Screen Usage**: Chat utilizes entire viewport without layout competition
+- **Natural Reading Flow**: Figures appear contextually within conversation
+- **Scroll Continuity**: Charts integrate seamlessly into chat history
+- **Touch Accessibility**: All interactions optimized for mobile touch
+
+##### Desktop Experience
+- **Enhanced Sizing**: Larger charts with more detail on bigger screens
+- **Hover Interactions**: Rich hover states for mouse users
+- **Flexible Layout**: Charts can expand to use available space
+
+#### Technical Implementation
+
+##### Simplified Layout Architecture
+```tsx
+// ResponsiveChatLayout - Simplified Structure
+<div className="h-full flex flex-col">
+  <div className="flex-1 flex flex-col min-h-0">
+    <ChatInterface hideInlineCharts={false} />
+  </div>
+</div>
+```
+
+##### Chart State Management
+- **Stateless Design**: No external chart state management required
+- **Message-Bound Data**: Chart data lives within message objects
+- **Automatic Cleanup**: Charts removed when messages are cleared
+
+#### Migration Considerations
+
+##### From External to Inline Charts
+1. **Layout Simplification**: Remove external chart panel containers
+2. **State Cleanup**: Eliminate chart state management in parent components
+3. **Prop Simplification**: Remove onChartUpdate and chart state props
+4. **Mobile Testing**: Verify responsive behavior in inline context
+
+##### Backward Compatibility
+- **ChartDisplay API**: Maintains backward compatibility with optional onClose
+- **Message Schema**: Chart data structure unchanged
+- **Responsive Patterns**: All mobile optimizations preserved
+
+This inline chart architecture provides a more integrated, mobile-friendly experience while simplifying the technical implementation and reducing layout complexity.
