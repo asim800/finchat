@@ -969,7 +969,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                             <div className="bg-white rounded-md p-3 text-center">
                               <div className="text-xs text-gray-500 mb-1">Dividend</div>
                               <div className="text-lg font-semibold text-green-600">
-                                {(asset.metrics.dividendYield * 100).toFixed(1)}%
+                                {asset.metrics.dividendYield.toFixed(1)}%
                               </div>
                             </div>
                           )}
@@ -987,7 +987,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                             <div className="bg-white rounded-md p-3 text-center col-span-2">
                               <div className="text-xs text-gray-500 mb-1">Volatility</div>
                               <div className="text-lg font-semibold text-orange-600">
-                                {(asset.metrics.volatility * 100).toFixed(1)}%
+                                {asset.metrics.volatility.toFixed(1)}%
                               </div>
                             </div>
                           )}
@@ -1172,7 +1172,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                             <div className="bg-white rounded-lg p-3 border border-gray-200">
                               <div className="text-xs font-medium text-gray-500 mb-1">Dividend Yield</div>
                               <div className="text-lg font-semibold text-green-600">
-                                {(asset.metrics.dividendYield * 100).toFixed(1)}%
+                                {asset.metrics.dividendYield.toFixed(1)}%
                               </div>
                               <div className="text-xs text-gray-500 mt-1">Annual dividend</div>
                             </div>
@@ -1192,7 +1192,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                             <div className="bg-white rounded-lg p-3 border border-gray-200">
                               <div className="text-xs font-medium text-gray-500 mb-1">Volatility</div>
                               <div className="text-lg font-semibold text-orange-600">
-                                {(asset.metrics.volatility * 100).toFixed(1)}%
+                                {asset.metrics.volatility.toFixed(1)}%
                               </div>
                               <div className="text-xs text-gray-500 mt-1">Price volatility</div>
                             </div>
