@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/password-form-field.tsx
 // Enhanced password input with strength indicator and validation
-// ============================================================================
 
 'use client';
 
@@ -151,9 +148,9 @@ export const PasswordFormField: React.FC<PasswordFormFieldProps> = ({
             tabIndex={-1}
           >
             {showPassword ? (
-              <EyeOff className="h-4 w-4 text-gray-500" />
+              <EyeOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             ) : (
-              <Eye className="h-4 w-4 text-gray-500" />
+              <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             )}
           </Button>
         )}
@@ -163,13 +160,13 @@ export const PasswordFormField: React.FC<PasswordFormFieldProps> = ({
       {showStrengthIndicator && !confirmPassword && value && (
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div className="flex-1 bg-gray-200 dark:bg-slate-700 rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.color}`}
                 style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
               ></div>
             </div>
-            <span className="text-xs font-medium text-gray-600 min-w-16">
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 min-w-16">
               {passwordStrength.label}
             </span>
           </div>

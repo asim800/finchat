@@ -30,7 +30,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Backend Services
 
 - **FastAPI service**: `uvicorn main:app --reload --host 0.0.0.0 --port 8000` (in services/fastapi-portfolio-service/)
-- **MCP server**: `python finance_mcp_server.py` (in mcp-server/)
 - **Python package management**: Use `uv` consistently for all Python services (Python 3.12)
 
 ## Tech Stack & Architecture
@@ -52,29 +51,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Financial Analysis Backend
 
-The application supports **dual analysis backends** with automatic fallback:
-
-#### MCP (Model Context Protocol) Server
-
-- **Primary Backend**: Located in `mcp-server/` folder
-- **Technology**: FastMCP framework with SQLAlchemy database integration
-- **Features**: Real-time portfolio risk analysis, Sharpe ratio calculations, market data fetching
-- **Dependencies**: pandas, numpy, yfinance, psycopg2-binary
-- **Configuration**: Configurable via `PRIMARY_ANALYSIS_BACKEND=mcp` environment variable
+Portfolio analysis is handled by a single **FastAPI microservice**.
 
 #### FastAPI Microservice
 
-- **Secondary Backend**: Located in `services/fastapi-portfolio-service/` folder
+- **Location**: `services/fastapi-portfolio-service/` folder
 - **Technology**: FastAPI with comprehensive CORS configuration
-- **Features**: Portfolio risk metrics, VaR calculations, market data analysis
+- **Features**: Portfolio risk metrics, VaR calculations, Sharpe ratio, optimization, Monte Carlo, market data analysis
 - **Dependencies**: fastapi, uvicorn, yfinance, pandas, numpy
 - **Deployment**: Vercel-ready with vercel.json configuration
 
 #### Unified Analysis Service
 
-- **Abstraction Layer**: `lib/unified-analysis-service.ts` provides seamless switching between backends
-- **Fallback Logic**: Automatic health checks and failover between MCP and FastAPI
-- **Configuration**: Backend selection via `lib/backend-config.ts`
+- **Abstraction Layer**: `lib/unified-analysis-service.ts` routes analysis requests to the FastAPI client (`lib/fastapi-client.ts`)
+- **Configuration**: `lib/backend-config.ts` (FastAPI is the only backend; an older MCP backend was removed)
 
 ### Project Structure
 
@@ -97,10 +87,9 @@ frontend/
 │   │   ├── auth.ts           # JWT and authentication utilities
 │   │   ├── db.ts             # Prisma database client
 │   │   ├── llm-service.ts    # Multi-provider LLM integration
-│   │   ├── unified-analysis-service.ts # Backend abstraction layer
-│   │   ├── mcp-client.ts     # MCP server client
+│   │   ├── unified-analysis-service.ts # Analysis backend abstraction layer
 │   │   ├── fastapi-client.ts # FastAPI service client
-│   │   ├── backend-config.ts # Backend selection configuration
+│   │   ├── backend-config.ts # Analysis backend configuration
 │   │   └── financial-prompts.ts # Financial AI prompt engineering
 │   ├── hooks/
 │   │   └── use-chat-api.ts   # Chat API hooks
@@ -115,13 +104,6 @@ services/
 │   ├── main.py               # FastAPI application
 │   ├── pyproject.toml        # Python dependencies
 │   └── vercel.json           # Vercel deployment config
-
-mcp-server/
-├── finance_mcp_server.py     # MCP server implementation
-├── analyzers/
-│   └── finance_analyzer.py   # Pluggable finance analyzer
-├── pyproject.toml            # Python dependencies
-└── start.sh                  # Startup script
 ```
 
 ### Database Schema
@@ -174,8 +156,6 @@ mcp-server/
 
 ### Analysis Backend Configuration
 
-- `PRIMARY_ANALYSIS_BACKEND`: Choose 'mcp' or 'fastapi' (default: 'mcp')
-- `ENABLE_BACKEND_FALLBACK`: Enable automatic fallback (default: 'false')
 - `FASTAPI_SERVICE_URL`: FastAPI microservice URL (external service, deployed separately)
 - `RISK_FREE_RATE`: Risk-free rate for calculations (optional, defaults to 0.02)
 
@@ -202,16 +182,8 @@ mcp-server/
 - **Environment Variables**: Ensure `DATABASE_URL` is properly configured in your deployment environment
 - **Build Process**: Prisma generation happens automatically via the postinstall hook
 - **FastAPI Service**: Can be deployed separately on Vercel or other platforms
-- **MCP Server**: Requires database access for portfolio analysis
 
 ## Backend Architecture Notes
-
-### MCP Server
-
-- Implements financial analysis tools through Model Context Protocol
-- Uses SQLAlchemy for database connections
-- Provides portfolio risk analysis, Sharpe ratio calculations, market data fetching
-- Supports pluggable analyzer architecture
 
 ### FastAPI Service
 
@@ -222,9 +194,8 @@ mcp-server/
 
 ### Unified Service Layer
 
-- Transparent backend switching with health checks
-- Automatic fallback between MCP and FastAPI
-- Consistent API interface regardless of backend
+- Routes analysis requests to the FastAPI client
+- Consistent API interface for all analysis types
 - Comprehensive error handling and logging
 
 ## Testing & Scripts
@@ -243,7 +214,6 @@ mcp-server/
 ## Python Notes
 
 - Please use uv as package manager and Python version 3.12
-- Both MCP server and FastAPI service use consistent dependency management
 - Environment variables required for database connections in Python services
 
 ## Mobile vs Desktop Design Decisions

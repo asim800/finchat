@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/asset-metrics/search/route.ts
 // API endpoints for searching asset metrics
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AssetMetricsService } from '@/lib/asset-metrics-service';

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/textarea-form-field.tsx
 // Standardized textarea field with validation and character counting
-// ============================================================================
 
 'use client';
 
@@ -110,7 +107,7 @@ export const TextareaFormField: React.FC<TextareaFormFieldProps> = ({
             'text-xs',
             isOverLimit ? 'text-red-600' : 
             isNearLimit ? 'text-yellow-600' : 
-            'text-gray-500'
+            'text-gray-500 dark:text-gray-400'
           )}>
             {characterCount}/{maxLength}
           </span>
@@ -129,7 +126,7 @@ export const TextareaFormField: React.FC<TextareaFormFieldProps> = ({
       {hasSuggestions && (
         <Alert className={fieldStyles.suggestions}>
           <Lightbulb className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
+          <AlertDescription className="text-blue-800 dark:text-blue-300">
             <div className="font-medium mb-1">Suggestions:</div>
             <ul className="list-disc list-inside space-y-1 text-sm">
               {suggestions.map((suggestion, index) => (

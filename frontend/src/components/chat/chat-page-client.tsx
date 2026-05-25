@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/chat/chat-page-client.tsx
 // Client wrapper for chat page with guest asset support
-// ============================================================================
 
 'use client';
 
@@ -76,7 +73,7 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 md:py-8">
       {/* Chat Header with CSV Manager */}
       <ChatHeader 
         isGuestMode={isGuestMode} 
@@ -86,7 +83,7 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
 
       {/* Guest Mode Notice */}
       {isGuestMode && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mb-4 md:mb-6 bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -111,7 +108,7 @@ export const ChatPageClient: React.FC<ChatPageClientProps> = ({
       )}
 
       {/* Chat Container */}
-      <div className="bg-white rounded-lg shadow h-[calc(100vh-200px)]">
+      <div className="bg-white dark:bg-slate-900 md:rounded-lg md:shadow h-[calc(100vh-140px)] md:h-[calc(100vh-200px)]">
         <ResponsiveChatLayout isGuestMode={isGuestMode} userId={userId} />
       </div>
     </div>

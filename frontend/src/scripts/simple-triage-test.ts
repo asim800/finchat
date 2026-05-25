@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-// ============================================================================
-// FILE: scripts/simple-triage-test.ts
 // Simple standalone test for chat triage system
-// ============================================================================
 
 import { QueryTriage } from '../lib/query-triage';
 import { ChatTriageProcessor } from '../lib/chat-triage-processor';

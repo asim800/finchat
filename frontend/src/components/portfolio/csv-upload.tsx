@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/csv-upload.tsx
 // CSV upload component for portfolio management
-// ============================================================================
 
 'use client';
 
@@ -285,14 +282,14 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
           </>
         ) : (
           <div className="space-y-4">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <h4 className="font-medium text-green-800 mb-2">
+            <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-900 rounded-lg p-3">
+              <h4 className="font-medium text-green-800 dark:text-green-300 mb-2">
                 Found {parsedAssets.length} assets to import
               </h4>
               
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {parsedAssets.map((asset, index) => (
-                  <div key={index} className="text-sm text-green-700">
+                  <div key={index} className="text-sm text-green-700 dark:text-green-300">
                     <div className="flex justify-between">
                       <span>{asset.symbol}: {asset.quantity} shares ({asset.assetType})</span>
                       <span>
@@ -320,9 +317,9 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
             </div>
 
             {errors.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <h4 className="font-medium text-red-800 mb-2">Errors found:</h4>
-                <ul className="text-sm text-red-700 space-y-1">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-lg p-3">
+                <h4 className="font-medium text-red-800 dark:text-red-300 mb-2">Errors found:</h4>
+                <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
                   {errors.map((error, index) => (
                     <li key={index}>• {error}</li>
                   ))}
@@ -345,7 +342,7 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
           </div>
         )}
 
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 dark:text-gray-400">
           <p><strong>CSV Format (Position-Based):</strong></p>
           <p className="mt-1">Column 1: Symbol (required) | Column 2: Quantity (required) | Column 3: Price (optional) | Column 4: AssetType (optional) | Column 5: PurchaseDate (optional)</p>
           <p className="mt-1"><strong>Basic Example:</strong></p>

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/portfolio-header.tsx
 // Portfolio page header with action buttons
-// ============================================================================
 
 'use client';
 

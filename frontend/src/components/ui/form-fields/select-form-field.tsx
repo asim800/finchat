@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/select-form-field.tsx
 // Standardized select field with validation
-// ============================================================================
 
 'use client';
 
@@ -124,7 +121,7 @@ export const SelectFormField: React.FC<SelectFormFieldProps> = ({
       {hasSuggestions && (
         <Alert className={fieldStyles.suggestions}>
           <Lightbulb className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
+          <AlertDescription className="text-blue-800 dark:text-blue-300">
             <div className="font-medium mb-1">Suggestions:</div>
             <ul className="list-disc list-inside space-y-1 text-sm">
               {suggestions.map((suggestion, index) => (

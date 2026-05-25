@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/chat-simulation.ts (UPDATED)
 // Updated simulation with file upload and portfolio input support
-// ============================================================================
 
 import { detectPortfolioIntent, parsePortfolioInput, formatPortfolioResponse } from './portfolio-parser';
 import { GuestPortfolioService } from './guest-portfolio';
@@ -334,7 +331,6 @@ ${isGuestMode ? '\n*Sign up to get personalized market insights based on your po
     content: defaultResponses[Math.floor(Math.random() * defaultResponses.length)]
   };
 }
-
 
 
 

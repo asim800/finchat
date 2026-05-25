@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/validation.ts
 // Real-time form validation system with specific field errors
-// ============================================================================
 
 import { z } from 'zod';
 

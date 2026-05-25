@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: scripts/populate-asset-metrics.ts
 // Script to populate initial asset metrics data for testing and development
-// ============================================================================
 
 import { AssetMetricsService } from '../lib/asset-metrics-service';
 

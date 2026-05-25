@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: scripts/add-sample-prices.ts
 // Script to add sample historical price data for testing
-// ============================================================================
 
 import { HistoricalPriceService } from '../lib/historical-price-service';
 

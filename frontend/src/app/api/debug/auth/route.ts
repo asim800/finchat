@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/debug/auth/route.ts
 // Debug endpoint to check authentication status
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 

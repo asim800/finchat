@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/chat/route.ts
 // Chat API endpoint with LLM integration
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { llmService, LLMProvider } from '@/lib/llm-service';
@@ -563,6 +560,5 @@ async function analyzeMCPToolNeeds(
     mcpStatus
   };
 }
-
 
 

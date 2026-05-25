@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/portfolio-badges.tsx
 // Portfolio-specific badge indicators for risk assessment
-// ============================================================================
 
 'use client';
 

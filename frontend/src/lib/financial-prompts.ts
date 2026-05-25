@@ -1,9 +1,7 @@
-// ============================================================================
-// FILE: lib/financial-prompts.ts
 // Specialized prompts for financial AI assistant
-// ============================================================================
 
 import { formatCurrency } from './number-utils';
+import type { PromptPortfolio as Portfolio } from './types/portfolio';
 
 export const FINANCIAL_SYSTEM_PROMPT = `You are an expert AI financial assistant with access to advanced portfolio analysis tools. Your role is to provide helpful, accurate, and personalized financial analysis using both your knowledge and real-time portfolio calculations.
 
@@ -39,14 +37,6 @@ For market analysis:
 When users ask about portfolio performance, risk, or Sharpe ratios, use the appropriate tools to provide accurate, real-time analysis rather than general insights.
 
 Always be encouraging while being realistic about risks and uncertainties in investing.`;
-
-interface Portfolio {
-  id: string;
-  name: string;
-  description?: string | null;
-  assets: Array<{ symbol: string; [key: string]: unknown }>;
-  totalValue: number;
-}
 
 interface PortfolioData {
   holdings?: Array<{ symbol: string; [key: string]: unknown }>;
@@ -221,4 +211,3 @@ export const generateFinancialPrompt = (
     portfolioSelection
   };
 };
-

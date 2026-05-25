@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/progress.tsx
 // Progress bar component for analytics dashboard
-// ============================================================================
 
 "use client"
 
@@ -22,7 +19,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
       <div
         ref={ref}
         className={cn(
-          "relative h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700",
+          "relative h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700 dark:bg-gray-700",
           className
         )}
         {...props}

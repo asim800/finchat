@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/chat/llm-selector.tsx
 // Component to select LLM provider
-// ============================================================================
 
 'use client';
 
@@ -27,11 +24,11 @@ export const LLMSelector: React.FC<LLMSelectorProps> = ({
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      <span className="text-sm text-gray-600">AI Model:</span>
+      <span className="text-sm text-gray-600 dark:text-gray-400">AI Model:</span>
       <select
         value={selectedProvider}
         onChange={(e) => onProviderChange(e.target.value as LLMProvider)}
-        className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+        className="text-sm border border-gray-300 dark:border-slate-700 rounded px-2 py-1 bg-white dark:bg-slate-900"
       >
         {availableProviders.map(provider => (
           <option key={provider} value={provider}>

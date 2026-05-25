@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: middleware.ts (UPDATED)
 // Updated middleware to allow guest access to certain pages
-// ============================================================================
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -49,6 +46,5 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
-
 
 

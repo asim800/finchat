@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/portfolio-page-wrapper.tsx
 // Client wrapper for portfolio page
-// ============================================================================
 
 'use client';
 
@@ -84,7 +81,7 @@ export const PortfolioPageWrapper: React.FC<PortfolioPageWrapperProps> = ({
         />
 
         {/* Portfolio Table */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow">
           <PortfolioTable 
             isGuestMode={isGuestMode} 
             userId={userId} 
@@ -97,7 +94,7 @@ export const PortfolioPageWrapper: React.FC<PortfolioPageWrapperProps> = ({
 
   // Authenticated mode - use multi-portfolio manager (no global header needed)
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-white dark:bg-slate-900 rounded-lg shadow">
       <MultiPortfolioManager 
         isGuestMode={isGuestMode} 
         userId={userId} 

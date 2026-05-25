@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/chat-service.ts
 // Chat service for managing chat sessions and messages
-// ============================================================================
 
 import { prisma } from './db';
 import type { ChatSession as PrismaChatSession, Message as PrismaMessage, Prisma } from '@prisma/client';

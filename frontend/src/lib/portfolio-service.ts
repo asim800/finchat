@@ -1,43 +1,12 @@
-// ============================================================================
-// FILE: lib/portfolio-service.ts
 // Portfolio management service for authenticated users
-// ============================================================================
 
 import { prisma } from './db';
 import { ParsedAsset } from './portfolio-parser';
 import { HistoricalPriceService } from './historical-price-service';
-import { AssetMetricsService, AssetMetrics } from './asset-metrics-service';
+import { AssetMetricsService } from './asset-metrics-service';
 
-export interface Portfolio {
-  id: string;
-  name: string;
-  description?: string | null;
-  assets: Asset[];
-  totalValue: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Asset {
-  id: string;
-  symbol: string;
-  quantity: number;
-  avgCost?: number | null;
-  price?: number | null; // Current market price from historical data
-  assetType: string;
-  currentValue?: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-  purchaseDate?: Date | null;
-  
-  // Options-specific fields
-  optionType?: string | null;
-  expirationDate?: Date | null;
-  strikePrice?: number | null;
-  
-  // Asset metrics
-  metrics?: AssetMetrics | null;
-}
+export type { Portfolio, Asset } from './types/portfolio';
+import type { Portfolio, Asset } from './types/portfolio';
 
 export class PortfolioService {
   

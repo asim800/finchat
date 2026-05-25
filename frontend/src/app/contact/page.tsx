@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/contact/page.tsx
 // Contact Us page with badge selection and email functionality
-// ============================================================================
 
 'use client';
 
@@ -166,9 +163,9 @@ export default function ContactPage() {
           <div className="container mx-auto px-4 py-8">
             <div className="max-w-2xl mx-auto">
               <div className="animate-pulse space-y-4">
-                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                <div className="h-32 bg-gray-200 rounded"></div>
+                <div className="h-8 bg-gray-200 dark:bg-slate-700 rounded w-1/3"></div>
+                <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-2/3"></div>
+                <div className="h-32 bg-gray-200 dark:bg-slate-700 rounded"></div>
               </div>
             </div>
           </div>
@@ -209,9 +206,9 @@ export default function ContactPage() {
 
             {/* Success Message */}
             {submitStatus === 'success' && (
-              <Alert className="mb-6 border-green-200 bg-green-50">
+              <Alert className="mb-6 border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/40">
                 <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
+                <AlertDescription className="text-green-800 dark:text-green-300">
                   Thank you for contacting us! We&apos;ve received your message and will get back to you soon.
                 </AlertDescription>
               </Alert>
@@ -244,11 +241,11 @@ export default function ContactPage() {
                     value={form.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     disabled={isAuthenticated}
-                    className={isAuthenticated ? 'bg-gray-50' : ''}
+                    className={isAuthenticated ? 'bg-gray-50 dark:bg-slate-800/50' : ''}
                     required
                   />
                   {isAuthenticated && (
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                       Signed in as {user?.firstName} {user?.lastName}
                     </p>
                   )}
@@ -272,8 +269,8 @@ export default function ContactPage() {
                         onClick={() => handleTopicToggle(topic.id)}
                         className={`p-3 rounded-lg border transition-all text-left ${
                           form.selectedTopics.includes(topic.id)
-                            ? 'border-blue-500 bg-blue-50 text-blue-900'
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200'
+                            : 'border-gray-200 dark:border-slate-700 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
                         <div className="flex items-center space-x-2">
@@ -287,7 +284,7 @@ export default function ContactPage() {
                   {/* Selected Topics Display */}
                   {form.selectedTopics.length > 0 && (
                     <div className="mt-4">
-                      <p className="text-sm text-gray-600 mb-2">Selected topics:</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Selected topics:</p>
                       <div className="flex flex-wrap gap-2">
                         {form.selectedTopics.map((topicId) => {
                           const topic = CONTACT_TOPICS.find(t => t.id === topicId);
@@ -320,7 +317,7 @@ export default function ContactPage() {
                     className="resize-none"
                     required
                   />
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                     {form.message.length}/1000 characters
                   </p>
                 </CardContent>
@@ -349,9 +346,9 @@ export default function ContactPage() {
             </form>
 
             {/* Additional Help */}
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-2">Need immediate assistance?</h3>
-              <p className="text-sm text-gray-600">
+            <div className="mt-8 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Need immediate assistance?</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 For urgent matters or technical support, you can also reach us directly at{' '}
                 <a href="mailto:quantwell7@gmail.com" className="text-blue-600 hover:underline">
                   quantwell7@gmail.com

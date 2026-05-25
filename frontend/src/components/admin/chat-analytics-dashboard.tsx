@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/admin/chat-analytics-dashboard.tsx
 // Real-time analytics dashboard for chat query analysis
-// ============================================================================
 
 'use client';
 
@@ -23,21 +20,21 @@ interface MetricCardProps {
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, subtitle, trend, color = 'blue' }) => {
   const colorClasses = {
-    green: 'text-green-600 bg-green-50',
-    red: 'text-red-600 bg-red-50',
-    blue: 'text-blue-600 bg-blue-50',
-    yellow: 'text-yellow-600 bg-yellow-50'
+    green: 'text-green-600 bg-green-50 dark:bg-green-950/40',
+    red: 'text-red-600 bg-red-50 dark:bg-red-950/40',
+    blue: 'text-blue-600 bg-blue-50 dark:bg-blue-950/40',
+    yellow: 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950/40'
   };
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-gray-600">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         {subtitle && (
-          <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
         )}
         {trend && (
           <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-2 ${colorClasses[color]}`}>
@@ -142,7 +139,7 @@ export default function ChatAnalyticsDashboard() {
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading analytics...</p>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Loading analytics...</p>
         </div>
       </div>
     );
@@ -152,7 +149,7 @@ export default function ChatAnalyticsDashboard() {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <p className="text-gray-600">No analytics data available</p>
+          <p className="text-gray-600 dark:text-gray-400">No analytics data available</p>
           <Button onClick={() => setIsLoading(true)} className="mt-2">
             Retry
           </Button>
@@ -236,21 +233,21 @@ export default function ChatAnalyticsDashboard() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">Regexp Processing</span>
-                  <span className="text-sm text-gray-500">{analytics.performance.regexpAvgLatency.toFixed(0)}ms</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{analytics.performance.regexpAvgLatency.toFixed(0)}ms</span>
                 </div>
                 <Progress value={Math.min((analytics.performance.regexpAvgLatency / 1000) * 100, 100)} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">LLM Processing</span>
-                  <span className="text-sm text-gray-500">{analytics.performance.llmAvgLatency.toFixed(0)}ms</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{analytics.performance.llmAvgLatency.toFixed(0)}ms</span>
                 </div>
                 <Progress value={Math.min((analytics.performance.llmAvgLatency / 3000) * 100, 100)} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium">Hybrid Processing</span>
-                  <span className="text-sm text-gray-500">{analytics.performance.hybridAvgLatency.toFixed(0)}ms</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{analytics.performance.hybridAvgLatency.toFixed(0)}ms</span>
                 </div>
                 <Progress value={Math.min((analytics.performance.hybridAvgLatency / 2000) * 100, 100)} className="h-2" />
               </div>
@@ -268,21 +265,21 @@ export default function ChatAnalyticsDashboard() {
                 <span className="text-sm font-medium">Regexp Queries</span>
                 <div className="flex items-center space-x-2">
                   <Progress value={analytics.queryPatterns.regexpSuccessRate} className="w-20 h-2" />
-                  <span className="text-sm text-gray-500">{analytics.queryPatterns.regexpSuccessRate.toFixed(1)}%</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{analytics.queryPatterns.regexpSuccessRate.toFixed(1)}%</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">LLM Queries</span>
                 <div className="flex items-center space-x-2">
                   <Progress value={analytics.queryPatterns.llmFallbackRate} className="w-20 h-2" />
-                  <span className="text-sm text-gray-500">{analytics.queryPatterns.llmFallbackRate.toFixed(1)}%</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{analytics.queryPatterns.llmFallbackRate.toFixed(1)}%</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Hybrid Queries</span>
                 <div className="flex items-center space-x-2">
                   <Progress value={analytics.queryPatterns.hybridUsageRate} className="w-20 h-2" />
-                  <span className="text-sm text-gray-500">{analytics.queryPatterns.hybridUsageRate.toFixed(1)}%</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{analytics.queryPatterns.hybridUsageRate.toFixed(1)}%</span>
                 </div>
               </div>
             </div>
@@ -305,7 +302,7 @@ export default function ChatAnalyticsDashboard() {
                     <Badge variant="outline">{action.action}</Badge>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">{action.count}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{action.count}</span>
                     <span className="text-xs text-gray-400">({action.percentage.toFixed(1)}%)</span>
                   </div>
                 </div>
@@ -327,7 +324,7 @@ export default function ChatAnalyticsDashboard() {
                     <Badge variant="outline">{symbol.symbol}</Badge>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">{symbol.count}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{symbol.count}</span>
                     <span className="text-xs text-gray-400">({symbol.percentage.toFixed(1)}%)</span>
                   </div>
                 </div>
@@ -381,21 +378,21 @@ export default function ChatAnalyticsDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold">{analytics.userBehavior.sessionLength.toFixed(1)}</div>
-              <div className="text-sm text-gray-500">Avg Session Length</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Avg Session Length</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{analytics.userBehavior.queriesPerSession.toFixed(1)}</div>
-              <div className="text-sm text-gray-500">Queries per Session</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Queries per Session</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">{analytics.userBehavior.repeatUsers}</div>
-              <div className="text-sm text-gray-500">Repeat Users</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Repeat Users</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">
                 {analytics.userBehavior.guestVsAuth.guest + analytics.userBehavior.guestVsAuth.authenticated}
               </div>
-              <div className="text-sm text-gray-500">Total Users</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Total Users</div>
             </div>
           </div>
         </CardContent>

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/admin-auth.ts
 // Admin authentication and authorization utilities
-// ============================================================================
 
 import { NextRequest } from 'next/server';
 import { getUserFromRequest } from './auth';

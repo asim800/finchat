@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-// ============================================================================
-// FILE: scripts/realistic-portfolio-test.ts
 // Realistic portfolio test with sequential operations
-// ============================================================================
 
 import { QueryTriage } from '../lib/query-triage';
 import { ChatTriageProcessor } from '../lib/chat-triage-processor';

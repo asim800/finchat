@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/auth.ts
 // Authentication utilities and JWT handling
-// ============================================================================
 
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
@@ -97,4 +94,3 @@ export async function getUserFromRequest(request: NextRequest): Promise<AuthUser
     return null;
   }
 }
-

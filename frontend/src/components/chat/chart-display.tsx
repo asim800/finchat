@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/chat/chart-display.tsx
 // Chart component for financial data visualization
-// ============================================================================
 
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -53,10 +50,10 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data, onClose }) => 
             </div>
           );
         }
-        return <div className="text-gray-500">Figure format not supported</div>;
+        return <div className="text-gray-500 dark:text-gray-400">Figure format not supported</div>;
       
       case 'pie':
-        if (!data.data) return <div className="text-gray-500">No data provided</div>;
+        if (!data.data) return <div className="text-gray-500 dark:text-gray-400">No data provided</div>;
         return (
           <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 200 : 300}>
             <PieChart>
@@ -80,7 +77,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data, onClose }) => 
         );
       
       case 'bar':
-        if (!data.data) return <div className="text-gray-500">No data provided</div>;
+        if (!data.data) return <div className="text-gray-500 dark:text-gray-400">No data provided</div>;
         return (
           <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 200 : 300}>
             <BarChart data={data.data}>
@@ -101,20 +98,20 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data, onClose }) => 
         );
       
       default:
-        return <div className="text-gray-500">Chart type not supported</div>;
+        return <div className="text-gray-500 dark:text-gray-400">Chart type not supported</div>;
     }
   };
 
   return (
-    <div className="relative bg-white p-2 md:p-4 rounded-lg border border-gray-200">
+    <div className="relative bg-white dark:bg-slate-900 p-2 md:p-4 rounded-lg border border-gray-200 dark:border-slate-700">
       <div className="flex items-center justify-between mb-2 md:mb-3">
-        <h4 className="text-xs md:text-sm font-medium text-gray-700 truncate pr-8">{data.title}</h4>
+        <h4 className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 truncate pr-8">{data.title}</h4>
         
         {/* Optional Close Button for Inline Charts */}
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-2 right-2 md:top-3 md:right-3 w-6 h-6 md:w-5 md:h-5 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors"
+            className="absolute top-2 right-2 md:top-3 md:right-3 w-6 h-6 md:w-5 md:h-5 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 text-gray-500 dark:text-gray-400 hover:text-gray-700 transition-colors"
             aria-label="Hide chart"
             title="Hide chart"
           >
@@ -138,5 +135,4 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({ data, onClose }) => 
     </div>
   );
 };
-
 

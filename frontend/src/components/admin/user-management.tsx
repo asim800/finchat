@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/admin/user-management.tsx
 // User management interface with CRUD operations
-// ============================================================================
 
 'use client';
 
@@ -118,11 +115,11 @@ export const UserManagement: React.FC<UserManagementProps> = ({ adminUser }) => 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300';
       case 'user':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-200';
     }
   };
 
@@ -191,9 +188,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ adminUser }) => 
                           <div className="font-medium">
                             {user.firstName} {user.lastName}
                           </div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
                           {user.phone && (
-                            <div className="text-sm text-gray-500">{user.phone}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{user.phone}</div>
                           )}
                         </div>
                       </TableCell>
@@ -206,7 +203,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ adminUser }) => 
                         <div className="text-sm">
                           {user.city && user.state ? `${user.city}, ${user.state}` : 'Not specified'}
                           {user.employmentStatus && (
-                            <div className="text-gray-500 capitalize">{user.employmentStatus}</div>
+                            <div className="text-gray-500 dark:text-gray-400 capitalize">{user.employmentStatus}</div>
                           )}
                         </div>
                       </TableCell>

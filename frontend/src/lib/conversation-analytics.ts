@@ -1,7 +1,6 @@
-// ============================================================================
-// FILE: lib/conversation-analytics.ts
 // Comprehensive conversation analytics and event tracking system
-// ============================================================================
+
+import { httpPost } from './http';
 
 // Generate UUID using crypto API (Node.js and modern browsers)
 const generateUUID = (): string => {
@@ -511,11 +510,7 @@ class ConversationAnalytics {
     
     if (process.env.ANALYTICS_ENDPOINT) {
       try {
-        await fetch(process.env.ANALYTICS_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(event)
-        });
+        await httpPost(process.env.ANALYTICS_ENDPOINT, event, { parseJson: false });
       } catch (error) {
         console.warn('Failed to send analytics event:', error);
       }

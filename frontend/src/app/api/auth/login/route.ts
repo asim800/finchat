@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/auth/login/route.ts
 // User login endpoint
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyPassword, generateToken } from '@/lib/auth';
@@ -82,4 +79,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

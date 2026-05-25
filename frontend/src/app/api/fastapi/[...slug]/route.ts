@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: src/app/api/fastapi/[...slug]/route.ts
 // Proxy API route to forward requests to FastAPI chat engine
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 

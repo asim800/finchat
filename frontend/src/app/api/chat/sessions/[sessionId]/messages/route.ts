@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/chat/sessions/[sessionId]/messages/route.ts
 // API endpoint for loading more messages with pagination
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';

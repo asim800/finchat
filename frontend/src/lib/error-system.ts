@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/error-system.ts
 // Comprehensive error system with recovery actions
-// ============================================================================
 
 export interface RecoveryAction {
   label: string;

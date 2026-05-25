@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/auth/logout/route.ts
 // User logout endpoint
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -19,4 +16,3 @@ export async function POST(request: NextRequest) {
   
   return response;
 }
-

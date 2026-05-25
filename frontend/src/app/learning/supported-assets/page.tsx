@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/learning/supported-assets/page.tsx
 // Supported Assets page displaying all symbols and asset types from historical_prices
-// ============================================================================
 
 'use client';
 

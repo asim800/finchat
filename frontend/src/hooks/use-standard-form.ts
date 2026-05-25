@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: hooks/use-standard-form.ts
 // Standardized form management hook with consistent validation patterns
-// ============================================================================
 
 'use client';
 

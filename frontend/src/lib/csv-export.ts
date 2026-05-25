@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/csv-export.ts
 // CSV export utilities for portfolio data
-// ============================================================================
 
 import { formatPurchaseDate } from './tax-utils';
 

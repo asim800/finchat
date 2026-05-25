@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/validated-form-field.tsx
 // Enhanced form field component with real-time validation
-// ============================================================================
 
 'use client';
 
@@ -110,9 +107,9 @@ export const ValidatedFormField: React.FC<ValidatedFormFieldProps> = ({
 
       {/* Suggestions */}
       {hasSuggestions && (
-        <Alert className="border-blue-200 bg-blue-50">
+        <Alert className="border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/40">
           <Lightbulb className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
+          <AlertDescription className="text-blue-800 dark:text-blue-300">
             <div className="font-medium mb-1">Suggestions:</div>
             <ul className="list-disc list-inside space-y-1 text-sm">
               {suggestions.map((suggestion, index) => (

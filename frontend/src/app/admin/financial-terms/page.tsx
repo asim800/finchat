@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/admin/financial-terms/page.tsx
 // Admin page for managing financial terms
-// ============================================================================
 
 'use client';
 
@@ -63,7 +60,7 @@ const TermCard = React.memo<{
       </div>
     </CardHeader>
     <CardContent>
-      <p className="text-gray-700 mb-3">{term.definition}</p>
+      <p className="text-gray-700 dark:text-gray-300 mb-3">{term.definition}</p>
       {term.keywords.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {term.keywords.map(keyword => (
@@ -299,7 +296,7 @@ const FinancialTermsAdminComponent = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Financial Terms Management</h1>
-          <p className="text-gray-600">Manage financial terms and definitions</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage financial terms and definitions</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -383,7 +380,7 @@ const FinancialTermsAdminComponent = () => {
                   id="isActive"
                   checked={formData.isActive}
                   onChange={handleActiveChange}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 dark:border-slate-700"
                 />
                 <Label htmlFor="isActive">Active</Label>
               </div>
@@ -439,7 +436,7 @@ const FinancialTermsAdminComponent = () => {
       
       {filteredTerms.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No terms found matching your criteria.</p>
+          <p className="text-gray-500 dark:text-gray-400">No terms found matching your criteria.</p>
         </div>
       )}
     </div>

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/asset-metrics/sectors/route.ts
 // API endpoints for getting sectors and industries
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AssetMetricsService } from '@/lib/asset-metrics-service';

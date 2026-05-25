@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/dashboard/chat/page.tsx (UPDATED)
 // Updated chat page with actual chat interface
-// ============================================================================
 
 import { headers } from 'next/headers';
 import { ChatPageClient } from '@/components/chat/chat-page-client';
@@ -44,5 +41,4 @@ export default async function ChatPage() {
     />
   );
 }
-
 

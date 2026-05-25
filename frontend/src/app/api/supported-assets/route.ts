@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: api/supported-assets/route.ts
 // API endpoint to fetch all supported assets from historical_prices table
-// ============================================================================
 
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';

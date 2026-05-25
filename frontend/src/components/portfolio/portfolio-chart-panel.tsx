@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/portfolio-chart-panel.tsx
 // Dedicated portfolio chart panel that displays outside of chat
-// ============================================================================
 
 'use client';
 
@@ -32,13 +29,13 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
   onClose
 }) => {
   return (
-    <div className={`relative bg-white border border-gray-100 ${className}`}>
+    <div className={`relative bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 ${className}`}>
       {/* Minimalist Header */}
       {chartData && (
-        <div className="p-2 md:p-3 border-b border-gray-100">
+        <div className="p-2 md:p-3 border-b border-gray-100 dark:border-slate-700">
           <div className="flex items-center justify-between pr-8 md:pr-10">
-            <span className="text-sm font-medium text-gray-700 truncate mr-2">{chartData.title}</span>
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded whitespace-nowrap">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate mr-2">{chartData.title}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded whitespace-nowrap">
               {chartData.type.toUpperCase()}
             </span>
           </div>
@@ -47,7 +44,7 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="absolute top-2 right-2 md:top-3 md:right-3 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors"
+              className="absolute top-2 right-2 md:top-3 md:right-3 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 text-gray-500 dark:text-gray-400 hover:text-gray-700 transition-colors"
               aria-label="Close chart"
               title="Close chart"
             >
@@ -76,7 +73,7 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
             <ChartDisplay data={chartData} />
           </div>
         ) : (
-          <div className="h-64 md:h-80 flex items-center justify-center text-gray-500">
+          <div className="h-64 md:h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
             <div className="text-center">
               <svg 
                 className="mx-auto h-12 w-12 text-gray-300 mb-4" 
@@ -91,7 +88,7 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" 
                 />
               </svg>
-              <p className="text-sm text-gray-500">No chart data available</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">No chart data available</p>
               <p className="text-xs text-gray-400 mt-1">
                 Ask for a portfolio analysis to see charts here
               </p>
@@ -102,9 +99,9 @@ export const PortfolioChartPanel: React.FC<PortfolioChartPanelProps> = ({
 
       {/* Chart Actions */}
       {chartData && (
-        <div className="p-2 md:p-4 border-t border-gray-200 bg-gray-50">
+        <div className="p-2 md:p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
           <div className="flex justify-between items-center text-xs md:text-sm">
-            <span className="text-gray-600 truncate mr-2">
+            <span className="text-gray-600 dark:text-gray-400 truncate mr-2">
               {chartData.type === 'figure' ? (
                 chartData.figureData ? 'Interactive Dashboard' : 'Figure Display'
               ) : (

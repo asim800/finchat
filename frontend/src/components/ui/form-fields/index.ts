@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/index.ts
 // Centralized exports for reusable form field components
-// ============================================================================
 
 export { StandardFormField } from './standard-form-field';
 export { NumberFormField } from './number-form-field';

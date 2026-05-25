@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/chat/chat-header.tsx
 // Chat page header with action buttons
-// ============================================================================
 
 'use client';
 
@@ -26,10 +23,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   guestAssets = [],
   onCsvUploadComplete
 }) => {
-  const title = 'Interactive Chat';
-  const description = isGuestMode 
-    ? 'Chat with our AI assistant about general financial topics. Sign up for personalized analysis!'
-    : 'Get personalized financial insights and portfolio analysis from our AI assistant.';
+  const title = '';
+  const description = 'Awareness Not Financial Advice';
 
   const actions = [
     {

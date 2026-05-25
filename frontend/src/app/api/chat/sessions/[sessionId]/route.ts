@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/chat/sessions/[sessionId]/route.ts
 // Get specific chat session with messages
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/admin/users/route.ts
 // Admin API for user management (CRUD operations)
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, ADMIN_UNAUTHORIZED } from '@/lib/admin-auth';

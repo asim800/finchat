@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/asset-metrics-service.ts
 // Asset metrics service for managing financial data (beta, PE ratio, etc.)
-// ============================================================================
 
 import { prisma } from './db';
 

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/admin/page.tsx
 // Admin dashboard with user management and database access
-// ============================================================================
 
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
@@ -62,7 +59,7 @@ export default async function AdminPage() {
               </span>
               <a 
                 href="/dashboard" 
-                className="bg-white text-red-600 px-4 py-2 rounded hover:bg-gray-100 transition-colors"
+                className="bg-white dark:bg-slate-900 text-red-600 px-4 py-2 rounded hover:bg-gray-100 transition-colors"
               >
                 Back to App
               </a>

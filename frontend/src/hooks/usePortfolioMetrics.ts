@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: hooks/usePortfolioMetrics.ts
 // Custom hook for portfolio metrics and analytics
-// ============================================================================
 
 'use client';
 

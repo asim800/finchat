@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/auth/register-form.tsx
 // Registration form component
-// ============================================================================
 
 'use client';
 
@@ -111,7 +108,7 @@ export const RegisterForm: React.FC = () => {
           </Button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Already have an account?{' '}
               <a
                 href="/login"
@@ -126,5 +123,4 @@ export const RegisterForm: React.FC = () => {
     </Card>
   );
 };
-
 

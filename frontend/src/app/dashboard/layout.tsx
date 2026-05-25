@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/dashboard/layout.tsx
 // Dashboard layout with templated TopBar
-// ============================================================================
 
 import { DashboardLayout } from '@/components/layouts/dashboard-layout';
 

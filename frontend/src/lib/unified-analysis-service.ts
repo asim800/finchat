@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/unified-analysis-service.ts
 // Financial analysis service using FastAPI backend
-// ============================================================================
 
 import { fastAPIClient, formatRiskAnalysis as fastapiFormatRisk, formatSharpeAnalysis as fastapiFormatSharpe, formatPortfolioOptimization, formatMonteCarloSimulation, formatSentimentAnalysis } from './fastapi-client';
 import { backendConfig } from './backend-config';

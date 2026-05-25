@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/authenticated-top-bar.tsx
 // Top bar template for authenticated users
-// ============================================================================
 
 'use client';
 

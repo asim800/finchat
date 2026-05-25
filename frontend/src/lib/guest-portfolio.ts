@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/guest-portfolio.ts
 // Temporary portfolio storage for guest users
-// ============================================================================
 
 import { ParsedAsset } from './portfolio-parser';
 

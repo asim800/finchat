@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/chat/message-bubble.tsx (UPDATED)
 // Updated message bubble with provider badges
-// ============================================================================
 
 import React from 'react';
 import { getProviderConfig } from '@/lib/llm-config';
@@ -69,8 +66,8 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({ message }) => {
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
         isUser 
-          ? 'bg-blue-600 text-white' 
-          : 'bg-gray-100 text-gray-900'
+          ? 'bg-blue-600 text-white'
+          : 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-gray-100'
       }`}>
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
         
@@ -78,7 +75,7 @@ const MessageBubbleComponent: React.FC<MessageBubbleProps> = ({ message }) => {
         {!isUser && (
           <div className="mt-2 flex items-center justify-between">
             {getProviderBadge(message.provider)}
-            <p className="text-xs text-gray-500 ml-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 ml-2">
               {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>

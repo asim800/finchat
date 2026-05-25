@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/phone-form-field.tsx
 // Specialized phone input with formatting and validation
-// ============================================================================
 
 'use client';
 

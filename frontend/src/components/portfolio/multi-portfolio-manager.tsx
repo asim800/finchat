@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/multi-portfolio-manager.tsx
 // Multiple portfolio management component with collapsible sections
-// ============================================================================
 
 'use client';
 
@@ -13,28 +10,7 @@ import { CsvManager } from './csv-manager';
 import { PortfolioBadges } from './portfolio-badges';
 import { PortfolioDashboard } from './portfolio-dashboard';
 import { usePortfolioMetrics } from '@/hooks/usePortfolioMetrics';
-
-interface Portfolio {
-  id: string;
-  name: string;
-  description?: string | null;
-  assets: DisplayAsset[];
-  totalValue: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface DisplayAsset {
-  id: string;
-  symbol: string;
-  quantity: number;
-  avgCost?: number | null;
-  price?: number | null;
-  assetType: string;
-  totalValue: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import type { DisplayPortfolio as Portfolio, DisplayAsset } from '@/lib/types/portfolio';
 
 interface MultiPortfolioManagerProps {
   isGuestMode?: boolean;
@@ -289,7 +265,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
     return (
       <div className="p-6">
         <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Multiple Portfolios</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Multiple Portfolios</h3>
           <p className="text-gray-500 mb-4">
             Multiple portfolio management is available for registered users only.
           </p>
@@ -337,7 +313,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
 
       {/* Page Title */}
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">My Portfolios</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">My Portfolios</h2>
       </div>
 
       {/* Portfolios List */}
@@ -346,7 +322,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
           <div className="mx-auto h-12 w-12 text-gray-400">
             📊
           </div>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No portfolios yet</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No portfolios yet</h3>
           <p className="mt-1 text-sm text-gray-500">
             Create your first portfolio to start tracking your investments.
           </p>
@@ -359,10 +335,10 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
           ) : (
             <div className="mt-6 max-w-2xl mx-auto">
               <div className="bg-gray-50 p-4 rounded-lg border">
-                <h3 className="text-md font-medium text-gray-900 mb-4">Create Your First Portfolio</h3>
+                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Create Your First Portfolio</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Portfolio Name *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Name *</label>
                     <Input
                       type="text"
                       value={newPortfolioName}
@@ -372,7 +348,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
                     <Input
                       type="text"
                       value={newPortfolioDescription}
@@ -413,9 +389,9 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
             
             return (
               <div key={portfolio.id}>
-                <div className="border rounded-lg bg-white shadow-sm">
+                <div className="border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 shadow-sm">
                   {/* Portfolio Header */}
-                  <div className="p-4 border-b bg-gray-50 rounded-t-lg">
+                  <div className="p-4 border-b dark:border-slate-700 bg-gray-50 dark:bg-slate-800/40 rounded-t-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <button
@@ -449,7 +425,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                         ) : (
                           <div>
                             <div className="flex items-center gap-3 mb-1">
-                              <h3 className="text-lg font-medium text-gray-900">{portfolio.name}</h3>
+                              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{portfolio.name}</h3>
                               <PortfolioBadges 
                                 assets={portfolio.assets}
                                 portfolioValue={portfolioMarketValue}
@@ -505,28 +481,28 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                   {!collapsedPortfolios.has(portfolio.id) && (
                     <div className="p-4 bg-gray-25 border-b">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-blue-50 p-3 rounded-lg border">
-                          <h4 className="text-xs font-medium text-blue-800">Total Assets</h4>
-                          <p className="text-lg font-bold text-blue-900">{portfolio.assets.length}</p>
+                        <div className="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-lg border dark:border-blue-900">
+                          <h4 className="text-xs font-medium text-blue-800 dark:text-blue-300">Total Assets</h4>
+                          <p className="text-lg font-bold text-blue-900 dark:text-blue-200">{portfolio.assets.length}</p>
                         </div>
-                        <div className="bg-green-50 p-3 rounded-lg border">
-                          <h4 className="text-xs font-medium text-green-800">Portfolio Value</h4>
-                          <p className="text-lg font-bold text-green-900">
+                        <div className="bg-green-50 dark:bg-green-950/40 p-3 rounded-lg border dark:border-green-900">
+                          <h4 className="text-xs font-medium text-green-800 dark:text-green-300">Portfolio Value</h4>
+                          <p className="text-lg font-bold text-green-900 dark:text-green-200">
                             ${portfolioMarketValue.toLocaleString()}
                           </p>
                         </div>
-                        <div className="bg-orange-50 p-3 rounded-lg border">
-                          <h4 className="text-xs font-medium text-orange-800">Total Cost</h4>
-                          <p className="text-lg font-bold text-orange-900">
+                        <div className="bg-orange-50 dark:bg-orange-950/40 p-3 rounded-lg border dark:border-orange-900">
+                          <h4 className="text-xs font-medium text-orange-800 dark:text-orange-300">Total Cost</h4>
+                          <p className="text-lg font-bold text-orange-900 dark:text-orange-200">
                             ${portfolioCost.toLocaleString()}
                           </p>
                         </div>
-                        <div className="bg-purple-50 p-3 rounded-lg border">
-                          <h4 className="text-xs font-medium text-purple-800">Gain/Loss</h4>
+                        <div className="bg-purple-50 dark:bg-purple-950/40 p-3 rounded-lg border dark:border-purple-900">
+                          <h4 className="text-xs font-medium text-purple-800 dark:text-purple-300">Gain/Loss</h4>
                           <p className={`text-lg font-bold ${
-                            portfolioMarketValue - portfolioCost >= 0 
-                              ? 'text-green-900' 
-                              : 'text-red-900'
+                            portfolioMarketValue - portfolioCost >= 0
+                              ? 'text-green-900 dark:text-green-300'
+                              : 'text-red-900 dark:text-red-300'
                           }`}>
                             ${(portfolioMarketValue - portfolioCost).toLocaleString()}
                           </p>
@@ -580,11 +556,11 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                         </Button>
                       </div>
                     ) : (
-                      <div className="bg-gray-50 p-4 rounded-lg border">
-                        <h3 className="text-md font-medium text-gray-900 mb-4">Create New Portfolio</h3>
+                      <div className="bg-gray-50 dark:bg-slate-800/40 p-4 rounded-lg border dark:border-slate-700">
+                        <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-4">Create New Portfolio</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Portfolio Name *</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Portfolio Name *</label>
                             <Input
                               type="text"
                               value={newPortfolioName}
@@ -594,7 +570,7 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
                             <Input
                               type="text"
                               value={newPortfolioDescription}

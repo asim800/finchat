@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/dashboard/profile/page.tsx
 // User profile page with comprehensive financial information
-// ============================================================================
 
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';

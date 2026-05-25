@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: scripts/test-portfolio-dashboard.ts
 // Test script for portfolio dashboard functionality
-// ============================================================================
 
 // Test the PortfolioDashboard component with mock data
 const testPortfolioDashboard = () => {

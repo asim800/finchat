@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/chat/chat-with-chart-layout.tsx
 // Layout component that combines chat interface with portfolio chart panel
-// ============================================================================
 
 'use client';
 

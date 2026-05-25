@@ -1,30 +1,9 @@
-// ============================================================================
-// FILE: lib/portfolio-parser.ts
 // Portfolio parsing utilities for chat input
-// ============================================================================
 
 import { QuantityValidationUtils } from './validation';
 
-export interface ParsedAsset {
-  symbol: string;
-  quantity: number;
-  avgCost?: number | null;
-  assetType?: string;
-  purchaseDate?: string;
-  
-  // Options-specific fields
-  optionType?: string;
-  expirationDate?: string;
-  strikePrice?: number;
-}
-
-export interface PortfolioParseResult {
-  success: boolean;
-  assets: ParsedAsset[];
-  totalAssets: number;
-  errors: string[];
-  message: string;
-}
+export type { ParsedAsset, PortfolioParseResult } from './types/portfolio';
+import type { ParsedAsset, PortfolioParseResult } from './types/portfolio';
 
 // Regex patterns for different portfolio input formats
 const PORTFOLIO_PATTERNS = [

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/dashboard/portfolio/page.tsx  
 // Admin reference portfolios page - view and manage template portfolios
-// ============================================================================
 
 import { headers } from 'next/headers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -134,7 +131,7 @@ export default async function ReferencePortfoliosPage() {
       </div>
 
       {/* User Notice */}
-      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="mb-6 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
         <div className="flex">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -142,10 +139,10 @@ export default async function ReferencePortfoliosPage() {
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">
+            <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">
               {isGuestMode ? "Demo Mode" : isAdmin ? "Administrator View" : "Reference Portfolios"}
             </h3>
-            <div className="mt-2 text-sm text-blue-700">
+            <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
               <p>
                 {isGuestMode 
                   ? "These are professionally curated portfolio templates. Sign up for a free account to create your own portfolio and get personalized recommendations."

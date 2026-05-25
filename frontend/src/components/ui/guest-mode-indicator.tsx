@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/guest-mode-indicator.tsx
 // Guest mode capability indicator with clear upgrade prompts
-// ============================================================================
 
 'use client';
 
@@ -28,7 +25,7 @@ export const GuestModeIndicator: React.FC<GuestModeIndicatorProps> = ({
 }) => {
   if (variant === 'minimal') {
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 ${className}`}>
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300 ${className}`}>
         Demo Mode
       </span>
     );
@@ -36,11 +33,11 @@ export const GuestModeIndicator: React.FC<GuestModeIndicatorProps> = ({
 
   if (variant === 'compact') {
     return (
-      <div className={`bg-blue-50 border border-blue-200 rounded-lg p-3 ${className}`}>
+      <div className={`bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-lg p-3 ${className}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <InfoIcon className="h-4 w-4 text-blue-600 mr-2" />
-            <p className="text-sm text-blue-800">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
               Demo mode - data won't be saved permanently
             </p>
           </div>
@@ -56,10 +53,10 @@ export const GuestModeIndicator: React.FC<GuestModeIndicatorProps> = ({
 
   if (variant === 'demo-only') {
     return (
-      <div className={`bg-blue-50 border border-blue-200 rounded-lg p-3 ${className}`}>
+      <div className={`bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-lg p-3 ${className}`}>
         <div className="flex items-center">
           <InfoIcon className="h-4 w-4 text-blue-600 mr-2" />
-          <p className="text-sm text-blue-800">
+          <p className="text-sm text-blue-800 dark:text-blue-300">
             Demo mode - data won't be saved permanently
           </p>
         </div>
@@ -69,11 +66,11 @@ export const GuestModeIndicator: React.FC<GuestModeIndicatorProps> = ({
 
   if (variant === 'inline') {
     return (
-      <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-3 ${className}`}>
+      <div className={`bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-900 rounded-lg p-3 ${className}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <InfoIcon className="h-4 w-4 text-yellow-600 mr-2" />
-            <p className="text-sm text-yellow-800">
+            <p className="text-sm text-yellow-800 dark:text-yellow-300">
               {feature ? (
                 <>Demo mode limits access to <strong>{feature}</strong>. Sign up to unlock all features.</>
               ) : (
@@ -93,15 +90,15 @@ export const GuestModeIndicator: React.FC<GuestModeIndicatorProps> = ({
 
   // Banner variant (default)
   return (
-    <Alert className={`bg-yellow-50 border-yellow-400 border-l-4 ${className}`}>
+    <Alert className={`bg-yellow-50 dark:bg-yellow-950/40 border-yellow-400 border-l-4 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-start">
           <InfoIcon className="h-5 w-5 text-yellow-600 mt-0.5 mr-3" />
           <div>
-            <h3 className="text-yellow-800 font-medium text-sm mb-1">
+            <h3 className="text-yellow-800 dark:text-yellow-300 font-medium text-sm mb-1">
               Demo Mode Active
             </h3>
-            <AlertDescription className="text-yellow-700 text-sm">
+            <AlertDescription className="text-yellow-700 dark:text-yellow-300 text-sm">
               {feature ? (
                 <>You're currently in demo mode. {feature} and other advanced features require an account. Your portfolio data won't be saved permanently.</>
               ) : (
@@ -155,13 +152,13 @@ export const CapabilityCheck: React.FC<CapabilityCheckProps> = ({
       <div className={`relative ${className}`}>
         {children}
         {showOverlay && (
-          <div className="absolute inset-0 bg-gray-50 bg-opacity-90 flex items-center justify-center rounded-lg">
+          <div className="absolute inset-0 bg-gray-50 dark:bg-slate-800/50 bg-opacity-90 flex items-center justify-center rounded-lg">
             <div className="text-center p-4 max-w-sm">
               <InfoIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-600 mb-3 text-sm font-medium">
+              <p className="text-gray-600 dark:text-gray-400 mb-3 text-sm font-medium">
                 Sign up to use {feature}
               </p>
-              <p className="text-gray-500 mb-4 text-xs">
+              <p className="text-gray-500 dark:text-gray-400 mb-4 text-xs">
                 This feature requires a free account to access
               </p>
               <Link href="/register">

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/page-header.tsx
 // Templated page header component for dashboard pages
-// ============================================================================
 
 'use client';
 
@@ -30,13 +27,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   actions = []
 }) => {
   return (
-    <div className="mb-8">
+    <div className="mb-4 md:mb-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-blue-600">
+          <h1 className="text-2xl md:text-3xl font-bold text-blue-600">
             {title}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1 md:mt-2">
             {description}
           </p>
         </div>

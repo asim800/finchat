@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/asset-metrics/[symbol]/route.ts
 // API endpoints for specific symbol asset metrics
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AssetMetricsService } from '@/lib/asset-metrics-service';

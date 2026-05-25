@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/portfolio-page-client.tsx
 // Client-side wrapper for portfolio page functionality
-// ============================================================================
 
 'use client';
 
@@ -57,8 +54,8 @@ const PortfolioPageClientComponent: React.FC<PortfolioPageClientProps> = ({
 
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <PortfolioTable 
+    <div className="bg-white dark:bg-slate-900 rounded-lg shadow">
+      <PortfolioTable
         isGuestMode={isGuestMode} 
         userId={userId} 
         onAssetsChange={handleAssetsChange}

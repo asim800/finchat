@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/historical-price-service.ts
 // Service for managing historical asset prices
-// ============================================================================
 
 import { prisma } from './db';
 

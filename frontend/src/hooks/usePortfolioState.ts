@@ -1,41 +1,10 @@
-// ============================================================================
-// FILE: hooks/usePortfolioState.ts
 // Simplified portfolio state management with useReducer
-// ============================================================================
 
 import { useReducer, useCallback, useEffect } from 'react';
 
 // Types
-export interface DisplayAsset {
-  id: string;
-  symbol: string;
-  quantity: number;
-  avgCost?: number | null;
-  price?: number | null;
-  assetType: string;
-  totalValue: number;
-  createdAt: Date;
-  updatedAt: Date;
-  purchaseDate?: Date | null;
-  
-  // Options-specific fields
-  optionType?: string | null;
-  expirationDate?: Date | null;
-  strikePrice?: number | null;
-}
-
-export interface NewAsset {
-  symbol: string;
-  quantity: number;
-  avgCost?: number | null;
-  assetType: string;
-  purchaseDate?: string; // String for form input
-  
-  // Options-specific fields
-  optionType?: string;
-  expirationDate?: string; // String for form input
-  strikePrice?: number;
-}
+export type { DisplayAsset, NewAsset } from '@/lib/types/portfolio';
+import type { DisplayAsset, NewAsset } from '@/lib/types/portfolio';
 
 // State interface
 interface PortfolioState {

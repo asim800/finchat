@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/admin/admin-stats.tsx
 // Admin dashboard statistics overview
-// ============================================================================
 
 'use client';
 
@@ -178,21 +175,21 @@ export const AdminStats: React.FC<AdminStatsProps> = () => {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <h4 className="font-semibold text-green-600">✅ Database Connection</h4>
-              <p className="text-sm text-gray-600">Database is accessible and responding</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Database is accessible and responding</p>
             </div>
             <div>
               <h4 className="font-semibold text-green-600">✅ Authentication</h4>
-              <p className="text-sm text-gray-600">Admin authentication is working</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Admin authentication is working</p>
             </div>
             <div>
               <h4 className="font-semibold text-blue-600">ℹ️ Performance</h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Average response time: &lt;200ms
               </p>
             </div>
             <div>
               <h4 className="font-semibold text-blue-600">ℹ️ Storage</h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Database size: {(stats.users + stats.portfolios + stats.assets + stats.messages).toLocaleString()} records
               </p>
             </div>
@@ -212,14 +209,14 @@ export const AdminStats: React.FC<AdminStatsProps> = () => {
               className="text-left p-3 rounded border hover:bg-gray-50 transition-colors"
             >
               <div className="font-medium">🔄 Refresh Statistics</div>
-              <div className="text-sm text-gray-600">Update all dashboard metrics</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Update all dashboard metrics</div>
             </button>
             <button 
               onClick={() => window.location.reload()}
               className="text-left p-3 rounded border hover:bg-gray-50 transition-colors"
             >
               <div className="font-medium">♻️ Reload Dashboard</div>
-              <div className="text-sm text-gray-600">Refresh entire admin interface</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Refresh entire admin interface</div>
             </button>
           </div>
         </CardContent>

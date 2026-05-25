@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/analytics-test.ts
 // Test file to verify end-to-end analytics tracking
-// ============================================================================
 
 import { conversationAnalytics } from './conversation-analytics';
 import { fastAPIClient } from './fastapi-client';

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: scripts/test-historical-prices-access.ts
 // Test script to verify historical_prices table access patterns
-// ============================================================================
 
 import { prisma } from '../lib/db';
 import { HistoricalPriceService } from '../lib/historical-price-service';

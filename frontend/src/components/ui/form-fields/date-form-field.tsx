@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/date-form-field.tsx
 // Specialized date input with validation
-// ============================================================================
 
 'use client';
 

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/auth/login-form.tsx
 // Login form component
-// ============================================================================
 
 'use client';
 
@@ -90,7 +87,7 @@ export const LoginForm: React.FC = () => {
           </Button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Don&apos;t have an account?{' '}
               <a
                 href="/register"
@@ -105,5 +102,4 @@ export const LoginForm: React.FC = () => {
     </Card>
   );
 };
-
 

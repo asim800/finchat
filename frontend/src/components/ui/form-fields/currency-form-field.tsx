@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/currency-form-field.tsx
 // Specialized currency input with formatting and validation
-// ============================================================================
 
 'use client';
 

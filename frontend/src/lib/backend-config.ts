@@ -1,7 +1,5 @@
-// ============================================================================
-// FILE: lib/backend-config.ts
-// Configuration management for choosing between MCP and FastAPI backends
-// ============================================================================
+// Configuration for the FastAPI analysis backend.
+// (A second MCP backend was removed; FastAPI is now the only analysis backend.)
 
 export type BackendType = 'fastapi';
 
@@ -19,17 +17,13 @@ class BackendConfigManager {
   };
 
   constructor() {
-    // Get configuration from environment variables
     const isProduction = process.env.NODE_ENV === 'production';
     const isVercel = process.env.VERCEL === '1';
-    
-    // Default to FastAPI in all environments unless explicitly set
-    const defaultBackend = 'fastapi';
-    const primaryBackend = (process.env.PRIMARY_ANALYSIS_BACKEND || defaultBackend) as BackendType;
+
+    const primaryBackend: BackendType = 'fastapi';
     const fallbackEnabled = process.env.ENABLE_BACKEND_FALLBACK === 'true';
     const fastApiUrl = process.env.FASTAPI_SERVICE_URL || 'http://localhost:8000';
-    
-    // Log configuration for debugging
+
     console.log('🔧 Backend Configuration:', {
       environment: process.env.NODE_ENV,
       isVercel,
@@ -42,42 +36,30 @@ class BackendConfigManager {
       primary: {
         type: primaryBackend,
         enabled: true,
-        healthCheckUrl: primaryBackend === 'fastapi' ? `${fastApiUrl}/health` : undefined,
+        healthCheckUrl: `${fastApiUrl}/health`,
         fallbackEnabled
       },
       fallback: {
-        type: primaryBackend === 'mcp' ? 'fastapi' : 'mcp',
+        type: 'fastapi',
         enabled: fallbackEnabled,
-        healthCheckUrl: primaryBackend === 'mcp' ? `${fastApiUrl}/health` : undefined,
+        healthCheckUrl: `${fastApiUrl}/health`,
         fallbackEnabled: false
       }
     };
   }
 
-  /**
-   * Get the primary backend configuration
-   */
   getPrimaryBackend(): BackendConfig {
     return this.config.primary;
   }
 
-  /**
-   * Get the fallback backend configuration
-   */
   getFallbackBackend(): BackendConfig {
     return this.config.fallback;
   }
 
-  /**
-   * Check if fallback is enabled
-   */
   isFallbackEnabled(): boolean {
     return this.config.primary.fallbackEnabled && this.config.fallback.enabled;
   }
 
-  /**
-   * Get configuration for debugging
-   */
   getDebugInfo() {
     return {
       primaryBackend: this.config.primary.type,
@@ -92,10 +74,8 @@ class BackendConfigManager {
   }
 }
 
-// Export singleton instance
 export const backendConfig = new BackendConfigManager();
 
-// Utility function to log backend selection
 export const logBackendSelection = (backend: BackendType, reason: string) => {
   console.log(`🔧 Using ${backend.toUpperCase()} backend: ${reason}`);
 };

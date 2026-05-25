@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/chat/file-processor.tsx
 // Component to process uploaded files and extract data
-// ============================================================================
 
 'use client';
 
@@ -309,12 +306,12 @@ const FileProcessorComponent: React.FC<FileProcessorProps> = ({
         )}
         
         {selectedFile && !processing && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-900 rounded-lg p-3">
             <div className="flex items-center">
               <svg className="h-5 w-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm text-green-700">
+              <span className="text-sm text-green-700 dark:text-green-300">
                 Successfully processed: {selectedFile.name}
               </span>
             </div>
@@ -322,13 +319,13 @@ const FileProcessorComponent: React.FC<FileProcessorProps> = ({
         )}
         
         {preview && (
-          <div className="bg-gray-50 border rounded p-3">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">File Preview:</h4>
-            <pre className="text-xs text-gray-600 whitespace-pre-wrap">{preview}</pre>
+          <div className="bg-gray-50 dark:bg-slate-800/50 border rounded p-3">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File Preview:</h4>
+            <pre className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{preview}</pre>
           </div>
         )}
         
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 dark:text-gray-400">
           <p><strong>Supported formats:</strong></p>
           <ul className="mt-1 space-y-1">
             <li>• <strong>Portfolio CSV:</strong> Columns like Symbol, Quantity, Price, Name</li>
@@ -342,4 +339,3 @@ const FileProcessorComponent: React.FC<FileProcessorProps> = ({
 };
 
 export const FileProcessor = React.memo(FileProcessorComponent);
-

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/file-upload.tsx
 // Reusable file upload component
-// ============================================================================
 
 'use client';
 
@@ -87,10 +84,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       <div
         className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
           dragActive
-            ? 'border-blue-400 bg-blue-50'
+            ? 'border-blue-400 bg-blue-50 dark:bg-blue-950/40'
             : error
-            ? 'border-red-300 bg-red-50'
-            : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+            ? 'border-red-300 bg-red-50 dark:bg-red-950/40'
+            : 'border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -121,12 +118,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           </svg>
           
           <div className="mt-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium text-blue-600 hover:text-blue-500">
                 Click to upload
               </span> or drag and drop
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {acceptedTypes.join(', ')} up to {maxSize}MB
             </p>
           </div>
@@ -139,7 +136,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     </div>
   );
 };
-
 
 
 

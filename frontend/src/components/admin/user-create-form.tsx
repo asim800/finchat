@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/admin/user-create-form.tsx
 // User creation form for admin user management
-// ============================================================================
 
 'use client';
 
@@ -72,7 +69,7 @@ export const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess }) => 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-sm">
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded p-3 text-red-700 dark:text-red-300 text-sm">
           {error}
         </div>
       )}
@@ -119,7 +116,7 @@ export const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess }) => 
           name="role"
           value={formData.role}
           onChange={handleInputChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="user">User</option>
           <option value="admin">Admin</option>

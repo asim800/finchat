@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/profile/profile-page-wrapper.tsx
 // Client wrapper for profile page with edit functionality
-// ============================================================================
 
 'use client';
 
@@ -100,20 +97,20 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-          <p className="text-gray-600 mt-1">Manage your personal and financial information</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Profile</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your personal and financial information</p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-right">
-            <div className="text-sm text-gray-500">Profile Completion</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Profile Completion</div>
             <div className="flex items-center space-x-2">
-              <div className="w-20 bg-gray-200 rounded-full h-2">
+              <div className="w-20 bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                   style={{ width: `${getCompletionPercentage()}%` }}
                 ></div>
               </div>
-              <span className="text-sm font-medium text-gray-700">{getCompletionPercentage()}%</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{getCompletionPercentage()}%</span>
             </div>
           </div>
           <Button onClick={() => setIsEditing(true)} className="flex items-center space-x-2">
@@ -134,28 +131,28 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-500">First Name</label>
-              <p className="text-gray-900">{user.firstName || 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">First Name</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.firstName || 'Not specified'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Last Name</label>
-              <p className="text-gray-900">{user.lastName || 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Last Name</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.lastName || 'Not specified'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Email</label>
-              <p className="text-gray-900">{user.email}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.email}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Phone</label>
-              <p className="text-gray-900">{user.phone || 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Phone</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.phone || 'Not specified'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Birth Date</label>
-              <p className="text-gray-900">{formatDate(user.birthDate)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Birth Date</label>
+              <p className="text-gray-900 dark:text-gray-100">{formatDate(user.birthDate)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Employment Status</label>
-              <p className="text-gray-900 capitalize">{user.employmentStatus || 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Employment Status</label>
+              <p className="text-gray-900 dark:text-gray-100 capitalize">{user.employmentStatus || 'Not specified'}</p>
             </div>
           </div>
         </CardContent>
@@ -172,25 +169,25 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-gray-500">Address</label>
-              <p className="text-gray-900">{user.address || 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Address</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.address || 'Not specified'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">City</label>
-              <p className="text-gray-900">{user.city || 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">City</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.city || 'Not specified'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">State</label>
-              <p className="text-gray-900">{user.state || 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">State</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.state || 'Not specified'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">ZIP Code</label>
-              <p className="text-gray-900">{user.zipCode || 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">ZIP Code</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.zipCode || 'Not specified'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Housing Type</label>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Housing Type</label>
               <div className="flex items-center space-x-2">
-                <p className="text-gray-900 capitalize">{user.housingType || 'Not specified'}</p>
+                <p className="text-gray-900 dark:text-gray-100 capitalize">{user.housingType || 'Not specified'}</p>
                 {user.housingType && (
                   <Badge variant={user.housingType === 'own' ? 'success' : 'default'}>
                     {user.housingType === 'own' ? 'Homeowner' : 'Renter'}
@@ -201,19 +198,19 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
             {user.housingType === 'own' && (
               <>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Home Value</label>
-                  <p className="text-gray-900">{formatCurrency(user.homeValue)}</p>
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Home Value</label>
+                  <p className="text-gray-900 dark:text-gray-100">{formatCurrency(user.homeValue)}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">Monthly Mortgage</label>
-                  <p className="text-gray-900">{formatCurrency(user.monthlyMortgage)}</p>
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Mortgage</label>
+                  <p className="text-gray-900 dark:text-gray-100">{formatCurrency(user.monthlyMortgage)}</p>
                 </div>
               </>
             )}
             {user.housingType === 'rent' && (
               <div>
-                <label className="text-sm font-medium text-gray-500">Monthly Rent</label>
-                <p className="text-gray-900">{formatCurrency(user.monthlyRent)}</p>
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Rent</label>
+                <p className="text-gray-900 dark:text-gray-100">{formatCurrency(user.monthlyRent)}</p>
               </div>
             )}
           </div>
@@ -231,32 +228,32 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-500">Monthly Income</label>
-              <p className="text-gray-900 font-semibold">{formatCurrency(user.monthlyIncome)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Income</label>
+              <p className="text-gray-900 dark:text-gray-100 font-semibold">{formatCurrency(user.monthlyIncome)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Dependents</label>
-              <p className="text-gray-900">{user.dependents ?? 'Not specified'}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Dependents</label>
+              <p className="text-gray-900 dark:text-gray-100">{user.dependents ?? 'Not specified'}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Monthly Alimony</label>
-              <p className="text-gray-900">{formatCurrency(user.monthlyAlimony)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Alimony</label>
+              <p className="text-gray-900 dark:text-gray-100">{formatCurrency(user.monthlyAlimony)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Monthly Fixed Expenses</label>
-              <p className="text-gray-900">{formatCurrency(user.monthlyFixedExpenses)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Fixed Expenses</label>
+              <p className="text-gray-900 dark:text-gray-100">{formatCurrency(user.monthlyFixedExpenses)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Emergency Fund</label>
-              <p className="text-gray-900">{formatCurrency(user.emergencyFund)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Emergency Fund</label>
+              <p className="text-gray-900 dark:text-gray-100">{formatCurrency(user.emergencyFund)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Total Debt (excluding mortgage)</label>
-              <p className="text-gray-900">{formatCurrency(user.totalDebt)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Debt (excluding mortgage)</label>
+              <p className="text-gray-900 dark:text-gray-100">{formatCurrency(user.totalDebt)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Estimated Social Security at 65</label>
-              <p className="text-gray-900">{formatCurrency(user.estimatedSocialSecurityAt65)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Estimated Social Security at 65</label>
+              <p className="text-gray-900 dark:text-gray-100">{formatCurrency(user.estimatedSocialSecurityAt65)}</p>
             </div>
           </div>
         </CardContent>
@@ -273,18 +270,18 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-500">Investment Goals</label>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Investment Goals</label>
               <div className="flex items-center space-x-2">
-                <p className="text-gray-900 capitalize">{user.investmentGoals || 'Not specified'}</p>
+                <p className="text-gray-900 dark:text-gray-100 capitalize">{user.investmentGoals || 'Not specified'}</p>
                 {user.investmentGoals && (
                   <Badge variant="outline">{user.investmentGoals}</Badge>
                 )}
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Risk Tolerance</label>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Risk Tolerance</label>
               <div className="flex items-center space-x-2">
-                <p className="text-gray-900 capitalize">{user.riskTolerance || 'Not specified'}</p>
+                <p className="text-gray-900 dark:text-gray-100 capitalize">{user.riskTolerance || 'Not specified'}</p>
                 {user.riskTolerance && (
                   <Badge 
                     variant={
@@ -298,9 +295,9 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Investment Experience</label>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Investment Experience</label>
               <div className="flex items-center space-x-2">
-                <p className="text-gray-900 capitalize">{user.investmentExperience || 'Not specified'}</p>
+                <p className="text-gray-900 dark:text-gray-100 capitalize">{user.investmentExperience || 'Not specified'}</p>
                 {user.investmentExperience && (
                   <Badge variant="outline">{user.investmentExperience}</Badge>
                 )}
@@ -321,22 +318,22 @@ export const ProfilePageWrapper: React.FC<ProfilePageWrapperProps> = ({ user: in
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-500">Chat History Limit</label>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Chat History Limit</label>
               <div className="flex items-center space-x-2">
-                <p className="text-gray-900">{user.chatHistoryLimit || 5} chats</p>
+                <p className="text-gray-900 dark:text-gray-100">{user.chatHistoryLimit || 5} chats</p>
                 <Badge variant="outline">
                   {user.chatHistoryLimit === 1 ? '1 chat' : `${user.chatHistoryLimit || 5} chats`}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Number of recent conversations displayed in chat sidebar</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Number of recent conversations displayed in chat sidebar</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Member Since</label>
-              <p className="text-gray-900">{formatDate(user.createdAt)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Member Since</label>
+              <p className="text-gray-900 dark:text-gray-100">{formatDate(user.createdAt)}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Last Updated</label>
-              <p className="text-gray-900">{formatDate(user.updatedAt)}</p>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</label>
+              <p className="text-gray-900 dark:text-gray-100">{formatDate(user.updatedAt)}</p>
             </div>
           </div>
         </CardContent>

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/learning/financial-terms/page.tsx
 // Financial Terms Definitions Page
-// ============================================================================
 
 'use client';
 
@@ -73,9 +70,9 @@ export default function FinancialTermsPage() {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm border p-8">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border p-8">
           <div className="flex justify-center items-center h-64">
-            <div className="text-gray-500">Loading financial terms...</div>
+            <div className="text-gray-500 dark:text-gray-400">Loading financial terms...</div>
           </div>
         </div>
       </div>
@@ -84,12 +81,12 @@ export default function FinancialTermsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg shadow-sm border p-8">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border p-8">
           <div className="mb-8">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Financial Terms Glossary</h1>
-                <p className="text-gray-600 text-lg">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Financial Terms Glossary</h1>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
                   Essential financial and portfolio management terms to help you navigate the world of investing.
                 </p>
               </div>
@@ -133,9 +130,9 @@ export default function FinancialTermsPage() {
 
           <div className="grid gap-6">
             {filteredTerms.map((item) => (
-              <div key={item.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+              <div key={item.id} className="border-b border-gray-200 dark:border-slate-700 pb-4 last:border-b-0">
                 <div className="flex items-start justify-between mb-2">
-                  <h2 className="text-xl font-semibold text-gray-900">{item.term}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{item.term}</h2>
                   <div className="flex items-center gap-2">
                     {item.category && (
                       <Badge variant="outline">
@@ -151,7 +148,7 @@ export default function FinancialTermsPage() {
                     )}
                   </div>
                 </div>
-                <p className="text-gray-700 leading-relaxed mb-3">{item.definition}</p>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">{item.definition}</p>
                 {item.keywords.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {item.keywords.map(keyword => (
@@ -167,13 +164,13 @@ export default function FinancialTermsPage() {
 
           {filteredTerms.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500">No terms found matching your search criteria.</p>
+              <p className="text-gray-500 dark:text-gray-400">No terms found matching your search criteria.</p>
             </div>
           )}
 
-          <div className="mt-8 p-6 bg-blue-50 rounded-lg">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Need More Help?</h3>
-            <p className="text-blue-800">
+          <div className="mt-8 p-6 bg-blue-50 dark:bg-blue-950/40 rounded-lg">
+            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">Need More Help?</h3>
+            <p className="text-blue-800 dark:text-blue-300">
               These terms are just the beginning. Use our AI chat feature to get personalized explanations 
               and ask questions about any financial concept you&apos;d like to understand better.
             </p>

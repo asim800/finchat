@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/chat/providers/route.ts
 // Get available LLM providers endpoint
-// ============================================================================
 
 import { NextResponse } from 'next/server';
 

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/guest-top-bar.tsx
 // Top bar template for guest users
-// ============================================================================
 
 'use client';
 
@@ -94,7 +91,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
               MyStocks.ai
             </Link>
             
-            <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+            <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300 dark:bg-yellow-900 dark:text-yellow-200">
               Demo Mode
             </span>
           </div>
@@ -137,7 +134,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
               </Link>
             </div>
 
-            <div className="border-l border-gray-200 pl-4 flex items-center space-x-2">
+            <div className="border-l border-gray-200 dark:border-slate-700 pl-4 flex items-center space-x-2">
               {authNavItems.map(item => renderAuthButton(item))}
               <ThemeToggle />
             </div>
@@ -145,7 +142,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
 
           {/* Mobile Navigation */}
           <div className="md:hidden flex items-center space-x-3">
-            <span className="sm:hidden inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+            <span className="sm:hidden inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300 dark:bg-yellow-900 dark:text-yellow-200">
               Demo
             </span>
             <Link href="/login">

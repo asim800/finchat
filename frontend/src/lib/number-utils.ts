@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/number-utils.ts
 // Number formatting utilities for consistent financial display
-// ============================================================================
 
 /**
  * Format a number as currency with exactly 2 decimal places

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/csv-manager.tsx
 // Consolidated CSV import/export management component
-// ============================================================================
 
 'use client';
 
@@ -56,9 +53,9 @@ export const CsvManager: React.FC<CsvManagerProps> = ({
 
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white dark:bg-slate-900 border-b px-6 py-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Portfolio CSV Management</h2>
               <button
                 onClick={() => setIsOpen(false)}
@@ -72,13 +69,13 @@ export const CsvManager: React.FC<CsvManagerProps> = ({
 
             {/* Tab Navigation */}
             <div className="px-6 pt-4">
-              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+              <div className="flex space-x-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-lg">
                 <button
                   onClick={() => setActiveTab('import')}
                   className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'import'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
                   }`}
                 >
                   📁 Import CSV
@@ -87,8 +84,8 @@ export const CsvManager: React.FC<CsvManagerProps> = ({
                   onClick={() => setActiveTab('export')}
                   className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'export'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
                   }`}
                 >
                   📄 Export CSV
@@ -106,15 +103,15 @@ export const CsvManager: React.FC<CsvManagerProps> = ({
                 />
               ) : (
                 <div className="space-y-4">
-                  <div className="text-sm text-gray-600 mb-4">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Export your portfolio data as a CSV file for backup or analysis.
                   </div>
                   <CsvExport 
                     isGuestMode={isGuestMode}
                     guestAssets={guestAssets}
                   />
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-600">
+                  <div className="mt-4 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       <strong>Exported data includes:</strong> Symbol, Quantity, Price, Percentage, Total Value, Asset Type
                     </p>
                   </div>

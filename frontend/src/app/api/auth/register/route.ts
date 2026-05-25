@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/auth/register/route.ts
 // User registration endpoint
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, generateToken } from '@/lib/auth';
@@ -92,4 +89,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

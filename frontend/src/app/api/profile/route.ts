@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/profile/route.ts
 // API endpoint for user profile management
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';

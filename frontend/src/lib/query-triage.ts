@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/query-triage.ts
 // Query triage system for routing between regexp CRUD and LLM processing
-// ============================================================================
 
 import { formatCurrency } from './number-utils';
 

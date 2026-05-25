@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/chat-logger.ts
 // Comprehensive logging system for chat query analysis and observability
-// ============================================================================
 
 import { RegexpMatch, TriageResult } from './query-triage';
 
@@ -540,13 +537,10 @@ export class ChatLogger {
   
   private static async persistLog(log: QueryLog) {
     // In a real implementation, you would save to database
-    // For now, we'll just maintain in-memory logs with a limit
+    // Maintain in-memory logs with a size limit
     if (this.logs.length > this.MAX_LOGS) {
-      this.logs.shift(); // Remove oldest log
+      this.logs.shift();
     }
-    
-    // Example: Save to database
-    // await prisma.queryLog.create({ data: log });
   }
 }
 

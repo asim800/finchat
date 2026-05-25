@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/number-form-field.tsx
 // Specialized number input with validation and formatting
-// ============================================================================
 
 'use client';
 

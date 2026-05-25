@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/email-service.ts
 // Email service for contact form and notifications
-// ============================================================================
 
 interface ContactEmailData {
   userEmail: string;

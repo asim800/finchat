@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-// ============================================================================
-// FILE: scripts/test-portfolio-overview.ts
 // Test the new "show all my positions" functionality
-// ============================================================================
 
 import { QueryTriage } from '../lib/query-triage';
 import { ChatTriageProcessor } from '../lib/chat-triage-processor';

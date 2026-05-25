@@ -1,10 +1,8 @@
-// ============================================================================
-// FILE: hooks/usePortfolioCRUD.ts
 // Portfolio CRUD operations hook
-// ============================================================================
 
 import { useCallback } from 'react';
 import { GuestPortfolioService } from '@/lib/guest-portfolio';
+import { httpPost, httpPut, httpDelete } from '@/lib/http';
 import type { DisplayAsset, NewAsset } from './usePortfolioState';
 
 interface ApiAsset {
@@ -125,23 +123,10 @@ export const usePortfolioCRUD = ({
         return result.asset!;
       } else {
         // Add to authenticated user portfolio
-        const requestBody = {
+        const data = await httpPost<{ asset: ApiAsset }>('/api/portfolio', {
           ...newAsset,
           portfolioId
-        };
-        
-        const response = await fetch('/api/portfolio', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
         });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
         return transformApiAsset(data.asset);
       }
     } catch (error) {
@@ -167,18 +152,7 @@ export const usePortfolioCRUD = ({
         return result.asset!;
       } else {
         // Update authenticated user asset
-        const response = await fetch(`/api/portfolio/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updates)
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
+        const data = await httpPut<{ asset: ApiAsset }>(`/api/portfolio/${id}`, updates);
         return transformApiAsset(data.asset);
       }
     } catch (error) {
@@ -202,14 +176,7 @@ export const usePortfolioCRUD = ({
         }
       } else {
         // Delete from authenticated user portfolio
-        const response = await fetch(`/api/portfolio/${id}`, {
-          method: 'DELETE'
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-        }
+        await httpDelete(`/api/portfolio/${id}`, { parseJson: false });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete asset';

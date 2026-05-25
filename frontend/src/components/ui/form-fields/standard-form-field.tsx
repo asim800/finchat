@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/standard-form-field.tsx
 // Base standardized form field with validation support
-// ============================================================================
 
 'use client';
 
@@ -110,7 +107,7 @@ export const StandardFormField: React.FC<StandardFormFieldProps> = ({
       {hasSuggestions && (
         <Alert className={fieldStyles.suggestions}>
           <Lightbulb className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
+          <AlertDescription className="text-blue-800 dark:text-blue-300">
             <div className="font-medium mb-1">Suggestions:</div>
             <ul className="list-disc list-inside space-y-1 text-sm">
               {suggestions.map((suggestion, index) => (

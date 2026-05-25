@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/chat-triage-processor.ts
 // Main triage processor that routes queries between regexp and LLM
-// ============================================================================
 
 import { QueryTriage, TriageResult, RegexpMatch } from './query-triage';
 import { PortfolioCrudHandler, CrudResult } from './portfolio-crud-handler';

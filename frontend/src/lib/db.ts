@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/db.ts
 // Database connection utility
-// ============================================================================
 
 import { PrismaClient } from '@prisma/client';
 
@@ -35,4 +32,3 @@ export interface AuthError {
   error: string;
   details?: Record<string, unknown>;
 }
-

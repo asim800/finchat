@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/llm-config.ts
 // Client-safe LLM configuration (no heavy SDK imports)
-// ============================================================================
 
 export type LLMProvider = 'anthropic' | 'openai';
 

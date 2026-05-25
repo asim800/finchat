@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/learning/layout.tsx
 // Learning section layout with navigation
-// ============================================================================
 
 import { DashboardLayout } from '@/components/layouts/dashboard-layout';
 

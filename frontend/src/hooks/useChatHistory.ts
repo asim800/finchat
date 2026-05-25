@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: hooks/useChatHistory.ts
 // Custom hook for managing chat history navigation with up/down arrows
-// ============================================================================
 
 'use client';
 

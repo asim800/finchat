@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/chat/sessions/route.ts
 // Chat sessions API for managing chat history
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';

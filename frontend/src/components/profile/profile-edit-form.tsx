@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/profile/profile-edit-form.tsx
 // Edit form for user profile with comprehensive validation
-// ============================================================================
 
 'use client';
 
@@ -154,8 +151,8 @@ export const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, onSave, 
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
-          <p className="text-gray-600 mt-1">Update your personal and financial information</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Edit Profile</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Update your personal and financial information</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
@@ -170,8 +167,8 @@ export const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, onSave, 
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-800">{error}</p>
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-md p-4">
+          <p className="text-red-800 dark:text-red-300">{error}</p>
         </div>
       )}
 
@@ -502,7 +499,7 @@ export const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, onSave, 
                   <SelectItem value="50">50 chats</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Number of recent chat conversations to display in the chat sidebar
               </p>
             </div>

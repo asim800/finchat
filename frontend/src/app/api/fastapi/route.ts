@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: src/app/api/fastapi/route.ts
 // Root proxy route for FastAPI service (handles /api/fastapi requests)
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 

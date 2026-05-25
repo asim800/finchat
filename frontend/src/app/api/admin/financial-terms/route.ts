@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/admin/financial-terms/route.ts
 // API routes for financial terms CRUD operations (admin only)
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';

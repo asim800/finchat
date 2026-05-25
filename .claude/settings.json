@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '/^def |^async def / {print NR\": \"$0}' /home/saahmed1/coding/projects/nextjs/finance-app/services/fastapi-portfolio-service/main.py)",
+      "Bash(awk '/^def |^async def / {if \\(prev\\) print prev_line\"-\"NR\": \"prev; prev=NR; prev_line=$0} END {if \\(prev\\) print prev\"-\"NR\": \"prev}' /home/saahmed1/coding/projects/nextjs/finance-app/services/fastapi-portfolio-service/main.py)",
+      "Bash(cat)",
+      "Read(//tmp/**)",
+      "Bash(ls -la src/types)",
+      "Bash(ls -la src/lib/types)",
+      "Bash(find src *)",
+      "Bash(grep -A20 '\"paths\"' tsconfig.json)",
+      "Bash(grep -rn \"interface Portfolio\\\\b\\\\|interface Portfolio \" src/lib src/hooks)",
+      "Bash(mkdir -p /home/saahmed1/.claude/plans)",
+      "Bash(cp /home/saahmed1/.claude/plans/we-worked-on-this-atomic-shell.md /home/saahmed1/coding/projects/nextjs/finance-app/docs/refactor-plan-2026-05-19.md && echo \"Saved to docs/refactor-plan-2026-05-19.md\")"
+    ],
+    "additionalDirectories": [
+      "/home/saahmed1/.claude/plans",
+      "/home/saahmed1/coding/projects/nextjs/finance-app/docs"
+    ]
+  }
+}

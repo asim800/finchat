@@ -30,7 +30,6 @@ npx tsx src/scripts/test-edge-cases.ts           # Test edge cases and error han
 ```bash
 npx tsx src/scripts/test-chat-triage.ts          # Test chat query triage system
 npx tsx src/scripts/simple-triage-test.ts        # Simple triage functionality test
-npx tsx src/scripts/test-langgraph-integration.ts # Test LangGraph integration
 npx tsx src/scripts/test-user-query.ts           # Test user query processing
 ```
 
@@ -75,12 +74,6 @@ src/scripts/test-chat-scroll.html                # Test chat scroll behavior
 - Tests different query types (portfolio, financial, general)
 - Validates AI response routing
 - Performance testing for chat features
-
-#### `test-langgraph-integration.ts`
-- Tests LangGraph backend integration
-- AI agent workflow testing
-- Multi-step conversation flows
-- Integration with portfolio data
 
 #### `simple-triage-test.ts`
 - Lightweight triage testing
@@ -128,9 +121,6 @@ npx tsx src/scripts/test-chat-triage.ts
 ```bash
 # Test specific components
 npx tsx src/scripts/test-edge-cases.ts
-
-# Check AI integration
-npx tsx src/scripts/test-langgraph-integration.ts
 
 # Validate data flows
 npx tsx src/scripts/test-user-query.ts

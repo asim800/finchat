@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/llm-service.ts
 // Multi-LLM service with provider switching
-// ============================================================================
 
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
@@ -215,6 +212,5 @@ class LLMService {
 }
 
 export const llmService = new LLMService();
-
 
 

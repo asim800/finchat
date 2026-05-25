@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/layouts/dashboard-layout.tsx
 // Dashboard layout wrapper with templated TopBar
-// ============================================================================
 
 import React from 'react';
 import { headers } from 'next/headers';
@@ -58,7 +55,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = async ({ children
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex flex-col">
       {/* Render appropriate TopBar based on authentication */}
       {isGuestMode || !user ? (
         <GuestTopBar />

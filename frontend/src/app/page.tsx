@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/page.tsx (UPDATED)
 // Updated root page with landing page instead of immediate redirect
-// ============================================================================
 
 import { headers } from 'next/headers';
 import Link from 'next/link';
@@ -155,7 +152,7 @@ export default async function HomePage() {
                 Ask questions about financial markets, understand investment, and analyze trends with our AI assistant.
               </p>
               <div className="mt-4">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300">
                   Available in Demo
                 </span>
               </div>
@@ -174,7 +171,7 @@ export default async function HomePage() {
                 Track your investments, analyze performance, and get personalized insights on your financial portfolio.
               </p>
               <div className="mt-4">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">
                   Requires Account
                 </span>
               </div>
@@ -193,7 +190,7 @@ export default async function HomePage() {
                 Safely connect your bank accounts and investment platforms for comprehensive financial tracking.
               </p>
               <div className="mt-4">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300">
                   Requires Account
                 </span>
               </div>
@@ -226,4 +223,3 @@ export default async function HomePage() {
     </div>
   );
 }
-

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/admin/db/route.ts
 // Admin API for direct database queries (READ-ONLY for security)
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, ADMIN_UNAUTHORIZED } from '@/lib/admin-auth';

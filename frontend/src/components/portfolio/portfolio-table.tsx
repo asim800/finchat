@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/portfolio-table.tsx
 // Portfolio table with CRUD functionality
-// ============================================================================
 
 'use client';
 
@@ -22,6 +19,7 @@ import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
 import { AssetAdditionWizard } from './asset-addition-wizard';
 import { useErrorSystem, ErrorContainer } from '@/components/ui/error-display';
 import { QuantityValidationUtils } from '@/lib/validation';
+import { PortfolioTableSkeleton } from './portfolio-table/portfolio-table-skeleton';
 import type { DisplayAsset, NewAsset } from '@/hooks/usePortfolioState';
 
 interface PortfolioTableProps {
@@ -450,89 +448,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
   const totalAssets = assets.length;
 
   if (loading && assets.length === 0) {
-    return (
-      <div className={showSummary ? "p-6" : ""}>
-        {/* Portfolio Summary Skeleton */}
-        {showSummary && (
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-gray-50 p-4 rounded-lg border animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        )}
-        
-        {/* Assets Loading Skeleton */}
-        <div className="mb-4 flex justify-between items-center">
-          <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-          <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
-        </div>
-        
-        {/* Mobile Card Skeletons */}
-        <div className="block md:hidden space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow border p-4 animate-pulse">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <div className="h-6 bg-gray-200 rounded w-16 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-12"></div>
-                </div>
-                <div className="text-right">
-                  <div className="h-6 bg-gray-200 rounded w-20 mb-1"></div>
-                  <div className="h-3 bg-gray-200 rounded w-16"></div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div>
-                  <div className="h-3 bg-gray-200 rounded w-12 mb-1"></div>
-                  <div className="h-4 bg-gray-200 rounded w-8"></div>
-                </div>
-                <div>
-                  <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
-                  <div className="h-4 bg-gray-200 rounded w-12"></div>
-                </div>
-                <div>
-                  <div className="h-3 bg-gray-200 rounded w-14 mb-1"></div>
-                  <div className="h-4 bg-gray-200 rounded w-10"></div>
-                </div>
-                <div>
-                  <div className="h-3 bg-gray-200 rounded w-18 mb-1"></div>
-                  <div className="h-4 bg-gray-200 rounded w-16"></div>
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <div className="h-10 bg-gray-200 rounded flex-1"></div>
-                <div className="h-10 bg-gray-200 rounded flex-1"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Desktop Table Skeleton */}
-        <div className="hidden md:block rounded-md border">
-          <div className="space-y-4 p-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse flex items-center space-x-4">
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
-                <div className="h-4 bg-gray-200 rounded w-12"></div>
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-                <div className="h-4 bg-gray-200 rounded w-24"></div>
-                <div className="h-4 bg-gray-200 rounded w-12"></div>
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
-                <div className="flex space-x-2">
-                  <div className="h-8 bg-gray-200 rounded w-12"></div>
-                  <div className="h-8 bg-gray-200 rounded w-16"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <PortfolioTableSkeleton showSummary={showSummary} />;
   }
 
   // Helper functions for cleaner conditional rendering
@@ -549,7 +465,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         />
       );
     }
-    return <div className="text-sm font-medium text-gray-900">{asset.symbol}</div>;
+    return <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{asset.symbol}</div>;
   };
 
   const renderEditableQuantityCell = (asset: DisplayAsset) => {
@@ -569,7 +485,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         />
       );
     }
-    return <div className="text-sm text-gray-900">{QuantityValidationUtils.formatQuantity(asset.quantity)}</div>;
+    return <div className="text-sm text-gray-900 dark:text-gray-100">{QuantityValidationUtils.formatQuantity(asset.quantity)}</div>;
   };
 
   const renderEditableAvgCostCell = (asset: DisplayAsset) => {
@@ -586,7 +502,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       );
     }
     return (
-      <div className="text-sm text-gray-900">
+      <div className="text-sm text-gray-900 dark:text-gray-100">
         {asset.avgCost ? `$${asset.avgCost.toFixed(2)}` : '-'}
       </div>
     );
@@ -676,17 +592,17 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       {/* Portfolio Summary */}
       {showSummary && (
         <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg border">
+          <div className="bg-blue-50 dark:bg-blue-950/40 p-4 rounded-lg border dark:border-blue-900">
             <h3 className="text-sm font-medium text-blue-800">Total Assets</h3>
             <p className="text-2xl font-bold text-blue-900">{totalAssets}</p>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg border">
+          <div className="bg-green-50 dark:bg-green-950/40 p-4 rounded-lg border dark:border-green-900">
             <h3 className="text-sm font-medium text-green-800">Portfolio Value</h3>
             <p className="text-2xl font-bold text-green-900">
               ${totalPortfolioValue.toLocaleString()}
             </p>
           </div>
-          <div className="bg-purple-50 p-4 rounded-lg border">
+          <div className="bg-purple-50 dark:bg-purple-950/40 p-4 rounded-lg border dark:border-purple-900">
             <h3 className="text-sm font-medium text-purple-800">Total Cost</h3>
             <p className="text-2xl font-bold text-purple-900">
               ${totalCost.toLocaleString()}
@@ -726,7 +642,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
 
       {/* Add Asset Button */}
       <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-900">Assets</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Assets</h2>
         <Button 
           onClick={() => setShowAddForm(true)}
           disabled={Boolean(loading) || Boolean(showAddForm)}
@@ -752,8 +668,8 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
           <div className="mx-auto h-12 w-12 text-gray-400">
             📊
           </div>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No assets yet</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No assets yet</h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Add your first asset to get started with portfolio tracking.
           </p>
           {!showAddForm && (
@@ -769,18 +685,18 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
           {/* Mobile Card Layout */}
           <div className="block md:hidden space-y-4">
             {assets.map((asset) => (
-              <div key={asset.id} className="bg-white rounded-lg shadow border p-4">
+              <div key={asset.id} className="bg-white dark:bg-slate-800 rounded-lg shadow border dark:border-slate-700 p-4">
                 {editingId === asset.id ? (
                   // Editing card
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold text-gray-900">Edit Asset</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit Asset</h3>
                       <Badge variant="secondary">{asset.assetType}</Badge>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Symbol</label>
                         <Input
                           type="text"
                           value={editValues.symbol || ''}
@@ -789,7 +705,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
                         <Input
                           type="text"
                           inputMode="decimal"
@@ -804,7 +720,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         />
                       </div>
                       <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Average Cost</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Average Cost</label>
                         <Input
                           type="text"
                           inputMode="decimal"
@@ -828,7 +744,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                       <Button
                         onClick={stopEditing}
                         variant="outline"
-                        className="flex-1 text-gray-600 hover:text-gray-900 border-gray-200 hover:border-gray-300 min-h-[44px]"
+                        className="flex-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:text-gray-100 border-gray-200 hover:border-gray-300 min-h-[44px]"
                       >
                         Cancel
                       </Button>
@@ -839,39 +755,39 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                   <div className="space-y-3">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{asset.symbol}</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{asset.symbol}</h3>
                         <Badge variant="secondary" className="text-xs">
                           {asset.assetType}
                         </Badge>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">
+                        <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
                           ${asset.totalValue.toLocaleString()}
                         </div>
-                        <div className="text-sm text-gray-500">Total Value</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">Total Value</div>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <div className="text-gray-500">Quantity</div>
-                        <div className="font-medium text-gray-900">{QuantityValidationUtils.formatQuantity(asset.quantity)}</div>
+                        <div className="text-gray-500 dark:text-gray-400">Quantity</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{QuantityValidationUtils.formatQuantity(asset.quantity)}</div>
                       </div>
                       <div>
-                        <div className="text-gray-500">Current Price</div>
-                        <div className="font-medium text-gray-900">
+                        <div className="text-gray-500 dark:text-gray-400">Current Price</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
                           {asset.price ? `$${asset.price.toFixed(2)}` : 'N/A'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-500">Avg Cost</div>
-                        <div className="font-medium text-gray-900">
+                        <div className="text-gray-500 dark:text-gray-400">Avg Cost</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
                           {asset.avgCost ? `$${asset.avgCost.toFixed(2)}` : '-'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-gray-500">Purchase Date</div>
-                        <div className="font-medium text-gray-900">
+                        <div className="text-gray-500 dark:text-gray-400">Purchase Date</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
                           {formatPurchaseDate(asset.purchaseDate)}
                         </div>
                       </div>
@@ -948,26 +864,26 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         
                         <div className="grid grid-cols-2 gap-3">
                           {asset.metrics.beta !== null && (
-                            <div className="bg-white rounded-md p-3 text-center">
-                              <div className="text-xs text-gray-500 mb-1">Beta</div>
-                              <div className="text-lg font-semibold text-gray-900">
+                            <div className="bg-white dark:bg-slate-700 rounded-md p-3 text-center">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Beta</div>
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 {asset.metrics.beta.toFixed(2)}
                               </div>
                             </div>
                           )}
                           
                           {asset.metrics.peRatio !== null && (
-                            <div className="bg-white rounded-md p-3 text-center">
-                              <div className="text-xs text-gray-500 mb-1">P/E Ratio</div>
-                              <div className="text-lg font-semibold text-gray-900">
+                            <div className="bg-white dark:bg-slate-700 rounded-md p-3 text-center">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">P/E Ratio</div>
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 {asset.metrics.peRatio.toFixed(1)}
                               </div>
                             </div>
                           )}
                           
                           {asset.metrics.dividendYield !== null && (
-                            <div className="bg-white rounded-md p-3 text-center">
-                              <div className="text-xs text-gray-500 mb-1">Dividend</div>
+                            <div className="bg-white dark:bg-slate-700 rounded-md p-3 text-center">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Dividend</div>
                               <div className="text-lg font-semibold text-green-600">
                                 {asset.metrics.dividendYield.toFixed(1)}%
                               </div>
@@ -975,9 +891,9 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                           )}
                           
                           {asset.metrics.eps !== null && (
-                            <div className="bg-white rounded-md p-3 text-center">
-                              <div className="text-xs text-gray-500 mb-1">EPS</div>
-                              <div className="text-lg font-semibold text-gray-900">
+                            <div className="bg-white dark:bg-slate-700 rounded-md p-3 text-center">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">EPS</div>
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 ${asset.metrics.eps.toFixed(2)}
                               </div>
                             </div>
@@ -985,7 +901,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                           
                           {asset.metrics.volatility !== null && (
                             <div className="bg-white rounded-md p-3 text-center col-span-2">
-                              <div className="text-xs text-gray-500 mb-1">Volatility</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Volatility</div>
                               <div className="text-lg font-semibold text-orange-600">
                                 {asset.metrics.volatility.toFixed(1)}%
                               </div>
@@ -1063,9 +979,9 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         title={asset.metrics ? 'Click to view financial metrics' : 'No financial metrics available'}
                       >
                         {expandedRows.has(asset.id) && asset.metrics ? (
-                          <ChevronDown className="h-4 w-4 text-gray-600" />
+                          <ChevronDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                         ) : (
-                          <ChevronRight className={`h-4 w-4 ${asset.metrics ? 'text-gray-600' : 'text-gray-300'}`} />
+                          <ChevronRight className={`h-4 w-4 ${asset.metrics ? 'text-gray-600 dark:text-gray-400' : 'text-gray-300'}`} />
                         )}
                       </Button>
                     </TableCell>
@@ -1076,7 +992,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     {renderEditableQuantityCell(asset)}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-gray-900 dark:text-gray-100">
                       {asset.price ? `$${asset.price.toFixed(2)}` : 'N/A'}
                     </div>
                   </TableCell>
@@ -1084,7 +1000,7 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     {renderEditableAvgCostCell(asset)}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       ${asset.totalValue.toLocaleString()}
                     </div>
                   </TableCell>
@@ -1092,33 +1008,33 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                     {renderEditableAssetTypeCell(asset)}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm text-gray-900">
+                    <div className="text-sm text-gray-900 dark:text-gray-100">
                       {formatPurchaseDate(asset.purchaseDate)}
                     </div>
                   </TableCell>
                   <TableCell>
                     {asset.assetType === 'option' ? (
                       <div className="text-xs space-y-1">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
                           {asset.optionType ? asset.optionType.toUpperCase() : 'N/A'}
                         </div>
-                        <div className="text-gray-600">
+                        <div className="text-gray-600 dark:text-gray-400">
                           Strike: ${asset.strikePrice ? asset.strikePrice.toFixed(2) : 'N/A'}
                         </div>
-                        <div className="text-gray-600">
+                        <div className="text-gray-600 dark:text-gray-400">
                           Exp: {asset.expirationDate ? 
                             new Date(asset.expirationDate).toLocaleDateString() : 'N/A'}
                         </div>
                       </div>
                     ) : asset.assetType === 'bond' ? (
                       <div className="text-xs space-y-1">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
                           {asset.optionType ? asset.optionType.toUpperCase() : 'N/A'}
                         </div>
-                        <div className="text-gray-600">
+                        <div className="text-gray-600 dark:text-gray-400">
                           Coupon: {asset.strikePrice ? `${asset.strikePrice}%` : 'N/A'}
                         </div>
-                        <div className="text-gray-600">
+                        <div className="text-gray-600 dark:text-gray-400">
                           Maturity: {asset.expirationDate ? 
                             new Date(asset.expirationDate).toLocaleDateString() : 'N/A'}
                         </div>
@@ -1134,12 +1050,12 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                 
                 {/* Expanded Metrics Row */}
                 {expandedRows.has(asset.id) && asset.metrics && (
-                  <TableRow className="bg-gray-50/50">
+                  <TableRow className="bg-gray-50/50 dark:bg-slate-800/40">
                     <TableCell></TableCell>
                     <TableCell colSpan={9} className="p-0">
                       <div className="px-6 py-4 border-l-4 border-blue-200">
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-sm font-medium text-gray-900">Financial Metrics - {asset.symbol}</h4>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Financial Metrics - {asset.symbol}</h4>
                           {asset.metrics.sector && (
                             <Badge variant="secondary" className="text-xs">
                               {asset.metrics.sector}
@@ -1149,58 +1065,58 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
                         
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                           {asset.metrics.beta !== null && (
-                            <div className="bg-white rounded-lg p-3 border border-gray-200">
-                              <div className="text-xs font-medium text-gray-500 mb-1">Beta</div>
-                              <div className="text-lg font-semibold text-gray-900">
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-200 dark:border-slate-700">
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Beta</div>
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 {asset.metrics.beta.toFixed(2)}
                               </div>
-                              <div className="text-xs text-gray-500 mt-1">Market risk</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Market risk</div>
                             </div>
                           )}
                           
                           {asset.metrics.peRatio !== null && (
-                            <div className="bg-white rounded-lg p-3 border border-gray-200">
-                              <div className="text-xs font-medium text-gray-500 mb-1">P/E Ratio</div>
-                              <div className="text-lg font-semibold text-gray-900">
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-200 dark:border-slate-700">
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">P/E Ratio</div>
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 {asset.metrics.peRatio.toFixed(1)}
                               </div>
-                              <div className="text-xs text-gray-500 mt-1">Price to earnings</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Price to earnings</div>
                             </div>
                           )}
                           
                           {asset.metrics.dividendYield !== null && (
-                            <div className="bg-white rounded-lg p-3 border border-gray-200">
-                              <div className="text-xs font-medium text-gray-500 mb-1">Dividend Yield</div>
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-200 dark:border-slate-700">
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Dividend Yield</div>
                               <div className="text-lg font-semibold text-green-600">
                                 {asset.metrics.dividendYield.toFixed(1)}%
                               </div>
-                              <div className="text-xs text-gray-500 mt-1">Annual dividend</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Annual dividend</div>
                             </div>
                           )}
                           
                           {asset.metrics.eps !== null && (
-                            <div className="bg-white rounded-lg p-3 border border-gray-200">
-                              <div className="text-xs font-medium text-gray-500 mb-1">EPS</div>
-                              <div className="text-lg font-semibold text-gray-900">
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-200 dark:border-slate-700">
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">EPS</div>
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 ${asset.metrics.eps.toFixed(2)}
                               </div>
-                              <div className="text-xs text-gray-500 mt-1">Earnings per share</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Earnings per share</div>
                             </div>
                           )}
                           
                           {asset.metrics.volatility !== null && (
-                            <div className="bg-white rounded-lg p-3 border border-gray-200">
-                              <div className="text-xs font-medium text-gray-500 mb-1">Volatility</div>
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-3 border border-gray-200 dark:border-slate-700">
+                              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Volatility</div>
                               <div className="text-lg font-semibold text-orange-600">
                                 {asset.metrics.volatility.toFixed(1)}%
                               </div>
-                              <div className="text-xs text-gray-500 mt-1">Price volatility</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Price volatility</div>
                             </div>
                           )}
                         </div>
                         
                         {(asset.metrics.industry || asset.metrics.marketCap) && (
-                          <div className="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-600 space-y-1">
+                          <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700 text-xs text-gray-600 dark:text-gray-400 space-y-1">
                             {asset.metrics.industry && (
                               <div><span className="font-medium">Industry:</span> {asset.metrics.industry}</div>
                             )}

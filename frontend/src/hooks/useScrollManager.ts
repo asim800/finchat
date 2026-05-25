@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: hooks/useScrollManager.ts
 // Consolidated scroll management for chat interface
-// ============================================================================
 
 import { useRef, useCallback, useEffect, useMemo } from 'react';
 

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/csv-export.tsx
 // CSV export component for portfolio data
-// ============================================================================
 
 'use client';
 
@@ -152,13 +149,13 @@ export const CsvExport: React.FC<CsvExportProps> = ({
       </Button>
 
       {error && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+        <div className="text-sm text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded p-2">
           {error}
         </div>
       )}
 
       {isGuestMode && guestAssets.length === 0 && (
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 dark:text-gray-400">
           Add some assets to your portfolio to enable export.
         </div>
       )}

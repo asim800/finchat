@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/portfolio/prices/route.ts
 // API endpoint for managing historical prices
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';

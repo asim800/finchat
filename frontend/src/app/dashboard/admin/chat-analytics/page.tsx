@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/dashboard/admin/chat-analytics/page.tsx
 // Admin page for chat analytics dashboard
-// ============================================================================
 
 import { Metadata } from 'next';
 import ChatAnalyticsDashboard from '@/components/admin/chat-analytics-dashboard';

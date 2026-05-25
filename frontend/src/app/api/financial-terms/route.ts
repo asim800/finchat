@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/financial-terms/route.ts
 // Public API route for financial terms (read-only)
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';

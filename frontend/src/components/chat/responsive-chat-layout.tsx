@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/chat/responsive-chat-layout.tsx
 // Responsive layout that adapts to different screen sizes
-// ============================================================================
 
 'use client';
 

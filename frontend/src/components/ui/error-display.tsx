@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/error-display.tsx
 // Error display components with recovery actions
-// ============================================================================
 
 'use client';
 
@@ -22,11 +19,11 @@ interface ErrorDisplayProps {
 
 const getSeverityColor = (severity: AppError['severity']) => {
   switch (severity) {
-    case 'low': return 'text-blue-600 bg-blue-50 border-blue-200';
-    case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
-    case 'critical': return 'text-red-600 bg-red-50 border-red-200';
-    default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    case 'low': return 'text-blue-600 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900';
+    case 'medium': return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-900';
+    case 'high': return 'text-orange-600 bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-900';
+    case 'critical': return 'text-red-600 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900';
+    default: return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-700';
   }
 };
 
@@ -45,7 +42,7 @@ const getActionVariantClass = (variant?: RecoveryAction['variant']) => {
     case 'primary': return 'bg-blue-600 hover:bg-blue-700 text-white';
     case 'destructive': return 'bg-red-600 hover:bg-red-700 text-white';
     case 'secondary': 
-    default: return 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300';
+    default: return 'bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-slate-700';
   }
 };
 
@@ -249,7 +246,7 @@ export const SuccessNotification: React.FC<SuccessNotificationProps> = ({
   className = ''
 }) => {
   return (
-    <Alert className={`text-green-600 bg-green-50 border-green-200 ${className}`}>
+    <Alert className={`text-green-600 bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-900 ${className}`}>
       <div className="flex items-center space-x-3">
         <CheckCircle className="h-5 w-5" />
         <AlertDescription className="font-medium flex-1">

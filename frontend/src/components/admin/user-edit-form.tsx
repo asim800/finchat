@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/admin/user-edit-form.tsx
 // User edit form for admin user management
-// ============================================================================
 
 'use client';
 
@@ -95,7 +92,7 @@ export const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, adm
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded p-3 text-red-700 text-sm">
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded p-3 text-red-700 dark:text-red-300 text-sm">
           {error}
         </div>
       )}
@@ -143,13 +140,13 @@ export const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, adm
           value={formData.role}
           onChange={handleInputChange}
           disabled={!canChangeRole}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="user">User</option>
           <option value="admin">Admin</option>
         </select>
         {!canChangeRole && (
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {user.id === adminUser.id ? 'Cannot change your own role' : 'Insufficient permissions'}
           </p>
         )}

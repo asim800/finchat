@@ -1,8 +1,5 @@
 #!/usr/bin/env node
-// ============================================================================
-// FILE: scripts/test-chat-triage.ts
 // Development script to test chat triage system manually
-// ============================================================================
 
 import { QueryTriage } from '../lib/query-triage';
 import { PortfolioCrudHandler } from '../lib/portfolio-crud-handler';

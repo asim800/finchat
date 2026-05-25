@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/portfolio/export/route.ts
 // Portfolio CSV export API endpoint
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/portfolio/asset-addition-wizard.tsx
 // Wizard-style asset addition form to reduce cognitive load
-// ============================================================================
 
 'use client';
 
@@ -178,8 +175,8 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
   };
 
   const renderOptionFields = () => (
-    <div className="mt-6 p-4 bg-blue-50 rounded-lg border">
-      <h5 className="font-medium text-blue-800 mb-3">Option Details</h5>
+    <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/40 rounded-lg border">
+      <h5 className="font-medium text-blue-800 dark:text-blue-300 mb-3">Option Details</h5>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {renderTypeSelector('Option Type', 'optionType', [
           { value: 'call', label: 'Call' },
@@ -192,8 +189,8 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
   );
 
   const renderBondFields = () => (
-    <div className="mt-6 p-4 bg-green-50 rounded-lg border">
-      <h5 className="font-medium text-green-800 mb-3">Bond Details</h5>
+    <div className="mt-6 p-4 bg-green-50 dark:bg-green-950/40 rounded-lg border">
+      <h5 className="font-medium text-green-800 dark:text-green-300 mb-3">Bond Details</h5>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {renderTypeSelector('Bond Type', 'optionType', [
           { value: 'usd', label: 'US Treasury' },
@@ -261,11 +258,11 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
   );
 
   return (
-    <div className="bg-white rounded-lg border p-6 space-y-6">
+    <div className="bg-white dark:bg-slate-900 rounded-lg border p-6 space-y-6">
       {/* Progress Header */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Add New Asset</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add New Asset</h3>
           <Badge variant="secondary">{currentStep} of {WIZARD_STEPS.length}</Badge>
         </div>
         
@@ -284,14 +281,14 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
               </div>
               {index < WIZARD_STEPS.length - 1 && (
                 <div className={`flex-1 h-0.5 ${
-                  step.id < currentStep ? 'bg-green-600' : 'bg-gray-200'
+                  step.id < currentStep ? 'bg-green-600' : 'bg-gray-200 dark:bg-slate-700'
                 }`}></div>
               )}
             </React.Fragment>
           ))}
         </div>
         
-        <p className="text-sm text-gray-600">{WIZARD_STEPS[currentStep - 1].description}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{WIZARD_STEPS[currentStep - 1].description}</p>
       </div>
 
       {/* Error Display */}
@@ -301,7 +298,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
       <div className="min-h-[300px]">
         {currentStep === 1 && (
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Choose Asset Type</h4>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Choose Asset Type</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {ASSET_TYPES.map((type) => (
                 <button
@@ -312,12 +309,12 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
                   }}
                   className={`p-4 text-left border rounded-lg transition-colors ${
                     asset.assetType === type.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40'
+                      : 'border-gray-200 dark:border-slate-700 hover:border-gray-300'
                   }`}
                 >
-                  <div className="font-medium text-gray-900">{type.label}</div>
-                  <div className="text-sm text-gray-500">{type.description}</div>
+                  <div className="font-medium text-gray-900 dark:text-gray-100">{type.label}</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">{type.description}</div>
                 </button>
               ))}
             </div>
@@ -328,7 +325,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
         {currentStep === 2 && (
           <div className="space-y-4">
             <div className="flex items-center space-x-2 mb-4">
-              <h4 className="font-medium text-gray-900">Basic Information</h4>
+              <h4 className="font-medium text-gray-900 dark:text-gray-100">Basic Information</h4>
               {selectedAssetType && (
                 <Badge variant="secondary">{selectedAssetType.label}</Badge>
               )}
@@ -345,7 +342,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
                   suggestions={formValidation.getFieldSuggestions('symbol')}
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">Enter the ticker symbol</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Enter the ticker symbol</p>
               </div>
               
               <div>
@@ -363,7 +360,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
                   suggestions={formValidation.getFieldSuggestions('quantity')}
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">Number of shares/units</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Number of shares/units</p>
               </div>
             </div>
           </div>
@@ -371,7 +368,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
 
         {currentStep === 3 && (
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Additional Details</h4>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Additional Details</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -385,7 +382,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
                   step="0.01"
                   suggestions={formValidation.getFieldSuggestions('avgCost')}
                 />
-                <p className="text-xs text-gray-500 mt-1">Cost per share (optional)</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cost per share (optional)</p>
               </div>
               
               <div>
@@ -396,7 +393,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
                   onChange={(e) => formValidation.handleFieldChange('purchaseDate', e.target.value)}
                   suggestions={formValidation.getFieldSuggestions('purchaseDate')}
                 />
-                <p className="text-xs text-gray-500 mt-1">When you bought this asset</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">When you bought this asset</p>
               </div>
             </div>
 
@@ -407,41 +404,41 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
 
         {currentStep === 4 && (
           <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Review Your Asset</h4>
+            <h4 className="font-medium text-gray-900 dark:text-gray-100">Review Your Asset</h4>
             
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-center">
-                <span className="font-medium text-gray-700">Asset Type:</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">Asset Type:</span>
                 <Badge variant="secondary">{selectedAssetType?.label}</Badge>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-700">Symbol:</span>
+                <span className="text-gray-700 dark:text-gray-300">Symbol:</span>
                 <span className="font-medium">{asset.symbol}</span>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-700">Quantity:</span>
+                <span className="text-gray-700 dark:text-gray-300">Quantity:</span>
                 <span className="font-medium">{QuantityValidationUtils.formatQuantity(asset.quantity)}</span>
               </div>
               
               {asset.avgCost && (
                 <div className="flex justify-between">
-                  <span className="text-gray-700">Average Cost:</span>
+                  <span className="text-gray-700 dark:text-gray-300">Average Cost:</span>
                   <span className="font-medium">${asset.avgCost.toFixed(2)}</span>
                 </div>
               )}
               
               {asset.purchaseDate && (
                 <div className="flex justify-between">
-                  <span className="text-gray-700">Purchase Date:</span>
+                  <span className="text-gray-700 dark:text-gray-300">Purchase Date:</span>
                   <span className="font-medium">{asset.purchaseDate}</span>
                 </div>
               )}
 
               {asset.assetType === 'option' && asset.optionType && (
                 <div className="border-t pt-3 space-y-2">
-                  <div className="text-sm font-medium text-blue-800">Option Details</div>
+                  <div className="text-sm font-medium text-blue-800 dark:text-blue-300">Option Details</div>
                   <div className="flex justify-between text-sm">
                     <span>Type:</span>
                     <span>{asset.optionType.toUpperCase()}</span>
@@ -459,7 +456,7 @@ export const AssetAdditionWizard: React.FC<AssetAdditionWizardProps> = ({
 
               {asset.assetType === 'bond' && asset.optionType && (
                 <div className="border-t pt-3 space-y-2">
-                  <div className="text-sm font-medium text-green-800">Bond Details</div>
+                  <div className="text-sm font-medium text-green-800 dark:text-green-300">Bond Details</div>
                   <div className="flex justify-between text-sm">
                     <span>Type:</span>
                     <span>{asset.optionType.toUpperCase()}</span>

@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/auth/validated-auth-form.tsx
 // Enhanced authentication forms with real-time validation
-// ============================================================================
 
 'use client';
 
@@ -71,9 +68,9 @@ export const ValidatedAuthForm: React.FC<ValidatedAuthFormProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Server Error Display */}
           {serverError && (
-            <Alert className="border-red-200 bg-red-50">
+            <Alert className="border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40">
               <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
+              <AlertDescription className="text-red-800 dark:text-red-300">
                 {serverError}
               </AlertDescription>
             </Alert>
@@ -138,7 +135,7 @@ export const ValidatedAuthForm: React.FC<ValidatedAuthFormProps> = ({
           {/* Mode Toggle */}
           {onModeChange && (
             <div className="text-center pt-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
                 <button
                   type="button"
@@ -154,7 +151,7 @@ export const ValidatedAuthForm: React.FC<ValidatedAuthFormProps> = ({
 
           {/* Form Debug Info (remove in production) */}
           {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+            <div className="mt-4 p-2 bg-gray-100 dark:bg-slate-800 rounded text-xs">
               <div>Valid: {formValidation.isValid.toString()}</div>
               <div>Touched fields: {Object.keys(formValidation.errors).length}</div>
               <div>Errors: {JSON.stringify(formValidation.errors)}</div>

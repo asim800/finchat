@@ -54,16 +54,22 @@ __pycache__/
 .venv/
 *.egg-info/
 
-todo.md
-tasks.md
+# Working/planning logs and scratch notes (kept out of git, now under docs/)
+docs/todo.md
+docs/tasks.md
+docs/dev-notes.txt
 pythonscripts/*
 
-# Note: Python services now in separate repositories
-# MCP server: ./mcp-server/ (still in this repo)
-# FastAPI service: separate fastapi-portfolio-service repository
-
+# Note: the FastAPI service lives in a separate repository
 # Exclude FastAPI service directory (deployed separately)
 services/fastapi-portfolio-service/
-finapp_notes.txt
-finapp_summ.txt
+
+# Test / screenshot artifacts (e.g. Playwright MCP output)
+.playwright-mcp/
+/*.png
+
+# Dev-only scratch pages/examples (kept locally, not shipped to the repo)
+frontend/src/app/test-analytics/
+frontend/src/app/test-dashboard/
+frontend/src/examples/
 

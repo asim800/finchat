@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/ui/form-fields/email-form-field.tsx
 // Specialized email input with enhanced validation
-// ============================================================================
 
 'use client';
 

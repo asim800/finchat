@@ -13,11 +13,11 @@ export const ConstructionBanner: React.FC = () => {
   }
 
   return (
-    <Alert className="rounded-none border-l-0 border-r-0 border-t-0 bg-orange-50 border-orange-200 border-b-2">
+    <Alert className="rounded-none border-l-0 border-r-0 border-t-0 bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-900 border-b-2">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center">
           <span className="text-orange-600 mr-3 text-lg">🚧</span>
-          <AlertDescription className="text-orange-800 font-medium">
+          <AlertDescription className="text-orange-800 dark:text-orange-300 font-medium">
             This website is currently under construction.
           </AlertDescription>
         </div>

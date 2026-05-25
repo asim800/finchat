@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/dashboard/myportfolio/page.tsx
 // User's personal portfolio management page with CRUD functionality
-// ============================================================================
 
 import { headers } from 'next/headers';
 import Link from 'next/link';
@@ -51,7 +48,7 @@ export default async function PortfolioPage() {
 
         {/* Guest Mode Notice */}
         {isGuestMode && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="mb-6 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -59,10 +56,10 @@ export default async function PortfolioPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">
+                <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300">
                   Demo Mode Portfolio
                 </h3>
-                <div className="mt-2 text-sm text-blue-700">
+                <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
                   <p>
                     This is a demo portfolio that will not be saved permanently. Your changes are stored temporarily during this session.
                     <Link href="/register" className="font-medium underline hover:text-blue-600 ml-1">

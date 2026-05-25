@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/portfolio/route.ts
 // Portfolio API routes for authenticated users
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';

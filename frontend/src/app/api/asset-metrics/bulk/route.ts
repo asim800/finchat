@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: app/api/asset-metrics/bulk/route.ts
 // API endpoints for bulk asset metrics operations
-// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AssetMetricsService } from '@/lib/asset-metrics-service';

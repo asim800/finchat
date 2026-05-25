@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: components/admin/database-viewer.tsx
 // Database viewer with read-only access to all tables
-// ============================================================================
 
 'use client';
 
@@ -78,7 +75,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = () => {
 
     if (!tableData || tableData.length === 0) {
       return (
-        <div className="p-8 text-center text-gray-500">
+        <div className="p-8 text-center text-gray-500 dark:text-gray-400">
           No data found in this table.
         </div>
       );
@@ -175,7 +172,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = () => {
               {Math.min(50, tableData.length)} rows
             </p>
             {tableCount > 50 && (
-              <p className="text-sm text-gray-500">Limited to 50 rows for performance</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Limited to 50 rows for performance</p>
             )}
           </CardContent>
         </Card>
@@ -224,7 +221,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = () => {
                       <ul className="text-sm space-y-1">
                         {Array.isArray((tableSchema as Record<string, unknown>)?.fields) && 
                          ((tableSchema as Record<string, unknown>).fields as string[]).map((field: string) => (
-                          <li key={field} className="bg-gray-100 px-2 py-1 rounded">
+                          <li key={field} className="bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded">
                             {field}
                           </li>
                         ))}
@@ -235,7 +232,7 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = () => {
                       <ul className="text-sm space-y-1">
                         {Array.isArray((tableSchema as Record<string, unknown>)?.relations) && 
                          ((tableSchema as Record<string, unknown>).relations as string[]).map((relation: string) => (
-                          <li key={relation} className="bg-blue-100 px-2 py-1 rounded">
+                          <li key={relation} className="bg-blue-100 dark:bg-blue-900/40 px-2 py-1 rounded">
                             {relation}
                           </li>
                         ))}
@@ -250,13 +247,13 @@ export const DatabaseViewer: React.FC<DatabaseViewerProps> = () => {
       </Tabs>
 
       {/* Security Notice */}
-      <Card className="border-yellow-200 bg-yellow-50">
+      <Card className="border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950/40">
         <CardContent className="p-4">
           <div className="flex items-center space-x-2">
             <span className="text-yellow-600">🔒</span>
             <div>
-              <p className="text-yellow-800 font-medium">Read-Only Access</p>
-              <p className="text-yellow-700 text-sm">
+              <p className="text-yellow-800 dark:text-yellow-300 font-medium">Read-Only Access</p>
+              <p className="text-yellow-700 dark:text-yellow-300 text-sm">
                 This interface provides read-only access to the database. 
                 Use the User Management tab for safe CRUD operations.
               </p>

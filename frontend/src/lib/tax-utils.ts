@@ -1,7 +1,4 @@
-// ============================================================================
-// FILE: lib/tax-utils.ts
 // Tax-related utility functions for portfolio management
-// ============================================================================
 
 export type TaxStatus = 'long-term' | 'short-term' | 'unknown';
 
