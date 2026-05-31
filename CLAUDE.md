@@ -16,6 +16,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Make every task and code change as simple as possible. We want to avoid complex changes for little impact. Keep everything as simple as possible.
 - Add a review section to the tasks.md file with a summary of the changes you've made any relevant information as to why that change was required and append the summary to summary.md file as well
 
+## Architecture & Design Philosophy
+
+The guiding principle: **pages are thin, disposable UI we can pivot quickly on user feedback;
+the workhorse lives in the libraries, backend, and database.** Think in four buckets:
+
+1. **Database (persistence)** — Postgres via Prisma (`lib/db.ts`). The source of truth; holds
+   domain objects (Portfolio, Asset, User, etc.).
+2. **Frontend (UI)** — `app/**/page.tsx` + `components/**`. Thin, **disposable** experiences +
+   page-local view state. A page should be cheap to build, reshape, or throw away.
+3. **Common library (capabilities — the workhorse)** — `lib/**`, exposed to the UI via
+   `app/api/**`. The **only** layer that reads the DB and calls the Python backend, and where
+   data from both is **composed** for a page. Sub-divide by capability (`lib/portfolio`,
+   `lib/retirement`, `lib/analysis`, …); each owns its DB slice + backend calls + a public face.
+4. **Python backend (compute)** — FastAPI services (e.g. `services/fastapi-portfolio-service`),
+   called from bucket 3 via HTTP clients (`lib/fastapi`, `lib/http`).
+
+Rules that follow from this:
+- **Pages never talk to each other.** They funnel through capabilities (bucket 3), which own
+  persistence (1) and compute (4). Two pages share data only via **persistent domain objects**,
+  never via each other's state. → Persistence is the decoupling boundary.
+- **Hybrid contract:** client components reach a capability over HTTP (`/api/*`); server code
+  (route handlers, server components/actions) uses the capability's typed in-process public API.
+  Never import another capability's *internals* from outside it.
+- **Keep "simple" in the page, not by shortcutting the capability.** Even a quick v1 routes all
+  data/compute through `lib/<capability>` + backend/DB — no business logic inlined in pages/routes.
+- **Don't persist prematurely.** Promote data to a DB-backed domain object only when another
+  feature needs it or it must survive a reload; otherwise keep it page-local/ephemeral.
+  Committing a schema before user feedback fights "pivot quickly."
+- **Build new features greenfield in this shape; migrate existing code incrementally** — don't
+  pre-refactor working code. A capability can ship with simple internals and be upgraded later
+  (e.g. swap a simple projection for the real Monte Carlo service) **without changing the page**,
+  because the page only knows the capability's contract.
+
+See `docs/architecture-capabilities-and-pages.md`, `docs/frontend-architecture.md`, and
+`docs/frontend-architecture-details.md` for the full treatment.
+
 ## Development Commands
 
 ### Frontend (Next.js)
