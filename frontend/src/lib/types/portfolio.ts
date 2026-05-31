@@ -1,6 +1,11 @@
 // Single source of truth for portfolio and asset domain types.
 
 import type { AssetMetrics } from '../asset-metrics-service';
+import type { Account as PrismaAccount, RealEstateDetails as PrismaRealEstateDetails } from '@prisma/client';
+
+// Convenience: an Account plus its (optional) RealEstateDetails — mirrors lib/accounts/types
+// but lives here so portfolio types remain self-contained.
+export type PortfolioAccount = PrismaAccount & { realEstate: PrismaRealEstateDetails | null };
 
 // --- Server / persistence shapes (Prisma-backed) ---
 
@@ -30,6 +35,9 @@ export interface Portfolio {
   name: string;
   description?: string | null;
   assets: Asset[];
+  // Phase 2 declutter: accounts inside this portfolio (loaded by getPortfolioWithMarketValues
+  // so the UI can render account-type chips on the header without a second round-trip).
+  accounts?: PortfolioAccount[];
   totalValue: number;
   createdAt: Date;
   updatedAt: Date;
@@ -49,6 +57,9 @@ export interface DisplayAsset {
   updatedAt: Date;
   purchaseDate?: Date | null;
 
+  // Phase 2: which Account inside the Portfolio this asset belongs to (nullable until backfilled).
+  accountId?: string | null;
+
   // Options-specific fields
   optionType?: string | null;
   expirationDate?: Date | null;
@@ -60,6 +71,9 @@ export interface DisplayPortfolio {
   name: string;
   description?: string | null;
   assets: DisplayAsset[];
+  // Phase 2 declutter: accounts may be present on the wire so the header can render
+  // type chips inline. Optional so older callers stay compatible.
+  accounts?: PortfolioAccount[];
   totalValue: number;
   createdAt: Date;
   updatedAt: Date;

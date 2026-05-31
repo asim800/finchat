@@ -53,10 +53,36 @@ working code.
   work in one place so we design it once.)*
 
 ### Phase 2 — Portfolio page refresh
-**Goal:** the Portfolio page surfaces the richer domain.
-- UI: Portfolios are user-named groupings; Accounts inside are first-class, grouped/labeled
-  by type. New sub-forms for cash balances, real estate, mortgages/loans.
-- Mostly UI work over Phase-0 capability; consumes `lib/accounts` via `/api/accounts/*`.
+**Goal:** the Portfolio page surfaces the richer domain (Accounts as first-class UI).
+- **Structure:** Portfolio = user-named bucket (institution/grouping). Each Portfolio holds
+  **multiple Accounts**, each labeled by type. Assets belong to Accounts (not directly to
+  Portfolios). Example: Portfolio `"Fidelity"` → Accounts `[Roth IRA, Taxable, Traditional]`
+  → Assets per account.
+- **Backfill (already done in Phase 0):** every existing Portfolio has a default Account
+  (named `"<Portfolio> (Default)"`, type `TaxableBrokerage` — the realistic guess for
+  pre-existing data); all existing Assets are linked. Users recategorize via the new
+  account-edit form. **New portfolios going forward** auto-get a default Account (type
+  `Other`) on create so they're never orphaned.
+- **Add-Account UI** (inline inside each Portfolio): polymorphic form — top-level type
+  select, then type-dependent fields:
+  - Standard types (CashBank / TaxableBrokerage / TraditionalRetirement / RothRetirement /
+    HSA / Other): name only.
+  - Real Estate: name + `RealEstateDetails` (propertyType, currentValue, outstandingLoan,
+    interestRate, monthlyPayment).
+  - Mortgage/Loan: name + balance owed.
+- **Add-Asset UI:** existing form gets an **Account selector** (which account inside the
+  Portfolio to put it in). Existing assets are not movable in v1 (delete-and-re-add).
+- **Asset.portfolioId stays alongside accountId** (backward-compat for ~25 legacy call
+  sites); Phase 5 retires `portfolioId` as part of chat→portfolio decoupling.
+- **Chat-writes** stay on existing internals (untouched). They'll set `accountId=null`,
+  surfacing as an **"Unassigned" section** in the target Portfolio; user recategorizes
+  manually. The clean capability route happens in Phase 5.
+- **God-file discipline:** new UI lives in new colocated `_components/` files
+  (`AccountTypeBadge`, `AccountTypeSelect`, `AccountSection`, `AccountForm`,
+  `RealEstateFields`, `AccountSelector`). Edits to existing god-files
+  (`portfolio-table.tsx`, `multi-portfolio-manager.tsx`) stay minimal (one-line slot
+  insertions); `wc -l` delta reported pre-merge.
+- Consumes `lib/accounts` via `/api/accounts/*` (built in Phase 0) — no new capability work.
 
 ### Phase 3 — Bare retirement page (the hub)
 **Goal:** the central destination; thin disposable UI; one emotional payoff.

@@ -1,10 +1,16 @@
 // HTTP face of lib/accounts — thin wrapper, no business logic.
 // GET  /api/accounts            → list current user's accounts
-// POST /api/accounts            → create an account
+// POST /api/accounts            → create an account (optionally with realEstate in one call)
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { listAccountsByUser, createAccount, type CreateAccountInput } from '@/lib/accounts';
+import {
+  listAccountsByUser,
+  createAccount,
+  upsertRealEstateDetails,
+  type CreateAccountInput,
+  type RealEstateDetailsInput,
+} from '@/lib/accounts';
 
 export async function GET(request: NextRequest) {
   const user = await getUserFromRequest(request);
@@ -23,19 +29,28 @@ export async function GET(request: NextRequest) {
   }
 }
 
+type CreateAccountBody = CreateAccountInput & { realEstate?: RealEstateDetailsInput };
+
 export async function POST(request: NextRequest) {
   const user = await getUserFromRequest(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  let body: CreateAccountInput;
+  let body: CreateAccountBody;
   try {
-    body = (await request.json()) as CreateAccountInput;
+    body = (await request.json()) as CreateAccountBody;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
   try {
-    const account = await createAccount(body, user.id);
+    const { realEstate, ...accountInput } = body;
+    let account = await createAccount(accountInput, user.id);
+
+    // If RealEstate type and details supplied, attach in same request.
+    if (realEstate && account.accountType === 'RealEstate') {
+      account = await upsertRealEstateDetails(account.id, realEstate, user.id);
+    }
+
     return NextResponse.json({ account }, { status: 201 });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to create account';

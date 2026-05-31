@@ -103,7 +103,7 @@ export class PortfolioService {
     };
   }
 
-  // Create a new portfolio
+  // Create a new portfolio (+ auto-create a default Account so the portfolio is never orphaned)
   static async createPortfolio(userId: string, name: string, description?: string): Promise<Portfolio> {
     const portfolio = await prisma.portfolio.create({
       data: {
@@ -114,6 +114,18 @@ export class PortfolioService {
       include: {
         assets: true
       }
+    });
+
+    // Auto-create a default 'Other' account inside this portfolio (Phase 2 contract:
+    // every Portfolio has at least one Account; users can edit type or add more accounts).
+    await prisma.account.create({
+      data: {
+        userId,
+        portfolioId: portfolio.id,
+        accountName: `${name} (Default)`,
+        accountType: 'Other',
+        currency: 'USD',
+      },
     });
 
     return {
@@ -173,7 +185,7 @@ export class PortfolioService {
   }
 
   // Add assets to specific portfolio
-  static async addAssetsToPortfolio(userId: string, portfolioId: string, assets: ParsedAsset[]): Promise<{
+  static async addAssetsToPortfolio(userId: string, portfolioId: string, assets: ParsedAsset[], accountId?: string | null): Promise<{
     success: boolean;
     portfolio: Portfolio;
     addedAssets: Asset[];
@@ -255,10 +267,11 @@ export class PortfolioService {
             // Fetch current price from historical data
             const currentPrice = await HistoricalPriceService.getLatestPrice(parsedAsset.symbol);
             
-            // Create new asset
+            // Create new asset (accountId optionally bound by caller — Phase 2 onward)
             const newAsset = await prisma.asset.create({
               data: {
                 portfolioId: portfolioId,
+                accountId: accountId ?? null,
                 symbol: parsedAsset.symbol,
                 quantity: parsedAsset.quantity,
                 avgCost: parsedAsset.avgCost,
@@ -540,7 +553,10 @@ export class PortfolioService {
           userId
         },
         include: {
-          assets: true
+          assets: true,
+          // Phase 2 declutter: include accounts so the UI can render account-type chips
+          // in the portfolio header without a second round-trip.
+          accounts: { include: { realEstate: true } }
         }
       });
 

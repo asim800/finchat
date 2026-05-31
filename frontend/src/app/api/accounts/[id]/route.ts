@@ -1,11 +1,18 @@
 // HTTP face of lib/accounts — thin wrapper, no business logic.
 // GET    /api/accounts/[id]   → fetch a single account
-// PUT    /api/accounts/[id]   → update an account
+// PUT    /api/accounts/[id]   → update an account (optionally with realEstate in one call)
 // DELETE /api/accounts/[id]   → delete an account
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { getAccount, updateAccount, deleteAccount, type UpdateAccountInput } from '@/lib/accounts';
+import {
+  getAccount,
+  updateAccount,
+  deleteAccount,
+  upsertRealEstateDetails,
+  type UpdateAccountInput,
+  type RealEstateDetailsInput,
+} from '@/lib/accounts';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -23,20 +30,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
+type UpdateAccountBody = UpdateAccountInput & { realEstate?: RealEstateDetailsInput };
+
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   const user = await getUserFromRequest(request);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
-  let body: UpdateAccountInput;
+  let body: UpdateAccountBody;
   try {
-    body = (await request.json()) as UpdateAccountInput;
+    body = (await request.json()) as UpdateAccountBody;
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
   try {
-    const account = await updateAccount(id, body, user.id);
+    const { realEstate, ...accountInput } = body;
+    let account = await updateAccount(id, accountInput, user.id);
+
+    if (realEstate && account.accountType === 'RealEstate') {
+      account = await upsertRealEstateDetails(id, realEstate, user.id);
+    }
+
     return NextResponse.json({ account });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Failed to update account';

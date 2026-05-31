@@ -16,7 +16,8 @@ import { AlertCircle, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { generateGuestSessionId, GuestPortfolioService } from '@/lib/guest-portfolio';
 import { formatPurchaseDate } from '@/lib/tax-utils';
 import { GuestModeIndicator } from '@/components/ui/guest-mode-indicator';
-import { AssetAdditionWizard } from './asset-addition-wizard';
+// Phase 2 declutter: the wizard is launched per-account from AccountsSection now (binds
+// accountId correctly). The duplicate launcher that used to live in this table is gone.
 import { useErrorSystem, ErrorContainer } from '@/components/ui/error-display';
 import { QuantityValidationUtils } from '@/lib/validation';
 import { PortfolioTableSkeleton } from './portfolio-table/portfolio-table-skeleton';
@@ -118,13 +119,6 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       setLoading(false);
     }
   }, [crudOperations, setLoading, setAssets, clearAllErrors, showNetworkError]);
-
-  // Handle wizard submission
-  const handleWizardSubmit = useCallback(async (wizardAsset: NewAsset) => {
-    // Convert wizard asset to the format expected by handleAddAsset
-    updateNewAsset(wizardAsset);
-    await handleAddAssetInternal(wizardAsset);
-  }, []);
 
   // Add new asset (internal function)
   const handleAddAssetInternal = useCallback(async (assetData: NewAsset) => {
@@ -241,17 +235,6 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
       setLoading(false);
     }
   }, [isGuestMode, userId, portfolioId, guestSessionId, loadPortfolio]);
-
-  // Add asset from wizard
-  const handleAddAsset = () => {
-    handleAddAssetInternal(newAsset);
-  };
-
-  // Handle wizard cancel
-  const handleWizardCancel = () => {
-    setShowAddForm(false);
-    resetNewAsset();
-  };
 
   // Start editing an asset
   const startEdit = useCallback((asset: DisplayAsset) => {
@@ -640,27 +623,9 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
         </Alert>
       )}
 
-      {/* Add Asset Button */}
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Assets</h2>
-        <Button 
-          onClick={() => setShowAddForm(true)}
-          disabled={Boolean(loading) || Boolean(showAddForm)}
-        >
-          + Add Asset
-        </Button>
-      </div>
-
-      {/* Add Asset Wizard */}
-      {showAddForm && (
-        <div className="mb-6">
-          <AssetAdditionWizard
-            onSubmit={handleWizardSubmit}
-            onCancel={handleWizardCancel}
-            loading={loading}
-          />
-        </div>
-      )}
+      {/* Phase 2 declutter: removed the standalone "Assets" header + "+ Add Asset"
+          button + wizard mount. Add-asset is now per-account in the AccountsSection
+          above (the wizard correctly binds accountId there). */}
 
       {/* Assets Display */}
       {assets.length === 0 ? (
@@ -670,15 +635,8 @@ const PortfolioTableComponent: React.FC<PortfolioTableProps> = ({
           </div>
           <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No assets yet</h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Add your first asset to get started with portfolio tracking.
+            Use the <span className="font-medium">+ Add Asset</span> button next to an account above.
           </p>
-          {!showAddForm && (
-            <div className="mt-6">
-              <Button onClick={() => setShowAddForm(true)}>
-                + Add Your First Asset
-              </Button>
-            </div>
-          )}
         </div>
       ) : (
         <>

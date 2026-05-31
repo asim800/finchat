@@ -27,6 +27,20 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   Other: 'Other',
 };
 
+// Short labels for tight UI rows + as the default `accountName` when a user creates an
+// account without typing one (declutter: avoid prompting for a name the type already
+// implies — see AccountForm).
+export const ACCOUNT_TYPE_SHORT_LABELS: Record<AccountType, string> = {
+  CashBank: 'Cash',
+  TaxableBrokerage: 'Taxable',
+  TraditionalRetirement: 'Traditional',
+  RothRetirement: 'Roth',
+  HSA: 'HSA',
+  RealEstate: 'Real Estate',
+  MortgageLoan: 'Mortgage',
+  Other: 'Other',
+};
+
 export type Account = PrismaAccount;
 export type RealEstateDetails = PrismaRealEstateDetails;
 

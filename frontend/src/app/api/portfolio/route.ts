@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { assets, portfolioId, name, description, action, userId } = body;
+    const { assets, portfolioId, accountId, name, description, action, userId } = body;
     
     // Handle portfolio fetch for FastAPI client
     if (action === 'fetch' || userId) {
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       targetPortfolioId = defaultPortfolio.id;
     }
 
-    const result = await PortfolioService.addAssetsToPortfolio(user.id, targetPortfolioId, assets);
+    const result = await PortfolioService.addAssetsToPortfolio(user.id, targetPortfolioId, assets, accountId ?? null);
     
     // Transform portfolio assets to include totalValue
     const portfolioWithTotals = {

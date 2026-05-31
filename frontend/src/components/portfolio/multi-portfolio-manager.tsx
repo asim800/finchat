@@ -5,10 +5,12 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PortfolioTable } from './portfolio-table';
+// PortfolioTable import dropped (declutter #2): per-account tables now render inside
+// AccountsSection. The standalone flat table at the portfolio level is gone.
 import { CsvManager } from './csv-manager';
 import { PortfolioBadges } from './portfolio-badges';
 import { PortfolioDashboard } from './portfolio-dashboard';
+import { AccountsSection } from '@/app/dashboard/myportfolio/_components/AccountsSection';
 import { usePortfolioMetrics } from '@/hooks/usePortfolioMetrics';
 import type { DisplayPortfolio as Portfolio, DisplayAsset } from '@/lib/types/portfolio';
 
@@ -71,10 +73,9 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
       }));
       
       setPortfolios([...transformedPortfolios]); // Force new array reference
-      
-      // Show analytics by default for all portfolios
-      const portfolioIds = transformedPortfolios.map(p => p.id);
-      setShowDashboard(new Set(portfolioIds));
+
+      // Phase 2 declutter: Analytics is collapsed by default (was: all-expanded). Users
+      // toggle per-portfolio via the collapsible row beneath each table.
     } catch (err) {
       setError('Failed to load portfolios');
       console.error('Portfolio loading error:', err);
@@ -311,10 +312,8 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
         </div>
       )}
 
-      {/* Page Title */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">My Portfolios</h2>
-      </div>
+      {/* Phase 2 declutter #3: removed redundant <h2>My Portfolios</h2> — the page-level
+          <h1>My Portfolio</h1> in app/dashboard/myportfolio/page.tsx already labels the page. */}
 
       {/* Portfolios List */}
       {portfolios.length === 0 ? (
@@ -380,13 +379,35 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
       ) : (
         <div className="space-y-6">
           {portfolios.map((portfolio, index) => {
-            const portfolioMarketValue = portfolio.assets.reduce((sum, asset) => 
+            const portfolioMarketValue = portfolio.assets.reduce((sum, asset) =>
               sum + (asset.price ? asset.quantity * asset.price : 0), 0
             );
-            const portfolioCost = portfolio.assets.reduce((sum, asset) => 
+            const portfolioCost = portfolio.assets.reduce((sum, asset) =>
               sum + (asset.avgCost ? asset.quantity * asset.avgCost : 0), 0
             );
-            
+
+            // --- Phase 2 declutter: build the inline header summary ---
+            // (Account-type chips removed from the header per refinement — type lives on
+            // each account row, not at the portfolio level. Portfolio = bank/grouping.)
+            const accounts = portfolio.accounts ?? [];
+            const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+            // Real-estate portfolios summarize property + loan instead of asset count.
+            const reAccounts = accounts.filter(a => a.accountType === 'RealEstate' && a.realEstate);
+            const reValueSum = reAccounts.reduce((s, a) => s + (a.realEstate!.currentValue || 0), 0);
+            const reLoanSum = reAccounts.reduce((s, a) => s + (a.realEstate!.outstandingLoan || 0), 0);
+            let summaryText: string;
+            if (portfolio.assets.length > 0) {
+              const gain = portfolioMarketValue - portfolioCost;
+              const gainStr = `${gain >= 0 ? '+' : '-'}${fmt.format(Math.abs(gain))}`;
+              summaryText = `${portfolio.assets.length} ${portfolio.assets.length === 1 ? 'asset' : 'assets'} · ${fmt.format(portfolioMarketValue)} · ${gainStr}`;
+            } else if (reValueSum > 0) {
+              summaryText = reLoanSum > 0
+                ? `Property ${fmt.format(reValueSum)} · Loan ${fmt.format(reLoanSum)}`
+                : `Property ${fmt.format(reValueSum)}`;
+            } else {
+              summaryText = 'Empty';
+            }
+
             return (
               <div key={portfolio.id}>
                 <div className="border dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 shadow-sm">
@@ -423,10 +444,22 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                             </Button>
                           </div>
                         ) : (
-                          <div>
-                            <div className="flex items-center gap-3 mb-1">
-                              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{portfolio.name}</h3>
-                              <PortfolioBadges 
+                          <div className="min-w-0">
+                            {/* Phase 2 declutter: name (click to rename) + inline summary on ONE line.
+                                Account-type chips moved DOWN to each account row (Portfolio is
+                                a bank/grouping; types belong to accounts). */}
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3
+                                className="text-lg font-medium text-gray-900 dark:text-gray-100 cursor-pointer hover:underline"
+                                title="Click to rename"
+                                onClick={() => setEditingPortfolio(portfolio.id)}
+                              >
+                                {portfolio.name}
+                              </h3>
+                              <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                {summaryText}
+                              </span>
+                              <PortfolioBadges
                                 assets={portfolio.assets}
                                 portfolioValue={portfolioMarketValue}
                                 portfolioCost={portfolioCost}
@@ -446,22 +479,8 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                               portfolioId={portfolio.id}
                               onUploadComplete={() => loadPortfolios()}
                             />
-                            <Button
-                              size="sm"
-                              variant={showDashboard.has(portfolio.id) ? "default" : "outline"}
-                              onClick={() => toggleDashboard(portfolio.id)}
-                              disabled={loading}
-                            >
-                              {showDashboard.has(portfolio.id) ? "Hide Analytics" : "Show Analytics"}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setEditingPortfolio(portfolio.id)}
-                              disabled={loading}
-                            >
-                              Edit
-                            </Button>
+                            {/* Edit button removed (Phase 2 declutter): click the portfolio
+                                name to rename. Analytics toggle lives BELOW the table. */}
                             <Button
                               size="sm"
                               variant="outline"
@@ -477,66 +496,43 @@ export const MultiPortfolioManager: React.FC<MultiPortfolioManagerProps> = ({
                     </div>
                   </div>
 
-                  {/* Individual Portfolio Summary */}
-                  {!collapsedPortfolios.has(portfolio.id) && (
-                    <div className="p-4 bg-gray-25 border-b">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-blue-50 dark:bg-blue-950/40 p-3 rounded-lg border dark:border-blue-900">
-                          <h4 className="text-xs font-medium text-blue-800 dark:text-blue-300">Total Assets</h4>
-                          <p className="text-lg font-bold text-blue-900 dark:text-blue-200">{portfolio.assets.length}</p>
-                        </div>
-                        <div className="bg-green-50 dark:bg-green-950/40 p-3 rounded-lg border dark:border-green-900">
-                          <h4 className="text-xs font-medium text-green-800 dark:text-green-300">Portfolio Value</h4>
-                          <p className="text-lg font-bold text-green-900 dark:text-green-200">
-                            ${portfolioMarketValue.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="bg-orange-50 dark:bg-orange-950/40 p-3 rounded-lg border dark:border-orange-900">
-                          <h4 className="text-xs font-medium text-orange-800 dark:text-orange-300">Total Cost</h4>
-                          <p className="text-lg font-bold text-orange-900 dark:text-orange-200">
-                            ${portfolioCost.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="bg-purple-50 dark:bg-purple-950/40 p-3 rounded-lg border dark:border-purple-900">
-                          <h4 className="text-xs font-medium text-purple-800 dark:text-purple-300">Gain/Loss</h4>
-                          <p className={`text-lg font-bold ${
-                            portfolioMarketValue - portfolioCost >= 0
-                              ? 'text-green-900 dark:text-green-300'
-                              : 'text-red-900 dark:text-red-300'
-                          }`}>
-                            ${(portfolioMarketValue - portfolioCost).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  {/* Phase 2 declutter: the 4-card summary grid was removed; the same
+                      info now appears inline on the portfolio header line above. */}
 
-                  {/* Portfolio Dashboard */}
-                  {!collapsedPortfolios.has(portfolio.id) && showDashboard.has(portfolio.id) && (
-                    <PortfolioDashboardWrapper 
+                  {/* Phase 2 + declutter #2: Accounts inside this portfolio, each
+                      with its OWN nested PortfolioTable (assets-under-accounts). The
+                      standalone flat PortfolioTable that used to sit here is gone. */}
+                  {!collapsedPortfolios.has(portfolio.id) && (
+                    <AccountsSection
                       portfolioId={portfolio.id}
-                      portfolioName={portfolio.name}
-                      assets={portfolio.assets}
-                      portfolioValue={portfolioMarketValue}
-                      portfolioCost={portfolioCost}
+                      portfolioAssets={portfolio.assets}
                       userId={userId}
+                      onChange={loadPortfolios}
                     />
                   )}
 
-                  {/* Portfolio Content */}
+                  {/* Phase 2 declutter: Analytics moved below the table, collapsed by default.
+                      The collapsible row IS the toggle (no separate header button needed). */}
                   {!collapsedPortfolios.has(portfolio.id) && (
-                    <div className="p-4">
-                      <PortfolioTable
-                        isGuestMode={false}
-                        userId={userId}
-                        portfolioId={portfolio.id}
-                        initialAssets={portfolio.assets}
-                        onAssetsChange={() => {
-                          console.log('🔄 MultiPortfolioManager onAssetsChange triggered');
-                          loadPortfolios();
-                        }}
-                        showSummary={false}
-                      />
+                    <div className="border-t dark:border-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => toggleDashboard(portfolio.id)}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:bg-muted/30 transition-colors"
+                      >
+                        <span>{showDashboard.has(portfolio.id) ? '▼' : '▶'}</span>
+                        <span>Analytics</span>
+                      </button>
+                      {showDashboard.has(portfolio.id) && (
+                        <PortfolioDashboardWrapper
+                          portfolioId={portfolio.id}
+                          portfolioName={portfolio.name}
+                          assets={portfolio.assets}
+                          portfolioValue={portfolioMarketValue}
+                          portfolioCost={portfolioCost}
+                          userId={userId}
+                        />
+                      )}
                     </div>
                   )}
                 </div>
