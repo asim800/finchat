@@ -75,6 +75,7 @@ model User {
   chatHistoryLimit            Int           @default(5)
   accounts                    Account[]
   apiKeys                     ApiKey[]
+  cashFlows                   CashFlow[]
   chatSessions                ChatSession[]
   portfolio                   Portfolio[]
 
@@ -173,6 +174,65 @@ model Account {
   @@index([portfolioId])
   @@index([userId])
   @@map("accounts")
+}
+
+// Cash-flow tracking (Phase 1 / income capability).
+// Unified inflows/outflows with start/end dates so the retirement capability
+// can compose them over the planning horizon. The user is allowed to enter
+// partial data (most fields nullable) — low-friction by design.
+
+enum CashFlowKind {
+  Income   // money in
+  Expense  // money out
+}
+
+enum CashFlowFrequency {
+  OneTime
+  Weekly
+  Biweekly
+  Monthly
+  Quarterly
+  Annual
+}
+
+enum CashFlowCategory {
+  // Income categories
+  Salary
+  Pension
+  SocialSecurity
+  Annuity
+  RentalIncome
+  DividendInterest
+  OtherIncome
+  // Expense categories
+  Housing       // rent, mortgage, property tax
+  Living        // food, utilities, transport
+  Healthcare
+  Discretionary // travel, entertainment
+  Taxes
+  OtherExpense
+}
+
+model CashFlow {
+  id                String            @id @default(cuid())
+  userId            String
+  kind              CashFlowKind
+  category          CashFlowCategory
+  amount            Float             // amount per `frequency` (always positive magnitude; `kind` carries direction)
+  frequency         CashFlowFrequency @default(Monthly)
+  startDate         DateTime?         // null = "in effect now"
+  endDate           DateTime?         // null = "indefinite"
+  source            String?           // free-text label, e.g. "Pension from XYZ"
+  notes             String?
+  inflationAdjusted Boolean           @default(false) // does it auto-adjust with inflation (SS, salary)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, kind])
+  @@map("cash_flows")
 }
 
 model RealEstateDetails {
