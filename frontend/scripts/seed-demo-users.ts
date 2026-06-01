@@ -94,6 +94,9 @@ interface PersonaSeed {
   birthDate: Date;
   city?: string;
   state?: string;
+  /** Phase 3.5: marks user as a public reference profile + display blurb. */
+  referenceTitle: string;
+  referenceDescription: string;
   profile: UserProfile;
   portfolios: PortfolioSeed[];
   cashFlows: CashFlowSeed[];
@@ -111,6 +114,9 @@ const PERSONAS: PersonaSeed[] = [
     birthDate: new Date('1986-04-12'),
     city: 'New York',
     state: 'NY',
+    referenceTitle: 'Single, mid-career, urban renter',
+    referenceDescription:
+      'A 40-year-old single professional renting in NYC. Simple Roth IRA + Taxable brokerage setup at Fidelity. Moderate-aggressive risk tolerance, no real estate.',
     profile: {
       monthlyIncome: 10000,
       monthlyRent: 2500,
@@ -169,6 +175,9 @@ const PERSONAS: PersonaSeed[] = [
     birthDate: new Date('1968-09-23'),
     city: 'Boston',
     state: 'MA',
+    referenceTitle: 'Near-retirement, multi-portfolio, homeowner',
+    referenceDescription:
+      'A 58-year-old married professional eight years from retirement. Holdings split across Vanguard (Traditional 401(k), Taxable) and Schwab (Roth IRA, HSA), plus a primary home + mortgage. Future pension + SS modeled as CashFlow.',
     profile: {
       monthlyIncome: 15000,
       monthlyMortgage: 3200,
@@ -276,6 +285,9 @@ const PERSONAS: PersonaSeed[] = [
     birthDate: new Date('1992-03-15'),
     city: 'Austin',
     state: 'TX',
+    referenceTitle: 'Dual-income couple, 2 kids, starter home + rental',
+    referenceDescription:
+      'A 34-year-old married couple with two kids in Austin. Both have Traditional 401(k)s, plus a joint Fidelity brokerage, family HSA, primary home with mortgage, and an inherited rental property. Aggressive risk tolerance, long accumulation horizon.',
     profile: {
       monthlyIncome: 19000,
       monthlyMortgage: 2800,
@@ -417,6 +429,10 @@ async function seedPersona(p: PersonaSeed) {
       birthDate: p.birthDate,
       city: p.city,
       state: p.state,
+      // Phase 3.5: mark as a reference profile so the Templates page surfaces it.
+      isReferenceProfile: true,
+      referenceTitle: p.referenceTitle,
+      referenceDescription: p.referenceDescription,
       ...p.profile,
     },
   });

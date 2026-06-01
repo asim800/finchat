@@ -34,6 +34,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
   const isChatPage = isActiveRoute('/chat');
   const isLearningPage = isActiveRoute('/learning');
   const isContactPage = isActiveRoute('/contact');
+  const isDirectoryPage = isActiveRoute('/directory');
 
   const getNavButtonVariant = (isActive: boolean, mobileMode = false) => {
     if (mobileMode) {
@@ -48,6 +49,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = () => {
   const mainNavItems = [
     { href: '/dashboard/myportfolio', label: 'My Portfolio', isActive: isMyPortfolioPage },
     { href: '/dashboard/portfolio', label: 'Templates', isActive: isReferencePortfolioPage },
+    { href: '/directory', label: 'Directory', isActive: isDirectoryPage },
     { href: '/dashboard/chat', label: 'Chat', isActive: isChatPage },
     { href: '/contact', label: 'Contact us', isActive: isContactPage }
   ];

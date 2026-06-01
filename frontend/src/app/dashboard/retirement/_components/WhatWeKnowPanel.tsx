@@ -8,7 +8,7 @@
 import Link from 'next/link';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import type { WhatWeKnow, InputsResolved } from '@/lib/retirement/types';
+import type { WhatWeKnow, InputsResolved, InputSource } from '@/lib/retirement/types';
 
 interface Props {
   whatWeKnow: WhatWeKnow;
@@ -20,8 +20,8 @@ interface Row {
   filled: boolean;
   /** What's filled-in: a human-readable summary. */
   value?: string;
-  /** Where the value came from (CashFlow or User profile), if filled. */
-  source?: 'cashflow' | 'profile' | 'unknown';
+  /** Where the value came from (CashFlow / User profile / diagnostic override), if filled. */
+  source?: InputSource;
   /** Where to send the user to fix it. */
   fixHref: string;
   fixLabel: string;

@@ -4,9 +4,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define different route categories
-const protectedRoutes = ['/dashboard/myportfolio', '/dashboard/income', '/dashboard/retirement', '/api-keys', '/accounts'];
+const protectedRoutes = ['/dashboard/myportfolio', '/dashboard/income', '/dashboard/retirement', '/dashboard/reference', '/api-keys', '/accounts'];
 const authRoutes = ['/login', '/register'];
-const guestAllowedRoutes = ['/dashboard/chat', '/dashboard/portfolio', '/demo']; // Chat and reference portfolios available for guests
+const guestAllowedRoutes = ['/dashboard/chat', '/dashboard/portfolio', '/directory', '/demo']; // Chat, Templates, Directory available for guests
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -14,6 +14,13 @@ export interface RetirementInputs {
   targetMonthlySpending: number;
   /** Horizon end. Defaults to 95 inside the capability if omitted. */
   endOfLifeAge?: number;
+  // ---- Phase 3.5 diagnostic overrides (all optional) ----
+  /** If a number, use as the current monthly income instead of resolving from CashFlow/profile. */
+  overrideMonthlyIncome?: number | null;
+  /** If a number, use as the current monthly expenses instead of resolving from CashFlow/profile. */
+  overrideMonthlyExpenses?: number | null;
+  /** Defaults to true. When false, SS (CashFlow rows + profile estimate) is excluded from retirement income. */
+  includeSocialSecurity?: boolean;
 }
 
 // ---- projection output ----
@@ -54,9 +61,21 @@ export interface ReadinessSummary {
 
 /**
  * Where a resolved input came from. `cashflow` = derived from CashFlow rows;
- * `profile` = User.monthlyIncome / monthlyFixedExpenses fallback; `unknown` = neither.
+ * `profile` = User.monthlyIncome / monthlyFixedExpenses fallback; `override` =
+ * diagnostic-page override input; `unknown` = neither.
  */
-export type InputSource = 'cashflow' | 'profile' | 'unknown';
+export type InputSource = 'cashflow' | 'profile' | 'override' | 'unknown';
+
+/** One account's contribution to the investable balance (diagnostic). */
+export interface InvestableBreakdownRow {
+  accountId: string;
+  accountName: string;
+  accountType: AccountType;
+  portfolioName: string;
+  value: number;
+  /** Whether `value` came from asset market values (sum) or from account.balance fallback. */
+  source: 'assets' | 'balance';
+}
 
 export interface InputsResolved {
   currentAge: number | null; // null if no birthDate
@@ -65,6 +84,8 @@ export interface InputsResolved {
   /** Sum of monthly retirement-income flows active at the retirement age (SS, pension, rental). */
   monthlyRetirementIncomeAtRetire: number;
   investableBalance: number;
+  /** Per-account contribution rows — totals to `investableBalance`. (Phase 3.5) */
+  investableBreakdown: InvestableBreakdownRow[];
   expectedReturn: number;
   /** Source attribution for the resolved values; UI surfaces "where this came from". */
   sources: {

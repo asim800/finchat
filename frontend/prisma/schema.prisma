@@ -73,6 +73,12 @@ model User {
   zipCode                     String?
   role                        String        @default("user")
   chatHistoryLimit            Int           @default(5)
+  // Phase 3.5: marks users whose data is exposed as a reference profile on the
+  // Templates page (and viewable read-only by other logged-in users). Set via seed
+  // for now; admin UI deferred.
+  isReferenceProfile          Boolean       @default(false)
+  referenceTitle              String? // e.g. "Single, mid-career, urban renter"
+  referenceDescription        String? // 1-2 sentence blurb for the card
   accounts                    Account[]
   apiKeys                     ApiKey[]
   cashFlows                   CashFlow[]

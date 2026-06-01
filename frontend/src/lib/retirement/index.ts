@@ -32,6 +32,7 @@ import type {
   ReadinessStatus,
   InputsResolved,
   InputSource,
+  InvestableBreakdownRow,
   WhatWeKnow,
   RealEstateWealth,
   AssetMatrix,
@@ -93,38 +94,81 @@ export async function projectRetirement(
   });
 
   // 2. Resolve inputs (with source attribution for the UI panel).
+  // Phase 3.5: diagnostic overrides take precedence over CashFlow/profile resolution.
   const currentAge = ageFromBirthDate(user.birthDate);
   const ageSource: InputSource = user.birthDate ? 'profile' : 'unknown';
 
-  const monthlyIncome = monthlyIncomeFromFlows > 0
-    ? monthlyIncomeFromFlows
-    : (user.monthlyIncome ?? 0);
-  const incomeSource: InputSource = monthlyIncomeFromFlows > 0
-    ? 'cashflow'
-    : (user.monthlyIncome && user.monthlyIncome > 0) ? 'profile' : 'unknown';
+  let monthlyIncome: number;
+  let incomeSource: InputSource;
+  if (inputs.overrideMonthlyIncome != null) {
+    monthlyIncome = inputs.overrideMonthlyIncome;
+    incomeSource = 'override';
+  } else if (monthlyIncomeFromFlows > 0) {
+    monthlyIncome = monthlyIncomeFromFlows;
+    incomeSource = 'cashflow';
+  } else if (user.monthlyIncome && user.monthlyIncome > 0) {
+    monthlyIncome = user.monthlyIncome;
+    incomeSource = 'profile';
+  } else {
+    monthlyIncome = 0;
+    incomeSource = 'unknown';
+  }
 
-  const monthlyExpenses = monthlyExpenseFromFlows > 0
-    ? monthlyExpenseFromFlows
-    : (user.monthlyFixedExpenses ?? 0);
-  const expenseSource: InputSource = monthlyExpenseFromFlows > 0
-    ? 'cashflow'
-    : (user.monthlyFixedExpenses && user.monthlyFixedExpenses > 0) ? 'profile' : 'unknown';
+  let monthlyExpenses: number;
+  let expenseSource: InputSource;
+  if (inputs.overrideMonthlyExpenses != null) {
+    monthlyExpenses = inputs.overrideMonthlyExpenses;
+    expenseSource = 'override';
+  } else if (monthlyExpenseFromFlows > 0) {
+    monthlyExpenses = monthlyExpenseFromFlows;
+    expenseSource = 'cashflow';
+  } else if (user.monthlyFixedExpenses && user.monthlyFixedExpenses > 0) {
+    monthlyExpenses = user.monthlyFixedExpenses;
+    expenseSource = 'profile';
+  } else {
+    monthlyExpenses = 0;
+    expenseSource = 'unknown';
+  }
 
   const expectedReturn = expectedReturnFor(user.riskTolerance);
-  const investableBalance = sumInvestableBalance(accounts, allAssets);
+  const { total: investableBalance, breakdown: investableBreakdownRaw } =
+    sumInvestableBalanceWithBreakdown(accounts, allAssets);
+
+  // Resolve portfolio names for the breakdown (one small query — referenced only by
+  // the diagnostic page; cheap enough to always include).
+  const portfolioIds = Array.from(new Set(accounts.map((a) => a.portfolioId).filter(Boolean) as string[]));
+  const portfolioNameById = new Map<string, string>();
+  if (portfolioIds.length > 0) {
+    const portfolioRows = await prisma.portfolio.findMany({
+      where: { id: { in: portfolioIds } },
+      select: { id: true, name: true },
+    });
+    for (const p of portfolioRows) portfolioNameById.set(p.id, p.name);
+  }
+  const accountToPortfolioName = new Map<string, string>();
+  for (const acc of accounts) {
+    if (acc.portfolioId) accountToPortfolioName.set(acc.id, portfolioNameById.get(acc.portfolioId) ?? '');
+  }
+  const investableBreakdown: InvestableBreakdownRow[] = investableBreakdownRaw.map((row) => ({
+    ...row,
+    portfolioName: accountToPortfolioName.get(row.accountId) ?? '',
+  }));
 
   // 3. Retirement-era income flows (SS, pension, rental, annuity) active at retirement.
-  // If the user has no CashFlow SocialSecurity row but DOES have an
-  // estimatedSocialSecurityAt65 profile value, treat that as monthly SS starting at 65.
+  // Phase 3.5: if `includeSocialSecurity === false`, exclude BOTH the CashFlow SS rows
+  // AND the User.estimatedSocialSecurityAt65 fallback. Pension / Annuity / RentalIncome
+  // are still counted.
+  const includeSS = inputs.includeSocialSecurity ?? true;
   let monthlyRetirementIncomeAtRetire = sumRetirementIncomeAtAge(
     cashflows,
     inputs.retirementAge,
     currentAge ?? 0,
+    includeSS,
   );
   const hasCashFlowSS = cashflows.some(
     (cf) => cf.kind === 'Income' && cf.category === 'SocialSecurity' && cf.isActive,
   );
-  if (!hasCashFlowSS && user.estimatedSocialSecurityAt65 && inputs.retirementAge >= 65) {
+  if (includeSS && !hasCashFlowSS && user.estimatedSocialSecurityAt65 && inputs.retirementAge >= 65) {
     monthlyRetirementIncomeAtRetire += user.estimatedSocialSecurityAt65;
   }
 
@@ -134,6 +178,7 @@ export async function projectRetirement(
     monthlyExpenses,
     monthlyRetirementIncomeAtRetire,
     investableBalance,
+    investableBreakdown,
     expectedReturn,
     sources: { age: ageSource, income: incomeSource, expenses: expenseSource },
   };
@@ -235,20 +280,25 @@ function expectedReturnFor(riskTolerance: string | null): number {
 }
 
 /**
- * Sum investable balance across non-RE, non-Mortgage accounts.
+ * Sum investable balance across non-RE, non-Mortgage accounts, AND return a
+ * per-account breakdown (Phase 3.5 — used by the retirement diagnostic page so
+ * the user can cross-check the projection's investable figure against the
+ * Portfolio page values).
  *
  * For each account: prefer sum of its assets' market values (qty × current price);
  * fall back to `account.balance` when the account has no priced assets (Cash & Bank,
  * HSA-as-cash). Assets without a price contribute 0 — we don't double-fall-back to
  * avgCost because that's a cost basis, not a value, and would inflate readiness.
  */
-function sumInvestableBalance(
+function sumInvestableBalanceWithBreakdown(
   accounts: AccountWithRealEstate[],
   assets: AssetRow[],
-): number {
+): { total: number; breakdown: InvestableBreakdownRow[] } {
   const investable = accounts.filter(
     (a) => a.accountType !== 'RealEstate' && a.accountType !== 'MortgageLoan',
   );
+
+  // Sum asset values per account.
   const valueByAccount = new Map<string, number>();
   for (const a of assets) {
     if (!a.accountId || a.price == null) continue;
@@ -257,13 +307,43 @@ function sumInvestableBalance(
       (valueByAccount.get(a.accountId) ?? 0) + a.quantity * a.price,
     );
   }
+
+  // Build per-account rows + total. To populate `portfolioName` we need the
+  // portfolio map — fetch them here (single small query; accounts know their portfolioId).
+  // Note: keeping this in-memory: callers pass accounts already loaded; we map name from
+  // accounts[].portfolioId via a one-shot DB lookup below if needed. For now, populate
+  // portfolioName lazily — most callers (the diagnostic page) will live with portfolioId
+  // if the lookup is too costly. To stay synchronous, we fall back to the portfolioId as
+  // the portfolioName when we can't resolve it (rare; reference profiles always have a name).
+  const breakdown: InvestableBreakdownRow[] = [];
   let total = 0;
   for (const acc of investable) {
-    const v = valueByAccount.get(acc.id);
-    if (v && v > 0) total += v;
-    else if (acc.balance != null) total += acc.balance;
+    const assetValue = valueByAccount.get(acc.id);
+    let value: number;
+    let source: 'assets' | 'balance';
+    if (assetValue && assetValue > 0) {
+      value = assetValue;
+      source = 'assets';
+    } else if (acc.balance != null) {
+      value = acc.balance;
+      source = 'balance';
+    } else {
+      continue; // no contribution
+    }
+    total += value;
+    breakdown.push({
+      accountId: acc.id,
+      accountName: acc.accountName,
+      accountType: acc.accountType,
+      // portfolioName resolved by caller (it has the portfolio list); leave as empty
+      // string here. We don't make this fn async to keep simulate-stage perf simple.
+      portfolioName: '',
+      value,
+      source,
+    });
   }
-  return total;
+
+  return { total, breakdown };
 }
 
 function computeRealEstateWealth(accounts: AccountWithRealEstate[]): RealEstateWealth {
@@ -291,11 +371,13 @@ function computeRealEstateWealth(accounts: AccountWithRealEstate[]): RealEstateW
 /**
  * Sum the monthly equivalent of retirement-era income flows (SS, Pension, Annuity,
  * RentalIncome) that will be active when the user reaches retirementAge.
+ * Phase 3.5: pass `includeSS=false` to exclude SocialSecurity CashFlow rows.
  */
 function sumRetirementIncomeAtAge(
   cashflows: CashFlow[],
   retirementAge: number,
   currentAge: number,
+  includeSS: boolean,
 ): number {
   const yearsTilRetire = Math.max(0, retirementAge - currentAge);
   const retireDate = new Date();
@@ -309,6 +391,7 @@ function sumRetirementIncomeAtAge(
   for (const cf of cashflows) {
     if (cf.kind !== 'Income') continue;
     if (!RETIREMENT_INCOME_CATEGORIES.has(cf.category)) continue;
+    if (!includeSS && cf.category === 'SocialSecurity') continue;
     if (!cf.isActive) continue;
     if (cf.startDate && cf.startDate > retireDate) continue;
     if (cf.endDate && cf.endDate < retireDate) continue;
