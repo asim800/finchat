@@ -16,42 +16,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Make every task and code change as simple as possible. We want to avoid complex changes for little impact. Keep everything as simple as possible.
 - Add a review section to the tasks.md file with a summary of the changes you've made any relevant information as to why that change was required and append the summary to summary.md file as well
 
-## Architecture & Design Philosophy
-
-The guiding principle: **pages are thin, disposable UI we can pivot quickly on user feedback;
-the workhorse lives in the libraries, backend, and database.** Think in four buckets:
-
-1. **Database (persistence)** — Postgres via Prisma (`lib/db.ts`). The source of truth; holds
-   domain objects (Portfolio, Asset, User, etc.).
-2. **Frontend (UI)** — `app/**/page.tsx` + `components/**`. Thin, **disposable** experiences +
-   page-local view state. A page should be cheap to build, reshape, or throw away.
-3. **Common library (capabilities — the workhorse)** — `lib/**`, exposed to the UI via
-   `app/api/**`. The **only** layer that reads the DB and calls the Python backend, and where
-   data from both is **composed** for a page. Sub-divide by capability (`lib/portfolio`,
-   `lib/retirement`, `lib/analysis`, …); each owns its DB slice + backend calls + a public face.
-4. **Python backend (compute)** — FastAPI services (e.g. `services/fastapi-portfolio-service`),
-   called from bucket 3 via HTTP clients (`lib/fastapi`, `lib/http`).
-
-Rules that follow from this:
-- **Pages never talk to each other.** They funnel through capabilities (bucket 3), which own
-  persistence (1) and compute (4). Two pages share data only via **persistent domain objects**,
-  never via each other's state. → Persistence is the decoupling boundary.
-- **Hybrid contract:** client components reach a capability over HTTP (`/api/*`); server code
-  (route handlers, server components/actions) uses the capability's typed in-process public API.
-  Never import another capability's *internals* from outside it.
-- **Keep "simple" in the page, not by shortcutting the capability.** Even a quick v1 routes all
-  data/compute through `lib/<capability>` + backend/DB — no business logic inlined in pages/routes.
-- **Don't persist prematurely.** Promote data to a DB-backed domain object only when another
-  feature needs it or it must survive a reload; otherwise keep it page-local/ephemeral.
-  Committing a schema before user feedback fights "pivot quickly."
-- **Build new features greenfield in this shape; migrate existing code incrementally** — don't
-  pre-refactor working code. A capability can ship with simple internals and be upgraded later
-  (e.g. swap a simple projection for the real Monte Carlo service) **without changing the page**,
-  because the page only knows the capability's contract.
-
-See `docs/architecture-capabilities-and-pages.md`, `docs/frontend-architecture.md`, and
-`docs/frontend-architecture-details.md` for the full treatment.
-
 ## Development Commands
 
 ### Frontend (Next.js)
@@ -65,8 +29,8 @@ See `docs/architecture-capabilities-and-pages.md`, `docs/frontend-architecture.m
 
 ### Backend Services
 
-- **FastAPI portfolio service**: `uvicorn main:app --reload --host 0.0.0.0 --port 8000` (in `services/fastapi-portfolio-service/`). Risk metrics, VaR, Sharpe, beta, simple Monte Carlo.
-- **Monte Carlo simulation service** (Phase 4): `uv run uvicorn src.api.main:app --host 0.0.0.0 --port 8001` (in `services/monte-carlo-service/`). Lifecycle MC engine returning Recharts-ready fan-chart data. Main endpoint: `POST /api/mc/simulate`. Bundles a vendored `findata` sibling library at `lib/findata/`. Default parameter files at `configs/data/{simulated_mean_returns.csv,simulated_cov_matrices.txt}`.
+- **FastAPI service**: `uvicorn main:app --reload --host 0.0.0.0 --port 8000` (in services/fastapi-portfolio-service/)
+- **MCP server**: `python finance_mcp_server.py` (in mcp-server/)
 - **Python package management**: Use `uv` consistently for all Python services (Python 3.12)
 
 ## Tech Stack & Architecture
@@ -88,20 +52,29 @@ See `docs/architecture-capabilities-and-pages.md`, `docs/frontend-architecture.m
 
 ### Financial Analysis Backend
 
-Portfolio analysis is handled by a single **FastAPI microservice**.
+The application supports **dual analysis backends** with automatic fallback:
+
+#### MCP (Model Context Protocol) Server
+
+- **Primary Backend**: Located in `mcp-server/` folder
+- **Technology**: FastMCP framework with SQLAlchemy database integration
+- **Features**: Real-time portfolio risk analysis, Sharpe ratio calculations, market data fetching
+- **Dependencies**: pandas, numpy, yfinance, psycopg2-binary
+- **Configuration**: Configurable via `PRIMARY_ANALYSIS_BACKEND=mcp` environment variable
 
 #### FastAPI Microservice
 
-- **Location**: `services/fastapi-portfolio-service/` folder
+- **Secondary Backend**: Located in `services/fastapi-portfolio-service/` folder
 - **Technology**: FastAPI with comprehensive CORS configuration
-- **Features**: Portfolio risk metrics, VaR calculations, Sharpe ratio, optimization, Monte Carlo, market data analysis
+- **Features**: Portfolio risk metrics, VaR calculations, market data analysis
 - **Dependencies**: fastapi, uvicorn, yfinance, pandas, numpy
 - **Deployment**: Vercel-ready with vercel.json configuration
 
 #### Unified Analysis Service
 
-- **Abstraction Layer**: `lib/unified-analysis-service.ts` routes analysis requests to the FastAPI client (`lib/fastapi-client.ts`)
-- **Configuration**: `lib/backend-config.ts` (FastAPI is the only backend; an older MCP backend was removed)
+- **Abstraction Layer**: `lib/unified-analysis-service.ts` provides seamless switching between backends
+- **Fallback Logic**: Automatic health checks and failover between MCP and FastAPI
+- **Configuration**: Backend selection via `lib/backend-config.ts`
 
 ### Project Structure
 
@@ -124,9 +97,10 @@ frontend/
 │   │   ├── auth.ts           # JWT and authentication utilities
 │   │   ├── db.ts             # Prisma database client
 │   │   ├── llm-service.ts    # Multi-provider LLM integration
-│   │   ├── unified-analysis-service.ts # Analysis backend abstraction layer
+│   │   ├── unified-analysis-service.ts # Backend abstraction layer
+│   │   ├── mcp-client.ts     # MCP server client
 │   │   ├── fastapi-client.ts # FastAPI service client
-│   │   ├── backend-config.ts # Analysis backend configuration
+│   │   ├── backend-config.ts # Backend selection configuration
 │   │   └── financial-prompts.ts # Financial AI prompt engineering
 │   ├── hooks/
 │   │   └── use-chat-api.ts   # Chat API hooks
@@ -141,6 +115,13 @@ services/
 │   ├── main.py               # FastAPI application
 │   ├── pyproject.toml        # Python dependencies
 │   └── vercel.json           # Vercel deployment config
+
+mcp-server/
+├── finance_mcp_server.py     # MCP server implementation
+├── analyzers/
+│   └── finance_analyzer.py   # Pluggable finance analyzer
+├── pyproject.toml            # Python dependencies
+└── start.sh                  # Startup script
 ```
 
 ### Database Schema
@@ -193,6 +174,8 @@ services/
 
 ### Analysis Backend Configuration
 
+- `PRIMARY_ANALYSIS_BACKEND`: Choose 'mcp' or 'fastapi' (default: 'mcp')
+- `ENABLE_BACKEND_FALLBACK`: Enable automatic fallback (default: 'false')
 - `FASTAPI_SERVICE_URL`: FastAPI microservice URL (external service, deployed separately)
 - `RISK_FREE_RATE`: Risk-free rate for calculations (optional, defaults to 0.02)
 
@@ -219,8 +202,16 @@ services/
 - **Environment Variables**: Ensure `DATABASE_URL` is properly configured in your deployment environment
 - **Build Process**: Prisma generation happens automatically via the postinstall hook
 - **FastAPI Service**: Can be deployed separately on Vercel or other platforms
+- **MCP Server**: Requires database access for portfolio analysis
 
 ## Backend Architecture Notes
+
+### MCP Server
+
+- Implements financial analysis tools through Model Context Protocol
+- Uses SQLAlchemy for database connections
+- Provides portfolio risk analysis, Sharpe ratio calculations, market data fetching
+- Supports pluggable analyzer architecture
 
 ### FastAPI Service
 
@@ -231,8 +222,9 @@ services/
 
 ### Unified Service Layer
 
-- Routes analysis requests to the FastAPI client
-- Consistent API interface for all analysis types
+- Transparent backend switching with health checks
+- Automatic fallback between MCP and FastAPI
+- Consistent API interface regardless of backend
 - Comprehensive error handling and logging
 
 ## Testing & Scripts
@@ -251,6 +243,7 @@ services/
 ## Python Notes
 
 - Please use uv as package manager and Python version 3.12
+- Both MCP server and FastAPI service use consistent dependency management
 - Environment variables required for database connections in Python services
 
 ## Mobile vs Desktop Design Decisions
