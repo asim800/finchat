@@ -214,13 +214,23 @@ function ageFromBirthDate(birthDate: Date | null): number | null {
   return Math.floor(ms / (365.25 * 24 * 60 * 60 * 1000));
 }
 
+/**
+ * Expected REAL return (above inflation) by risk tolerance. We project balances in
+ * today's-dollars to match the "today's purchasing power" framing of the headline
+ * readiness number. Using nominal returns (~5/7/9%) with today's-$ labels would
+ * silently overstate growth by ~2%/yr — over a 56-year horizon that's a 3× error
+ * in the displayed final balance. Real returns avoid that.
+ *
+ * Rough basis: long-run real returns are ~7% (US equities), ~2% (US bonds). The
+ * tolerance-tiered numbers reflect a typical glide-path mix at each posture.
+ */
 function expectedReturnFor(riskTolerance: string | null): number {
   switch ((riskTolerance ?? '').toLowerCase()) {
-    case 'conservative': return 0.05;
+    case 'conservative': return 0.03;
     case 'aggressive':
-    case 'moderate-aggressive': return 0.09;
+    case 'moderate-aggressive': return 0.07;
     case 'moderate':
-    default: return 0.07;
+    default: return 0.05;
   }
 }
 

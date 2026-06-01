@@ -38,8 +38,8 @@ export function ReadinessHeadline({ readiness, projection }: Props) {
         </div>
       </div>
       <div className="text-xs text-muted-foreground sm:text-right">
-        Assumes {pct}% expected return (±2% band). <br />
-        Projecting ages {ageStart}{ageStart != null ? ` → ${ageEnd}` : ` to ${ageEnd}`}.
+        {pct}% real return (after inflation, ±2% band). <br />
+        Balances in today&apos;s dollars; ages {ageStart}{ageStart != null ? ` → ${ageEnd}` : ` to ${ageEnd}`}.
       </div>
     </div>
   );
