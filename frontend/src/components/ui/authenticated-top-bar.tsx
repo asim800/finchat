@@ -43,6 +43,7 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
 
   const isMyPortfolioPage = isActiveRoute('/myportfolio');
   const isIncomePage = isActiveRoute('/dashboard/income');
+  const isRetirementPage = isActiveRoute('/dashboard/retirement');
   const isReferencePortfolioPage = isActiveRoute('/dashboard/portfolio') && !isActiveRoute('/myportfolio');
   const isChatPage = isActiveRoute('/chat');
   const isLearningPage = isActiveRoute('/learning');
@@ -61,6 +62,7 @@ export const AuthenticatedTopBar: React.FC<AuthenticatedTopBarProps> = ({
   const mainNavItems = [
     { href: '/dashboard/myportfolio', label: 'My Portfolio', isActive: isMyPortfolioPage },
     { href: '/dashboard/income', label: 'Income', isActive: isIncomePage },
+    { href: '/dashboard/retirement', label: 'Retirement', isActive: isRetirementPage },
     { href: '/dashboard/portfolio', label: 'Templates', isActive: isReferencePortfolioPage },
     { href: '/dashboard/chat', label: 'Chat', isActive: isChatPage },
     { href: '/contact', label: 'Contact us', isActive: isContactPage }
