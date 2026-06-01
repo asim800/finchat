@@ -576,13 +576,16 @@ export class PortfolioService {
       // Get metrics for all assets
       const assetsWithMetrics = await this.enrichAssetsWithMetrics(portfolio.assets);
       
-      // Calculate market values
+      // Calculate market values — fall back to stored asset.price when the historical
+      // lookup misses (e.g. seed data, tickers not in cache) so the UI shows
+      // user-entered prices instead of $0/N/A.
       const assetsWithMarketValue = assetsWithMetrics.map(asset => {
-        const marketPrice = priceMap[asset.symbol.toUpperCase()];
+        const lookupPrice = priceMap[asset.symbol.toUpperCase()];
+        const price = lookupPrice ?? asset.price ?? null;
         return {
           ...asset,
-          price: marketPrice,
-          currentValue: marketPrice ? asset.quantity * marketPrice : null
+          price,
+          currentValue: price != null ? asset.quantity * price : null
         };
       });
 
