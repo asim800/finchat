@@ -51,8 +51,9 @@ export default async function DirectoryPage() {
       entries: [
         { href: '/dashboard/myportfolio', label: 'My Portfolio', description: 'Manage your portfolios, accounts, and assets.' },
         { href: '/dashboard/income', label: 'Income', description: 'Track income and expense cash flows over time.' },
-        { href: '/dashboard/retirement', label: 'Retirement', description: 'Projection chart + readiness summary + asset matrix.' },
+        { href: '/dashboard/retirement', label: 'Retirement', description: 'Deterministic projection chart + readiness summary + asset matrix.' },
         { href: '/dashboard/retirement/diagnostic', label: 'Retirement diagnostic', description: 'Per-account breakdown + override Social Security / income / expenses to audit the projection.' },
+        { href: '/dashboard/monte-carlo', label: 'Monte Carlo sandbox', description: 'Probabilistic projection with 5%/25%/50%/75%/95% fan chart and success rate. Captures sequence-of-returns risk.' },
         { href: '/dashboard/account', label: 'Account', description: 'Email, password, API keys.' },
         { href: '/dashboard/profile', label: 'Profile', description: 'Birth date, income, expenses, risk tolerance, SS estimate.' },
       ],
@@ -71,12 +72,6 @@ export default async function DirectoryPage() {
           ],
     },
     {
-      title: 'Coming soon',
-      entries: [
-        { href: '/dashboard/monte-carlo', label: 'Monte Carlo sandbox', description: 'Phase 4 — probabilistic retirement projections with sequence-of-returns risk modeled honestly.', status: 'soon' },
-      ],
-    },
-    {
       title: 'Auth',
       entries: [
         { href: '/login', label: 'Login', description: '' },
@@ -84,6 +79,8 @@ export default async function DirectoryPage() {
       ],
     },
   ];
+  // (The "Coming soon" section is intentionally absent now that Phase 4 Monte Carlo
+  // is live. Re-add when there's another forthcoming feature to surface.)
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">

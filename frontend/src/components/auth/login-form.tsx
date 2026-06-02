@@ -80,7 +80,7 @@ export const LoginForm: React.FC = () => {
           <Button
             type="submit"
             loading={form.loading}
-            disabled={!form.canSubmit}
+            disabled={form.loading}
             className="w-full"
           >
             Sign In
